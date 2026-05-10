@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Problema y Solución — CHASKI AI 2.0</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #07090f;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────────────── */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .logo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #1D9BD1, #0e6fa3);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    padding: 6px 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .header h1 span { color: #1D9BD1; }
+  .header .tagline {
+    font-size: 15px;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  .header .uni {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  /* ── CONTEXT STRIP ──────────────────────────────────────────── */
+  .context-strip {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 56px;
+  }
+  .ctx-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .ctx-pill .icon { font-size: 18px; }
+  .ctx-pill strong { color: #cbd5e1; }
+
+  /* ── SECTION TITLE ──────────────────────────────────────────── */
+  .section-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .section-header p {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* ── PROBLEMA / SOLUCIÓN SPLIT ──────────────────────────────── */
+  .ps-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto 64px;
+    align-items: start;
+  }
+
+  .ps-col-title {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 12px;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
+  }
+  .col-problema .ps-col-title {
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.3);
+    border-bottom: none;
+  }
+  .col-solucion .ps-col-title {
+    background: rgba(34,197,94,0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34,197,94,0.3);
+    border-bottom: none;
+  }
+
+  .ps-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* cards del problema */
+  .prob-card {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-top: none;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: background 0.2s;
+  }
+  .prob-card:last-child { border-radius: 0 0 10px 10px; }
+  .prob-card:hover { background: rgba(239,68,68,0.1); }
+  .prob-card .p-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .prob-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fca5a5;
+    margin-bottom: 4px;
+  }
+  .prob-card p {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .prob-card .impact {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 11px;
+    background: rgba(239,68,68,0.2);
+    color: #f87171;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* flecha central */
+  .arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    padding-top: 52px;
+  }
+  .arrow-box {
+    background: linear-gradient(135deg, #1D9BD1, #FBBF24);
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 30px rgba(29,155,209,0.4);
+    position: sticky;
+    top: 40px;
+  }
+  .arrow-label {
+    font-size: 10px;
+    color: #475569;
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* cards de la solución */
+  .sol-card {
+    background: rgba(34,197,94,0.05);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-top: none;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: background 0.2s;
+  }
+  .sol-card:last-child { border-radius: 0 0 10px 10px; }
+  .sol-card:hover { background: rgba(34,197,94,0.1); }
+  .sol-card .s-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .sol-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #86efac;
+    margin-bottom: 4px;
+  }
+  .sol-card p {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .sol-card .tech {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 11px;
+    background: rgba(29,155,209,0.2);
+    color: #7dd3fc;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+
+  /* ── MÉTRICAS COMPARATIVAS ──────────────────────────────────── */
+  .metrics-section {
+    max-width: 1000px;
+    margin: 0 auto 64px;
+  }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .metric-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 24px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .metric-card.red::before { background: #ef4444; }
+  .metric-card.green::before { background: #22c55e; }
+  .metric-label {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .metric-before {
+    font-size: 28px;
+    font-weight: 800;
+    color: #f87171;
+    line-height: 1;
+  }
+  .metric-after {
+    font-size: 28px;
+    font-weight: 800;
+    color: #4ade80;
+    line-height: 1;
+  }
+  .metric-unit {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+  .metric-arrow {
+    font-size: 20px;
+    color: #FBBF24;
+    margin: 8px 0;
+  }
+
+  /* ── ACTORES DEL SISTEMA ────────────────────────────────────── */
+  .actors-section {
+    max-width: 1000px;
+    margin: 0 auto 64px;
+  }
+  .actors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .actor-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+  }
+  .actor-icon { font-size: 36px; margin-bottom: 12px; }
+  .actor-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+  }
+  .actor-actions {
+    list-style: none;
+    text-align: left;
+    padding: 0 4px;
+  }
+  .actor-actions li {
+    font-size: 11px;
+    color: #64748b;
+    padding: 3px 0;
+    padding-left: 12px;
+    position: relative;
+  }
+  .actor-actions li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: #1D9BD1;
+  }
+
+  /* ── TECH STACK ─────────────────────────────────────────────── */
+  .tech-section {
+    max-width: 1000px;
+    margin: 0 auto 64px;
+  }
+  .tech-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .tech-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid;
+  }
+  .tech-frontend { background: rgba(29,155,209,0.1); border-color: rgba(29,155,209,0.4); color: #7dd3fc; }
+  .tech-backend  { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.3);  color: #86efac; }
+  .tech-db       { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.4); color: #d8b4fe; }
+  .tech-iot      { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.4); color: #fde68a; }
+  .tech-ai       { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3);  color: #fca5a5; }
+
+  /* ── FOOTER ─────────────────────────────────────────────────── */
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    color: #334155;
+    font-size: 12px;
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .ps-grid {
+      grid-template-columns: 1fr;
+    }
+    .arrow-col {
+      padding: 24px 0;
+      flex-direction: row;
+      justify-content: center;
+    }
+    .arrow-box { width: 48px; height: 48px; font-size: 22px; }
+    .col-problema .ps-col-title,
+    .col-solucion .ps-col-title { border-radius: 8px 8px 0 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-badge">CHASKI AI 2.0</div>
+  <h1>De la Gestión Manual<br>a la <span>Transformación Digital</span></h1>
+  <p class="tagline">
+    Plataforma web para la digitalización y optimización de la gestión de transportistas
+    basada en monitoreo GPS y reglas de negocio automatizadas
+  </p>
+  <p class="uni">Universidad Peruana de Ciencias Aplicadas · Taller de Desempeño Profesional · 2026</p>
+</div>
+
+<!-- CONTEXTO -->
+<div class="context-strip">
+  <div class="ctx-pill"><span class="icon">📍</span><div><strong>Ubicación</strong><br>Juli, Chucuito, Puno, Perú</div></div>
+  <div class="ctx-pill"><span class="icon">🛣️</span><div><strong>Ruta</strong><br>Juli → Puno · 98.5 km · S/ 7.00</div></div>
+  <div class="ctx-pill"><span class="icon">🚐</span><div><strong>Flota</strong><br>60+ vehículos socios</div></div>
+  <div class="ctx-pill"><span class="icon">👥</span><div><strong>Asociación</strong><br>Virgen de Fátima</div></div>
+  <div class="ctx-pill"><span class="icon">📅</span><div><strong>Periodo</strong><br>Abril – Julio 2026</div></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     PROBLEMA vs SOLUCIÓN
+════════════════════════════════════════════════════════════════ -->
+<div class="section-header">
+  <h2>Problema → Solución</h2>
+  <p>Cada problema identificado en la asociación tiene una solución concreta implementada en CHASKI AI</p>
+</div>
+
+<div class="ps-grid">
+
+  <!-- COLUMNA PROBLEMA -->
+  <div class="ps-col col-problema">
+    <div class="ps-col-title">⚠ Situación Actual — Problemas</div>
+
+    <div class="prob-card">
+      <div class="p-icon">📋</div>
+      <div>
+        <h4>Cola de salida en papel</h4>
+        <p>El despachador asigna turnos manualmente en una lista física. Los conductores discuten por el orden de salida, no hay evidencia del registro.</p>
+        <span class="impact">Conflictos diarios entre socios</span>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="p-icon">📝</div>
+      <div>
+        <h4>Manifiestos en papel</h4>
+        <p>El conductor llena a mano el manifiesto de pasajeros exigido por el MTC. Proceso de 8–12 minutos por viaje. Se pierden, se dañan o son ilegibles.</p>
+        <span class="impact">Infracción ante fiscalización del MTC</span>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="p-icon">🚫</div>
+      <div>
+        <h4>Sin visibilidad de la flota</h4>
+        <p>La directiva no sabe dónde están los vehículos. No pueden verificar si un conductor llegó a destino, si tomó la ruta correcta o si tuvo un incidente.</p>
+        <span class="impact">Imposible supervisar 60 unidades</span>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="p-icon">📊</div>
+      <div>
+        <h4>Sin datos para tomar decisiones</h4>
+        <p>No existen reportes de ingresos, número de pasajeros por conductor, ocupación de vehículos ni historial de viajes. Todo se basa en memoria.</p>
+        <span class="impact">Gestión sin evidencia objetiva</span>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="p-icon">🚨</div>
+      <div>
+        <h4>Sin alertas de conducción</h4>
+        <p>No hay forma de detectar si un conductor excede la velocidad, frena bruscamente o se desvía de la ruta. Los incidentes se conocen solo cuando ocurren.</p>
+        <span class="impact">Riesgo de accidentes sin prevención</span>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="p-icon">📞</div>
+      <div>
+        <h4>Comunicación por llamadas telefónicas</h4>
+        <p>El despachador llama por teléfono a cada conductor para notificarle su turno. Proceso lento, costoso y sin registro de notificaciones enviadas.</p>
+        <span class="impact">Dependencia total de una persona</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FLECHA CENTRAL -->
+  <div class="arrow-col">
+    <div class="arrow-box">⚡</div>
+    <div class="arrow-label">CHASKI<br>AI 2.0</div>
+  </div>
+
+  <!-- COLUMNA SOLUCIÓN -->
+  <div class="ps-col col-solucion">
+    <div class="ps-col-title">✓ CHASKI AI — Soluciones</div>
+
+    <div class="sol-card">
+      <div class="s-icon">📲</div>
+      <div>
+        <h4>Cola de salida digital FIFO</h4>
+        <p>El conductor se registra desde su celular. El sistema asigna el número de turno automáticamente por hora de llegada. Sin intervención del despachador.</p>
+        <span class="tech">Socket.io</span><span class="tech">FIFO</span>
+      </div>
+    </div>
+
+    <div class="sol-card">
+      <div class="s-icon">✅</div>
+      <div>
+        <h4>Manifiestos digitales en 3 minutos</h4>
+        <p>El conductor registra pasajeros desde su celular. El sistema genera el manifiesto válido para el MTC en formato digital. Enviable por WhatsApp o PDF.</p>
+        <span class="tech">Node.js</span><span class="tech">PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="sol-card">
+      <div class="s-icon">🗺️</div>
+      <div>
+        <h4>Monitoreo GPS en tiempo real</h4>
+        <p>El dispositivo Teltonika FMC130 instalado en cada vehículo transmite posición cada 10 segundos al mapa del dashboard del administrador.</p>
+        <span class="tech">Teltonika FMC130</span><span class="tech">Leaflet.js</span>
+      </div>
+    </div>
+
+    <div class="sol-card">
+      <div class="s-icon">📈</div>
+      <div>
+        <h4>Reportes automáticos con IA</h4>
+        <p>El sistema genera reportes de ingresos, viajes y desempeño. El asistente Claude AI responde preguntas en lenguaje natural sobre la operación diaria.</p>
+        <span class="tech">Claude API</span><span class="tech">PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="sol-card">
+      <div class="s-icon">🧠</div>
+      <div>
+        <h4>Detección de anomalías en conducción</h4>
+        <p>El acelerómetro triaxial del FMC130 detecta frenazos bruscos y aceleración agresiva. El algoritmo Z-score genera alertas y puntajes por conductor.</p>
+        <span class="tech">Acelerómetro FMC130</span><span class="tech">Z-score</span>
+      </div>
+    </div>
+
+    <div class="sol-card">
+      <div class="s-icon">🔔</div>
+      <div>
+        <h4>Notificaciones automáticas en tiempo real</h4>
+        <p>El conductor recibe en su panel el estado de su turno actualizado automáticamente. Sin llamadas. El admin ve alertas instantáneas de velocidad y desvíos.</p>
+        <span class="tech">WebSocket</span><span class="tech">Socket.io</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     MÉTRICAS COMPARATIVAS
+════════════════════════════════════════════════════════════════ -->
+<div class="metrics-section">
+  <div class="section-header">
+    <h2>Impacto Esperado — Métricas Clave</h2>
+    <p>Comparación entre el proceso actual (manual) y el sistema CHASKI AI</p>
+  </div>
+
+  <div class="metrics-grid">
+
+    <div class="metric-card">
+      <div class="metric-label">Tiempo de Manifiesto</div>
+      <div class="metric-before">12 min</div>
+      <div class="metric-arrow">↓</div>
+      <div class="metric-after">3 min</div>
+      <div class="metric-unit">por viaje · reducción del 75%</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Conflictos de Cola</div>
+      <div class="metric-before">Diarios</div>
+      <div class="metric-arrow">↓</div>
+      <div class="metric-after">0</div>
+      <div class="metric-unit">asignación automática FIFO</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Visibilidad GPS</div>
+      <div class="metric-before">0%</div>
+      <div class="metric-arrow">↑</div>
+      <div class="metric-after">100%</div>
+      <div class="metric-unit">flota monitoreada en tiempo real</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Precisión GPS</div>
+      <div class="metric-before">Sin datos</div>
+      <div class="metric-arrow">↑</div>
+      <div class="metric-after">≤ 10 m</div>
+      <div class="metric-unit">error máximo · Teltonika FMC130</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Usabilidad Admin</div>
+      <div class="metric-before">—</div>
+      <div class="metric-arrow">↑</div>
+      <div class="metric-after">80%</div>
+      <div class="metric-unit">tareas sin asistencia técnica</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Reportes Operativos</div>
+      <div class="metric-before">Ninguno</div>
+      <div class="metric-arrow">↑</div>
+      <div class="metric-after">Diarios</div>
+      <div class="metric-unit">ingresos, viajes, conductores, alertas</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     ACTORES DEL SISTEMA
+════════════════════════════════════════════════════════════════ -->
+<div class="actors-section">
+  <div class="section-header">
+    <h2>¿Quién usa el sistema?</h2>
+    <p>Roles y acciones principales en CHASKI AI</p>
+  </div>
+
+  <div class="actors-grid">
+
+    <div class="actor-card">
+      <div class="actor-icon">👩‍💼</div>
+      <div class="actor-name">Administrador<br><small style="color:#64748b;font-weight:400">Directiva de la Asociación</small></div>
+      <ul class="actor-actions">
+        <li>Ver mapa GPS de la flota</li>
+        <li>Gestionar cola de salida</li>
+        <li>Revisar manifiestos del día</li>
+        <li>Consultar reportes de ingresos</li>
+        <li>Ver alertas de velocidad</li>
+        <li>Preguntar al asistente IA</li>
+      </ul>
+    </div>
+
+    <div class="actor-card">
+      <div class="actor-icon">🧑‍✈️</div>
+      <div class="actor-name">Conductor Socio<br><small style="color:#64748b;font-weight:400">60+ conductores afiliados</small></div>
+      <ul class="actor-actions">
+        <li>Registrarse en la cola del día</li>
+        <li>Ver su turno de salida</li>
+        <li>Registrar pasajeros del viaje</li>
+        <li>Generar manifiesto digital</li>
+        <li>Enviar manifiesto por WhatsApp</li>
+        <li>Ver su historial de viajes</li>
+      </ul>
+    </div>
+
+    <div class="actor-card">
+      <div class="actor-icon">📡</div>
+      <div class="actor-name">Dispositivo IoT<br><small style="color:#64748b;font-weight:400">Teltonika FMC130</small></div>
+      <ul class="actor-actions">
+        <li>Transmitir posición GPS cada 10s</li>
+        <li>Medir velocidad en tiempo real</li>
+        <li>Detectar frenazos (acelerómetro)</li>
+        <li>Guardar datos sin cobertura</li>
+        <li>Reconectar y sincronizar datos</li>
+      </ul>
+    </div>
+
+    <div class="actor-card">
+      <div class="actor-icon">🤖</div>
+      <div class="actor-name">Asistente IA<br><small style="color:#64748b;font-weight:400">Claude API (Anthropic)</small></div>
+      <ul class="actor-actions">
+        <li>Responder preguntas del admin</li>
+        <li>Generar reportes narrativos</li>
+        <li>Explicar alertas en español</li>
+        <li>Analizar conductores por nombre</li>
+        <li>Identificar tendencias de la flota</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     STACK TECNOLÓGICO
+════════════════════════════════════════════════════════════════ -->
+<div class="tech-section">
+  <div class="section-header">
+    <h2>Stack Tecnológico</h2>
+    <p>Tecnologías utilizadas en cada capa del sistema</p>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase">Frontend</div>
+    <div class="tech-row">
+      <span class="tech-badge tech-frontend">🌐 HTML5 + CSS3</span>
+      <span class="tech-badge tech-frontend">⚡ JavaScript Vanilla</span>
+      <span class="tech-badge tech-frontend">🗺️ Leaflet.js · Mapas</span>
+      <span class="tech-badge tech-frontend">🌍 Three.js · 3D</span>
+      <span class="tech-badge tech-frontend">✨ GSAP · Animaciones</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase">Backend</div>
+    <div class="tech-row">
+      <span class="tech-badge tech-backend">🟢 Node.js</span>
+      <span class="tech-badge tech-backend">🚀 Express.js · API REST</span>
+      <span class="tech-badge tech-backend">⚡ Socket.io · WebSockets</span>
+      <span class="tech-badge tech-backend">🔑 JWT · Autenticación</span>
+      <span class="tech-badge tech-backend">🔒 bcryptjs · Seguridad</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase">Base de Datos</div>
+    <div class="tech-row">
+      <span class="tech-badge tech-db">🐘 PostgreSQL 15</span>
+      <span class="tech-badge tech-db">📊 15 tablas relacionales</span>
+      <span class="tech-badge tech-db">⚙️ Índices de rendimiento</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase">IoT</div>
+    <div class="tech-row">
+      <span class="tech-badge tech-iot">📡 Teltonika FMC130</span>
+      <span class="tech-badge tech-iot">🛰️ GPS + GNSS multi-constelación</span>
+      <span class="tech-badge tech-iot">📶 4G LTE · Codec 8 TCP</span>
+      <span class="tech-badge tech-iot">📳 Acelerómetro Triaxial</span>
+    </div>
+  </div>
+
+  <div>
+    <div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase">Inteligencia Artificial</div>
+    <div class="tech-row">
+      <span class="tech-badge tech-ai">🤖 Claude API · Anthropic</span>
+      <span class="tech-badge tech-ai">📐 Z-score · Detección de Anomalías</span>
+      <span class="tech-badge tech-ai">💬 NLP en Español</span>
+    </div>
+  </div>
+</div>
+
+
+<div class="footer">
+  CHASKI AI 2.0 · Esquema Problema–Solución · Universidad Peruana de Ciencias Aplicadas · 2026<br>
+  Rudy Jayde Choque Cruz · Celso Angel Arturo Salvador Pomalaza · Ingeniería de Sistemas de Información
+</div>
+
+</body>
+</html>

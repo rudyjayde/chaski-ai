@@ -1,0 +1,261 @@
+/* ============================================================
+   reports.css — Estilos de la página de Reportes
+   Chaski AI v2.0
+   ============================================================
+   Secciones:
+   1.  Barra superior (tabs de período + exportar)
+   2.  KPI ejecutivos (grid de 6)
+   3.  Ranking de conductores
+   4.  Responsive
+   ============================================================ */
+
+/* ============================================================
+   1. BARRA SUPERIOR
+   ============================================================ */
+.rp-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.rp-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.rp-tab {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+}
+
+.rp-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.rp-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #000;
+  font-weight: 600;
+}
+
+.rp-export-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+
+/* ============================================================
+   2. KPI EJECUTIVOS
+   ============================================================ */
+.rp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rp-kpi-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+
+.rp-kpi-card:hover { border-color: rgba(0,200,255,0.3); }
+
+.rp-kpi-card.highlight-gold {
+  border-color: rgba(255, 184, 0, 0.25);
+  background: linear-gradient(135deg, var(--card-bg) 60%, rgba(255,184,0,0.04));
+}
+
+.rp-kpi-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(0, 200, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--primary);
+}
+
+.rp-kpi-icon.pax  { background: rgba(0,255,148,0.1);   color: var(--success); }
+.rp-kpi-icon.rev  { background: rgba(255,184,0,0.1);   color: var(--gold);    }
+.rp-kpi-icon.km   { background: rgba(138,80,255,0.1);  color: #a370f7;        }
+.rp-kpi-icon.occ  { background: rgba(0,200,255,0.1);   color: var(--primary); }
+.rp-kpi-icon.alrt { background: rgba(255,68,68,0.1);   color: var(--danger);  }
+
+.rp-kpi-val {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.rp-kpi-val.gold   { color: var(--gold);   }
+.rp-kpi-val.danger { color: var(--danger); }
+
+.rp-kpi-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* Indicador de tendencia */
+.rp-kpi-trend {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rp-kpi-trend.up   { color: var(--success); }
+.rp-kpi-trend.down { color: var(--danger);  }
+
+
+/* ============================================================
+   3. RANKING DE CONDUCTORES
+   ============================================================ */
+.rp-ranking-card {
+  flex: 1;
+}
+
+.rp-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rp-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.2s;
+}
+
+.rp-rank-item:hover { border-color: rgba(0,200,255,0.3); }
+
+/* Número de posición */
+.rp-rank-pos {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: center;
+}
+
+.rp-rank-pos.pos1 { color: #FFD700; }
+.rp-rank-pos.pos2 { color: #C0C0C0; }
+.rp-rank-pos.pos3 { color: #CD7F32; }
+.rp-rank-pos      { color: var(--text-muted); }
+
+/* Avatar mini */
+.rp-rank-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0a1628, #1a2d4a);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Nombre y empresa */
+.rp-rank-info { flex: 1; min-width: 0; }
+
+.rp-rank-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rp-rank-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Estadísticas al lado derecho */
+.rp-rank-stats {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.rp-rank-stat { text-align: right; }
+
+.rp-rank-stat-val {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+}
+
+.rp-rank-stat-val.gold { color: var(--gold); }
+
+.rp-rank-stat-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   4. RESPONSIVE
+   ============================================================ */
+@media (max-width: 1300px) {
+  .rp-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 800px) {
+  .rp-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .rp-tabs     { flex-wrap: wrap; }
+  .rp-rank-stats { display: none; }
+}
+
+@media (max-width: 500px) {
+  .rp-kpi-grid { grid-template-columns: 1fr; }
+}

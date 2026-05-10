@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura del Sistema — CHASKI AI 2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0a0f1e;
+    color: #e2e8f0;
+    padding: 40px 20px;
+  }
+  .page-header {
+    text-align: center;
+    margin-bottom: 60px;
+    padding: 32px;
+    background: linear-gradient(135deg, rgba(29,155,209,0.15), rgba(251,191,36,0.08));
+    border: 1px solid rgba(29,155,209,0.3);
+    border-radius: 16px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1D9BD1;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+  .page-header .subtitle {
+    font-size: 16px;
+    color: #FBBF24;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .section {
+    margin-bottom: 60px;
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FBBF24;
+    border-left: 4px solid #FBBF24;
+    padding-left: 16px;
+    margin-bottom: 8px;
+  }
+  .section-desc {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-left: 20px;
+    margin-bottom: 24px;
+  }
+
+  .diagram-card {
+    background: rgba(15,20,40,0.8);
+    border: 1px solid rgba(29,155,209,0.25);
+    border-radius: 12px;
+    padding: 32px 16px;
+    overflow-x: auto;
+  }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* leyenda */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding: 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: #475569;
+    font-size: 12px;
+  }
+
+  @media print {
+    body { background: white; color: black; }
+    .diagram-card { border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>CHASKI AI 2.0 — Arquitectura del Sistema</h1>
+  <div class="subtitle">Plataforma Web para la Gestión de Transportistas</div>
+  <p>Asociación de Transportistas Virgen de Fátima · Juli, Puno, Perú</p>
+  <p style="margin-top:6px">Universidad Peruana de Ciencias Aplicadas · Taller de Desempeño Profesional · 2026</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ARQUITECTURA LÓGICA
+═══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">1. Arquitectura Lógica — Capas del Sistema</div>
+  <div class="section-desc">
+    Muestra cómo están organizadas las capas de software y cómo se comunican entre sí.
+    Cada capa tiene una responsabilidad específica y se comunica solo con la capa adyacente.
+  </div>
+  <div class="diagram-card">
+    <div class="mermaid">
+graph TB
+    subgraph CAPA0["⠀CAPA 0 · DISPOSITIVOS IoT⠀"]
+        FMC["📡 Teltonika FMC130\nGPS + Acelerómetro\nProtocolo Codec 8 · TCP"]
+    end
+
+    subgraph CAPA1["⠀CAPA 1 · PRESENTACIÓN — Frontend⠀"]
+        direction LR
+        LANDING["🌐 Landing Page\nindex.html\nThree.js · GSAP"]
+        LOGIN["🔐 Login\nlogin.html\nDual rol"]
+        ADMIN["🖥️ Panel Admin\n6 módulos\nDashboard · Cola · Manifiestos\nVehículos · Conductores · Reportes"]
+        DRIVER["📱 Panel Conductor\n4 módulos\nDashboard · Manifiesto\nCola · Viajes"]
+    end
+
+    subgraph CAPA2["⠀CAPA 2 · COMUNICACIÓN⠀"]
+        direction LR
+        REST["🔄 HTTP / HTTPS\nAPI REST"]
+        WS["⚡ WebSocket\nSocket.io\nTiempo Real"]
+        TCP["🔌 TCP Puerto 5027\nCodec 8 · IoT"]
+    end
+
+    subgraph CAPA3["⠀CAPA 3 · LÓGICA DE NEGOCIO — Backend Node.js⠀"]
+        direction LR
+        AUTH["🔑 Auth Service\nJWT · bcryptjs"]
+        QUEUE["📋 Queue Service\nFIFO · Estados"]
+        MANIFEST["📄 Manifest Service\nPasajeros · PDF"]
+        GPS["🗺️ GPS Service\nSocket.io emit"]
+        ANOMALY["🧠 Anomaly Service\nZ-score · FMC130\n★ Opción A"]
+        CLAUDE["🤖 Claude Service\nAI Narrativo\n★ Opción C"]
+    end
+
+    subgraph CAPA4["⠀CAPA 4 · DATOS — PostgreSQL⠀"]
+        direction LR
+        DB1["👥 Usuarios\nConductores\nVehículos"]
+        DB2["📊 Cola · Viajes\nManifiestos\nPasajeros"]
+        DB3["📍 GPS Positions\nSpeed Alerts\nRoute Alerts"]
+    end
+
+    subgraph CAPA5["⠀CAPA 5 · SERVICIOS EXTERNOS⠀"]
+        direction LR
+        ANTHROPIC["🌐 Anthropic API\nClaude Haiku 4.5\n★ Opción C"]
+    end
+
+    FMC -->|"Codec 8\nTCP"| TCP
+    ADMIN -->|"fetch() / axios"| REST
+    DRIVER -->|"fetch() / axios"| REST
+    ADMIN -->|"socket.on()"| WS
+    DRIVER -->|"socket.on()"| WS
+    REST --> AUTH & QUEUE & MANIFEST & GPS
+    TCP --> GPS
+    GPS -->|"socket.emit()"| WS
+    GPS --> ANOMALY
+    AUTH & QUEUE & MANIFEST & GPS & ANOMALY --> DB1 & DB2 & DB3
+    CLAUDE --> ANTHROPIC
+    MANIFEST & ANOMALY --> CLAUDE
+
+    classDef iot fill:#1a3a2a,stroke:#22c55e,color:#86efac
+    classDef frontend fill:#1a2035,stroke:#1D9BD1,color:#7dd3fc
+    classDef comms fill:#1a1a35,stroke:#8b5cf6,color:#c4b5fd
+    classDef backend fill:#1a2535,stroke:#06b6d4,color:#67e8f9
+    classDef database fill:#2a1a35,stroke:#a855f7,color:#d8b4fe
+    classDef external fill:#352a1a,stroke:#FBBF24,color:#fde68a
+
+    class FMC,TCP iot
+    class LANDING,LOGIN,ADMIN,DRIVER frontend
+    class REST,WS comms
+    class AUTH,QUEUE,MANIFEST,GPS,ANOMALY,CLAUDE backend
+    class DB1,DB2,DB3 database
+    class ANTHROPIC external
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Capa IoT (Teltonika FMC130)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1D9BD1"></div> Capa Presentación (Frontend)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div> Capa Comunicación (REST + WebSocket + TCP)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div> Capa Lógica de Negocio (Backend Node.js)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> Capa Datos (PostgreSQL)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FBBF24"></div> Servicios Externos (Claude AI)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div> ★ Por implementar (Opciones A y C)</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ARQUITECTURA FÍSICA
+═══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">2. Arquitectura Física — Infraestructura y Red</div>
+  <div class="section-desc">
+    Muestra los componentes físicos: dispositivos, servidores, red y cómo están conectados.
+    Describe dónde corre cada parte del sistema en el mundo real.
+  </div>
+  <div class="diagram-card">
+    <div class="mermaid">
+graph LR
+    subgraph VEHICULOS["🚐 VEHÍCULOS EN RUTA Juli–Puno"]
+        direction TB
+        V1["Vehículo 001\nPUN-001"]
+        V2["Vehículo 002\nPUN-002"]
+        V3["... hasta\n60 vehículos"]
+        GPS1["📡 FMC130\nGPS + Accel\n4G SIM Claro"]
+        GPS2["📡 FMC130\nGPS + Accel\n4G SIM Claro"]
+        V1 --- GPS1
+        V2 --- GPS2
+    end
+
+    subgraph RED_MOVIL["📶 RED MÓVIL"]
+        CLARO["Claro / Movistar\n4G LTE · 3G · 2G\nFallback automático"]
+    end
+
+    subgraph INTERNET["🌐 INTERNET"]
+        NET["Backbone\nInternet"]
+    end
+
+    subgraph VPS["☁️ VPS DIGITALOCEAN\n1GB RAM · Ubuntu 22.04\n~S/45/mes"]
+        direction TB
+        NGINX["🔀 Nginx\nReverse Proxy\npuerto 80 / 443"]
+        HTTP["⚙️ Node.js HTTP\nExpress API REST\npuerto 3000"]
+        TCPSRV["⚙️ Node.js TCP\nServidor Codec 8\npuerto 5027"]
+        PG["🗄️ PostgreSQL 15\nBase de datos\npuerto 5432"]
+        NGINX -->|"proxy_pass"| HTTP
+        HTTP <-->|"SQL queries\npg pool"| PG
+        TCPSRV -->|"INSERT GPS\npositions"| PG
+        HTTP <-->|"Socket.io\nevents"| TCPSRV
+    end
+
+    subgraph ANTHROPIC_CLOUD["🌐 ANTHROPIC CLOUD"]
+        CLAUDE_API["🤖 Claude API\nclaude-haiku-4-5\nHTTPS"]
+    end
+
+    subgraph USUARIOS["👤 USUARIOS FINALES"]
+        direction TB
+        ADMIN_PC["🖥️ Directiva / Admin\nPC / Laptop\nChrome / Firefox"]
+        DRIVER_PHONE["📱 Conductor\nSmartphone\nChrome Mobile"]
+    end
+
+    GPS1 -->|"TCP Codec 8\npuerto 5027"| CLARO
+    GPS2 -->|"TCP Codec 8\npuerto 5027"| CLARO
+    CLARO --> NET
+    NET -->|"TCP :5027"| TCPSRV
+    NET -->|"HTTPS :443"| NGINX
+    HTTP -->|"HTTPS\nAPI calls"| CLAUDE_API
+    ADMIN_PC -->|"HTTPS"| NET
+    DRIVER_PHONE -->|"4G / WiFi"| NET
+
+    classDef vehicle fill:#1a3a2a,stroke:#22c55e,color:#86efac
+    classDef network fill:#1a1a2a,stroke:#6366f1,color:#a5b4fc
+    classDef server fill:#1a2535,stroke:#1D9BD1,color:#7dd3fc
+    classDef db fill:#2a1a35,stroke:#a855f7,color:#d8b4fe
+    classDef external fill:#352a1a,stroke:#FBBF24,color:#fde68a
+    classDef user fill:#1a2a1a,stroke:#4ade80,color:#bbf7d0
+
+    class V1,V2,V3,GPS1,GPS2 vehicle
+    class CLARO,NET network
+    class NGINX,HTTP,TCPSRV server
+    class PG db
+    class ANTHROPIC_CLOUD,CLAUDE_API external
+    class ADMIN_PC,DRIVER_PHONE user
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Vehículos con dispositivo FMC130</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div> Red móvil e Internet</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1D9BD1"></div> VPS DigitalOcean (servidor central)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> Base de datos PostgreSQL</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FBBF24"></div> API externa Claude AI (Anthropic)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Usuarios finales (admin y conductores)</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     FLUJO DE DATOS GPS EN TIEMPO REAL
+═══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">3. Flujo de Datos GPS — Tiempo Real (Secuencia)</div>
+  <div class="section-desc">
+    Muestra paso a paso cómo viaja un dato GPS desde el vehículo hasta el mapa del administrador.
+  </div>
+  <div class="diagram-card">
+    <div class="mermaid">
+sequenceDiagram
+    participant FMC as 📡 FMC130<br/>(Vehículo)
+    participant TCP as ⚙️ Servidor TCP<br/>(puerto 5027)
+    participant DB as 🗄️ PostgreSQL
+    participant ANOMALY as 🧠 Anomaly<br/>Service
+    participant WS as ⚡ Socket.io
+    participant MAP as 🗺️ Mapa Admin<br/>(Leaflet.js)
+
+    loop Cada 10 segundos en movimiento
+        FMC->>TCP: Paquete Codec 8 (binario)<br/>lat, lon, speed, accel xyz
+        TCP->>TCP: Decodifica paquete Codec 8
+        TCP->>DB: INSERT gps_positions<br/>(lat, lon, speed, heading, sat)
+
+        alt Velocidad > 90 km/h
+            TCP->>DB: INSERT speed_alerts<br/>(severity = warning/critical)
+        end
+
+        TCP->>ANOMALY: Analiza acelerómetro (x,y,z)
+        ANOMALY->>ANOMALY: Calcula Z-score vs historial
+
+        alt Anomalía detectada
+            ANOMALY->>DB: INSERT speed_alerts<br/>(tipo: conducción brusca)
+        end
+
+        TCP->>WS: emit('gps:update', {vehicleId, lat, lon, speed})
+        WS->>MAP: Actualiza marcador en mapa
+        MAP->>MAP: Mueve ícono del vehículo<br/>en tiempo real
+    end
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     FLUJO DE DATOS CLAUDE AI
+═══════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">4. Flujo del Asistente Claude AI — Opción C</div>
+  <div class="section-desc">
+    Muestra cómo el administrador puede consultar en lenguaje natural y recibir análisis inteligentes.
+  </div>
+  <div class="diagram-card">
+    <div class="mermaid">
+sequenceDiagram
+    participant ADMIN as 🖥️ Admin<br/>Panel Web
+    participant API as ⚙️ API REST<br/>(Node.js)
+    participant DB as 🗄️ PostgreSQL
+    participant CLAUDE as 🤖 Claude API<br/>(Anthropic)
+
+    ADMIN->>API: POST /api/ai/query<br/>"¿Cómo estuvo la flota esta semana?"
+    API->>DB: SELECT viajes, ingresos,<br/>alertas últimos 7 días
+    DB-->>API: Datos de 142 viajes,<br/>S/2840, 4 alertas velocidad
+    API->>API: Construye prompt con datos reales
+    API->>CLAUDE: Prompt + datos + pregunta<br/>(claude-haiku-4-5)
+    CLAUDE-->>API: Respuesta narrativa en español
+    API-->>ADMIN: "Esta semana se realizaron 142 viajes<br/>con ingresos de S/2,840. El conductor<br/>Mamani lideró con 18 viajes..."
+    ADMIN->>ADMIN: Muestra en panel de reportes
+    </div>
+  </div>
+</div>
+
+
+<div class="footer">
+  CHASKI AI 2.0 · Arquitectura del Sistema · Universidad Peruana de Ciencias Aplicadas · 2026<br>
+  Rudy Jayde Choque Cruz · Celso Angel Arturo Salvador Pomalaza · Ingeniería de Sistemas de Información
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1a2535',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#1D9BD1',
+      lineColor: '#4a6080',
+      secondaryColor: '#1a3040',
+      tertiaryColor: '#1a1a35',
+      background: '#0a0f1e',
+      mainBkg: '#1a2535',
+      nodeBorder: '#1D9BD1',
+      clusterBkg: '#0f1525',
+      titleColor: '#FBBF24',
+      edgeLabelBackground: '#0a0f1e',
+      actorBkg: '#1a2535',
+      actorBorder: '#1D9BD1',
+      actorTextColor: '#e2e8f0',
+      actorLineColor: '#4a6080',
+      signalColor: '#94a3b8',
+      signalTextColor: '#e2e8f0',
+      labelBoxBkgColor: '#1a2535',
+      labelBoxBorderColor: '#1D9BD1',
+      labelTextColor: '#e2e8f0',
+      loopTextColor: '#e2e8f0',
+      noteBorderColor: '#FBBF24',
+      noteBkgColor: '#352a1a',
+      noteTextColor: '#fde68a',
+      activationBorderColor: '#1D9BD1',
+      activationBkgColor: '#1a3040',
+      sequenceNumberColor: '#e2e8f0'
+    },
+    flowchart: { curve: 'basis', padding: 20 },
+    sequence: { actorMargin: 80, messageMargin: 40, mirrorActors: false }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaski AI — Nuevo Manifiesto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/driver.css">
+  <link rel="stylesheet" href="manifest.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="driver-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sb-logo">
+      <img src="../img/Logo oscuro.png" alt="Chaski AI">
+      <div>
+        <span class="sb-logo-name">CHASKI AI</span>
+        <span class="sb-logo-sub" id="sbAssocSub">ATIPCAR · Juli</span>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-driver-card" id="sidebarDriverCard" onclick="openProfileModal()" style="cursor:pointer" title="Editar perfil">
+    <div class="sdc-avatar">
+      <img src="../img/conductor.png" alt="Conductor" id="sidebarAvatar">
+      <span class="sdc-status-dot online"></span>
+      <div class="sdc-edit-overlay"><i class="fas fa-camera"></i></div>
+    </div>
+    <div class="sdc-info">
+      <strong id="sidebarDriverName">—</strong>
+      <span id="sidebarVehicle">—</span>
+      <span id="sidebarCompany" class="sdc-company">—</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="index.html"    class="sb-link"><i class="fas fa-home"></i><span>Inicio</span></a>
+    <a href="manifest.html" class="sb-link active"><i class="fas fa-file-invoice"></i><span>Nuevo Manifiesto</span></a>
+    <a href="queue.html"    class="sb-link"><i class="fas fa-list-ol"></i><span>Cola de Salida</span></a>
+    <a href="trips.html"    class="sb-link"><i class="fas fa-route"></i><span>Mis Viajes</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="../index.html" class="sb-link sb-link-logout"><i class="fas fa-home"></i><span>Inicio Web</span></a>
+    <button onclick="logout()" class="sb-link sb-link-logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="driver-main">
+  <header class="driver-header">
+    <div class="dh-left">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div>
+        <h1 class="dh-title">Nuevo Manifiesto</h1>
+        <span class="dh-subtitle">Registra los pasajeros antes de salir</span>
+      </div>
+    </div>
+    <div class="dh-right">
+      <div class="dh-time" id="clock">00:00</div>
+    </div>
+  </header>
+
+  <div class="driver-content">
+    <div class="manifest-wrap">
+
+      <!-- ══════════════════════════════════════
+           CABECERA DEL MANIFIESTO
+      ══════════════════════════════════════ -->
+      <div class="manifest-header-card" id="manifestHeaderCard">
+        <div class="mhc-top">
+          <div class="mhc-brand">
+            <span class="mhc-tag">CHASKI AI · ATIPCAR</span>
+            <h2>Manifiesto de Pasajeros</h2>
+            <span class="mhc-assoc">Asociación de Transportistas TipCar · Juli, Puno</span>
+          </div>
+          <div class="mhc-num-wrap">
+            <span class="mhc-num" id="manifestNum">MAN-…</span>
+            <small>N° de manifiesto</small>
+          </div>
+        </div>
+
+        <!-- Fila 1: conductor + empresa + código + placa -->
+        <div class="mhc-grid">
+          <div class="mhc-field">
+            <label><i class="fas fa-user"></i> Conductor</label>
+            <div class="mhc-val" id="mhcDriver">—</div>
+          </div>
+          <div class="mhc-field">
+            <label><i class="fas fa-building"></i> Empresa</label>
+            <div class="mhc-val" id="mhcCompany">—</div>
+          </div>
+          <div class="mhc-field sm">
+            <label><i class="fas fa-hashtag"></i> Código</label>
+            <div class="mhc-val" id="mhcCode">—</div>
+          </div>
+          <div class="mhc-field sm">
+            <label><i class="fas fa-id-card"></i> Placa</label>
+            <div class="mhc-val" id="mhcPlate">—</div>
+          </div>
+          <div class="mhc-field sm">
+            <label><i class="fas fa-certificate"></i> Lic.</label>
+            <div class="mhc-val" id="mhcLicense">—</div>
+          </div>
+          <div class="mhc-field">
+            <label><i class="fas fa-road"></i> Ruta</label>
+            <select id="routeField" class="mhc-select">
+              <option value="juli-puno">Juli → Puno</option>
+              <option value="puno-juli">Puno → Juli</option>
+              <option value="juli-desaguadero">Juli → Desaguadero</option>
+              <option value="desaguadero-juli">Desaguadero → Juli</option>
+            </select>
+          </div>
+          <div class="mhc-field">
+            <label><i class="fas fa-clock"></i> Fecha y Hora Salida</label>
+            <input type="datetime-local" id="departureDT" class="mhc-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           PANEL YAPE QR
+      ══════════════════════════════════════ -->
+      <div class="yape-panel" id="yapePanel">
+        <div class="yape-header" onclick="toggleYapePanel()">
+          <div class="yape-header-left">
+            <i class="fas fa-qrcode"></i>
+            <span>Cobro Digital — QR Yape / Plin</span>
+            <span class="yape-status" id="yapeStatus">No configurado</span>
+          </div>
+          <i class="fas fa-chevron-down yape-chevron" id="yapeChevron"></i>
+        </div>
+        <div class="yape-body" id="yapeBody" style="display:none">
+          <div class="yape-content">
+            <div class="yape-qr-col">
+              <div class="yape-qr-box" id="yapeQrBox">
+                <i class="fas fa-qrcode"></i>
+                <span>Sin QR</span>
+              </div>
+              <div class="yape-qr-actions">
+                <button class="btn-yape-action" onclick="document.getElementById('qrFileInput').click()">
+                  <i class="fas fa-upload"></i> Subir QR
+                </button>
+                <button class="btn-yape-action gold" onclick="generateYapeQr()">
+                  <i class="fas fa-magic"></i> Generar QR
+                </button>
+                <input type="file" id="qrFileInput" accept="image/*" style="display:none" onchange="loadQrImage(event)">
+              </div>
+            </div>
+            <div class="yape-info-col">
+              <div class="yape-field-wrap">
+                <label>N° de celular (Yape / Plin)</label>
+                <div class="yape-phone-row">
+                  <input type="tel" id="yapePhone" placeholder="+51 999 999 999" maxlength="15">
+                  <button onclick="saveYapePhone()"><i class="fas fa-check"></i></button>
+                </div>
+              </div>
+              <div class="yape-field-wrap">
+                <label>Nombre en Yape</label>
+                <input type="text" id="yapeName" placeholder="Como aparece en Yape">
+              </div>
+              <p class="yape-tip"><i class="fas fa-info-circle"></i> Muestra este código QR al pasajero para que escanee y pague con su celular.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           FORMULARIO DE REGISTRO — 1 PASAJERO
+      ══════════════════════════════════════ -->
+      <div class="pax-entry-card">
+        <div class="pax-entry-header">
+          <div class="pax-entry-title">
+            <i class="fas fa-user-plus"></i>
+            <span>Registrar Pasajero</span>
+            <span class="pax-next-seat">Asiento #<strong id="nextSeatNum">1</strong></span>
+          </div>
+        </div>
+
+        <div class="pax-form-body">
+          <!-- Row 1: DNI + Nombre -->
+          <div class="pax-form-row main-row">
+            <div class="pf-group dni-group">
+              <label>DNI</label>
+              <div class="pf-dni-wrap">
+                <input type="tel" id="pfDni" maxlength="8" placeholder="12345678" oninput="this.value=this.value.replace(/\D/g,'')">
+                <span class="pf-dni-check" id="pfDniCheck"></span>
+              </div>
+            </div>
+            <div class="pf-group name-group">
+              <label>Nombre Completo</label>
+              <input type="text" id="pfName" placeholder="Apellidos y nombres del pasajero">
+            </div>
+          </div>
+
+          <!-- Row 2: Origen + Destino + Asiento + Tarifa -->
+          <div class="pax-form-row detail-row">
+            <div class="pf-group">
+              <label>Origen</label>
+              <select id="pfOrigin">
+                <option value="Juli">Juli</option>
+                <option value="Salsete">Salsete</option>
+                <option value="Pomata">Pomata</option>
+                <option value="Desaguadero">Desaguadero</option>
+                <option value="Puno">Puno</option>
+              </select>
+            </div>
+            <div class="pf-group">
+              <label>Destino</label>
+              <select id="pfDest">
+                <option value="Puno">Puno</option>
+                <option value="Juli">Juli</option>
+                <option value="Desaguadero">Desaguadero</option>
+                <option value="Pomata">Pomata</option>
+              </select>
+            </div>
+            <div class="pf-group seat-group">
+              <label>Asiento</label>
+              <input type="number" id="pfSeat" min="1" max="19" value="1">
+            </div>
+            <div class="pf-group fare-group">
+              <label>Tarifa (S/)</label>
+              <input type="number" id="pfFare" step="0.50" min="0" value="7.00">
+            </div>
+          </div>
+
+          <!-- Row 3: Método de pago (big buttons) -->
+          <div class="pax-form-row pay-row">
+            <label class="pay-row-label">Método de Pago</label>
+            <div class="pay-method-btns">
+              <button class="pmb active" data-pay="cash" onclick="selectPay(this)">
+                <img src="../img/soles.png" alt="Efectivo" class="pmb-logo">
+              </button>
+              <button class="pmb" data-pay="yape" onclick="selectPay(this)">
+                <img src="../img/yape.png" alt="Yape" class="pmb-logo">
+              </button>
+              <button class="pmb" data-pay="plin" onclick="selectPay(this)">
+                <img src="../img/plin.png" alt="Plin" class="pmb-logo">
+              </button>
+              <button class="pmb" data-pay="digital" onclick="selectPay(this)">
+                <img src="../img/visa.png" alt="Tarjeta" class="pmb-logo">
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón registrar -->
+        <button class="btn-register-pax" id="btnRegisterPax" onclick="registerPassenger()">
+          <i class="fas fa-user-plus"></i>
+          REGISTRAR PASAJERO
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           LISTA DE PASAJEROS REGISTRADOS
+      ══════════════════════════════════════ -->
+      <div class="pax-list-card">
+        <div class="plc-header">
+          <h3><i class="fas fa-users"></i> Pasajeros Registrados</h3>
+          <div class="plc-header-right">
+            <span class="plc-total">Total: <strong id="passengerCount">0</strong></span>
+            <button class="btn-clear-all" onclick="clearAllPassengers()" title="Limpiar lista">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista vacía -->
+        <div class="plc-empty" id="plcEmpty">
+          <i class="fas fa-user-plus"></i>
+          <p>Usa el formulario de arriba para registrar pasajeros uno a uno</p>
+        </div>
+
+        <!-- Lista de pasajeros -->
+        <div id="passengerList" class="pax-list"></div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           RESUMEN + ACCIONES
+      ══════════════════════════════════════ -->
+      <div class="manifest-summary-card">
+        <div class="ms-stats">
+          <div class="ms-item">
+            <span class="ms-val primary" id="sumTotal">0</span>
+            <span class="ms-label">Pasajeros</span>
+          </div>
+          <div class="ms-item">
+            <span class="ms-val success" id="sumCash">0</span>
+            <span class="ms-label">Efectivo</span>
+          </div>
+          <div class="ms-item">
+            <span class="ms-val cyan" id="sumDigital">0</span>
+            <span class="ms-label">Digital</span>
+          </div>
+          <div class="ms-item">
+            <span class="ms-val gold" id="sumRevenue">S/ 0.00</span>
+            <span class="ms-label">Recaudado</span>
+          </div>
+        </div>
+        <div class="ms-actions">
+          <button class="btn-pdf" onclick="exportPDF()">
+            <i class="fas fa-file-pdf"></i>
+          </button>
+          <button class="btn-wa" onclick="shareWhatsApp()">
+            <i class="fab fa-whatsapp"></i>
+          </button>
+          <button class="btn-save-manifest" onclick="saveManifest()">
+            <i class="fas fa-save"></i> GUARDAR MANIFIESTO
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /manifest-wrap -->
+  </div><!-- /driver-content -->
+</main>
+
+<!-- ══════════════════════════════════════
+     MODAL — EDITAR PERFIL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="profileModal" onclick="closeProfileModal(event)">
+  <div class="modal-box profile-modal-box">
+    <button class="modal-close" onclick="closeProfileModal()"><i class="fas fa-times"></i></button>
+    <div class="profile-modal-header">
+      <div class="profile-avatar-wrap">
+        <img id="profileAvatarImg" src="../img/conductor.png" alt="Avatar">
+        <button class="profile-avatar-edit" onclick="document.getElementById('avatarInput').click()">
+          <i class="fas fa-camera"></i>
+        </button>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="changeAvatar(event)">
+      </div>
+      <div>
+        <h3>Editar Perfil</h3>
+        <p class="modal-sub">Los cambios se guardan localmente en este dispositivo</p>
+      </div>
+    </div>
+    <div class="profile-form">
+      <div class="prf-group">
+        <label>Nombre Completo</label>
+        <input type="text" id="prfName" placeholder="Nombre del conductor">
+      </div>
+      <div class="prf-row">
+        <div class="prf-group">
+          <label>Teléfono</label>
+          <input type="tel" id="prfPhone" placeholder="+51 999 999 999">
+        </div>
+        <div class="prf-group">
+          <label>Cat. Licencia</label>
+          <select id="prfLicense">
+            <option value="AII-b">AII-b</option>
+            <option value="AIII-b">AIII-b</option>
+            <option value="AIII-c">AIII-c</option>
+            <option value="BII-b">BII-b</option>
+          </select>
+        </div>
+      </div>
+      <div class="prf-row">
+        <div class="prf-group">
+          <label>N° Licencia</label>
+          <input type="text" id="prfLicenseNum" placeholder="Q12345678">
+        </div>
+        <div class="prf-group">
+          <label>Venc. Licencia</label>
+          <input type="date" id="prfLicenseExp">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeProfileModal()">Cancelar</button>
+      <button class="btn-modal-save" onclick="saveProfile()">
+        <i class="fas fa-save"></i> Guardar Cambios
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de éxito -->
+<div class="toast-success" id="toastSuccess">
+  <i class="fas fa-check-circle"></i>
+  <span id="toastMsg">Operación exitosa</span>
+</div>
+
+<script src="manifest.js"></script>
+</body>
+</html>

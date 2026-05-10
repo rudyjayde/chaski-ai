@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaski AI — Mis Viajes</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/driver.css">
+  <link rel="stylesheet" href="trips.css">
+</head>
+<body class="driver-body">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sb-logo">
+      <img src="../img/Logo oscuro.png" alt="Chaski AI">
+      <div>
+        <span class="sb-logo-name">CHASKI AI</span>
+        <span class="sb-logo-sub">TipCar · Juli</span>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-driver-card">
+    <div class="sdc-avatar">
+      <img src="../img/conductor.png" alt="Conductor">
+      <span class="sdc-status-dot online"></span>
+    </div>
+    <div class="sdc-info">
+      <strong id="sidebarDriverName">—</strong>
+      <span id="sidebarVehicle">—</span>
+      <span id="sidebarCompany" class="sdc-company">—</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="index.html"    class="sb-link"><i class="fas fa-home"></i><span>Inicio</span></a>
+    <a href="manifest.html" class="sb-link"><i class="fas fa-file-invoice"></i><span>Nuevo Manifiesto</span></a>
+    <a href="queue.html"    class="sb-link"><i class="fas fa-list-ol"></i><span>Cola de Salida</span></a>
+    <a href="trips.html"    class="sb-link active"><i class="fas fa-route"></i><span>Mis Viajes</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="../index.html" class="sb-link sb-link-logout"><i class="fas fa-home"></i><span>Inicio Web</span></a>
+    <button onclick="logout()" class="sb-link sb-link-logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></button>
+  </div>
+</aside>
+
+<main class="driver-main">
+  <header class="driver-header">
+    <div class="dh-left">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div>
+        <h1 class="dh-title">Mis Viajes</h1>
+        <span class="dh-subtitle" id="dateDisplay">—</span>
+      </div>
+    </div>
+    <div class="dh-right">
+      <div class="dh-time" id="clockDisplay">00:00</div>
+    </div>
+  </header>
+
+  <div class="driver-content">
+
+    <!-- KPI del conductor -->
+    <div class="driver-stats-row">
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-route"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="kpiTotal">—</span>
+          <span class="dstat-label">Viajes totales</span>
+        </div>
+      </div>
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-users"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="kpiPax">—</span>
+          <span class="dstat-label">Pasajeros transportados</span>
+        </div>
+      </div>
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-road"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="kpiKm">—</span>
+          <span class="dstat-label">Kilómetros recorridos</span>
+        </div>
+      </div>
+      <div class="dstat-card highlight">
+        <div class="dstat-icon gold"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val gold" id="kpiRev">S/ —</span>
+          <span class="dstat-label">Recaudación total</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de filtros -->
+    <div class="tr-filter-bar">
+      <!-- Tabs de vista -->
+      <div class="tr-view-tabs">
+        <button class="tr-tab active" data-view="period" onclick="setView('period',this)">
+          <i class="fas fa-chart-bar"></i> Período
+        </button>
+        <button class="tr-tab" data-view="day" onclick="setView('day',this)">
+          <i class="fas fa-calendar-day"></i> Por Día
+        </button>
+      </div>
+
+      <!-- Filtro período -->
+      <div class="tr-period-btns" id="periodBtns">
+        <button class="tr-period-btn active" onclick="setDrPeriod(7,  this)">7 días</button>
+        <button class="tr-period-btn"        onclick="setDrPeriod(30, this)">Este mes</button>
+        <button class="tr-period-btn"        onclick="setDrPeriod(90, this)">3 meses</button>
+        <span class="tr-period-label" id="periodLabel">Últimos 7 días</span>
+      </div>
+
+      <!-- Filtro por día -->
+      <div class="tr-day-picker" id="dayPicker" style="display:none">
+        <button class="tr-day-nav" onclick="shiftDay(-1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="tr-day-display">
+          <input type="date" id="dayInput" onchange="renderDayView()">
+          <span id="dayLabel">—</span>
+        </div>
+        <button class="tr-day-nav" onclick="shiftDay(1)"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Vista Período -->
+    <div id="viewPeriod">
+      <div class="d-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-list"></i> Historial de Viajes</h3>
+          <a href="manifest.html" class="card-link">+ Nuevo manifiesto</a>
+        </div>
+        <div class="dt-list" id="tripsList"></div>
+      </div>
+    </div>
+
+    <!-- Vista Por Día (vueltas) -->
+    <div id="viewDay" style="display:none">
+
+      <!-- Resumen del día seleccionado -->
+      <div class="day-summary-card" id="daySummaryCard" style="display:none">
+        <div class="ds-header">
+          <i class="fas fa-calendar-check"></i>
+          <span id="dsDayTitle">—</span>
+        </div>
+        <div class="ds-stats">
+          <div class="ds-item">
+            <span class="ds-val primary" id="dsVueltas">0</span>
+            <span class="ds-label">Vueltas</span>
+          </div>
+          <div class="ds-item">
+            <span class="ds-val" id="dsTrips">0</span>
+            <span class="ds-label">Viajes</span>
+          </div>
+          <div class="ds-item">
+            <span class="ds-val success" id="dsPax">0</span>
+            <span class="ds-label">Pasajeros</span>
+          </div>
+          <div class="ds-item">
+            <span class="ds-val gold" id="dsRevenue">S/ 0</span>
+            <span class="ds-label">Recaudado</span>
+          </div>
+        </div>
+        <!-- Métodos de pago del día -->
+        <div class="ds-pay-breakdown">
+          <div class="ds-pay-item cash">
+            <img src="../img/soles.png" alt="Efectivo" class="ds-pay-logo">
+            <span>Efectivo: <strong id="dsCash">0</strong></span>
+          </div>
+          <div class="ds-pay-item yape">
+            <img src="../img/yape.png" alt="Yape" class="ds-pay-logo">
+            <span>Yape: <strong id="dsYape">0</strong></span>
+          </div>
+          <div class="ds-pay-item plin">
+            <img src="../img/plin-logo.png" alt="Plin" class="ds-pay-logo">
+            <span>Plin: <strong id="dsPlin">0</strong></span>
+          </div>
+          <div class="ds-pay-item digital">
+            <img src="../img/visa.png" alt="Tarjeta" class="ds-pay-logo">
+            <span>Tarjeta: <strong id="dsOther">0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de vueltas del día -->
+      <div class="d-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-sync-alt"></i> Vueltas del Día</h3>
+          <span class="card-badge" id="vueltasBadge">0 vueltas</span>
+        </div>
+        <div id="dayTripsList"></div>
+      </div>
+
+    </div><!-- /viewDay -->
+
+  </div>
+</main>
+
+<script src="trips.js"></script>
+
+</body>
+</html>

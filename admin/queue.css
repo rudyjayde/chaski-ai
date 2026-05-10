@@ -1,0 +1,252 @@
+/* ============================================================
+   queue.css — Estilos de la página de Lista Diaria / Cola
+   Chaski AI v2.0
+   ============================================================
+   Secciones:
+   1.  Banner de reglas
+   2.  Diagrama de terminal (posiciones)
+   3.  Slots de posición (llamando, rampa, exterior)
+   4.  Lista de espera compacta
+   5.  Responsive
+   ============================================================ */
+
+/* ============================================================
+   1. BANNER DE REGLAS
+   ============================================================ */
+.qw-rule-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: rgba(0, 200, 255, 0.06);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+.qw-rule-banner i {
+  color: var(--primary);
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.qw-rule-banner strong { color: var(--text-main); }
+
+
+/* ============================================================
+   2. TARJETA DEL TERMINAL
+   ============================================================ */
+.qw-terminal-card {
+  max-width: 360px;
+  min-width: 280px;
+}
+
+.qw-terminal-diagram {
+  padding: 4px 0;
+}
+
+.qw-terminal-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin: 12px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qw-terminal-label i { color: var(--primary); }
+
+/* Fila de posiciones en rampa/exterior */
+.qw-ramp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Contenedor de posición individual */
+.qw-position { display: flex; flex-direction: column; gap: 4px; }
+
+.qw-pos-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Slot de posición */
+.qw-pos-slot {
+  background: var(--dark-2);
+  border: 1px solid rgba(0, 200, 255, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.qw-pos-slot.outside {
+  border-color: rgba(255, 184, 0, 0.3);
+  color: var(--gold);
+}
+
+.qw-pos-slot.empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
+
+.qw-pos-slot small {
+  font-size: 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Posición "Llamando" más grande */
+#pos-calling .qw-pos-slot {
+  border-color: rgba(0, 255, 148, 0.4);
+  color: var(--success);
+  font-size: 22px;
+  min-height: 70px;
+  background: rgba(0, 255, 148, 0.04);
+  box-shadow: 0 0 10px rgba(0, 255, 148, 0.08);
+  margin-bottom: 8px;
+}
+
+#pos-calling .qw-pos-label {
+  color: var(--success);
+  font-size: 11px;
+}
+
+
+/* ============================================================
+   4. LISTA DE ESPERA COMPACTA
+   ============================================================ */
+.qw-waiting-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.qw-wait-chip {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.qw-wait-chip .chip-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.qw-wait-chip .chip-pos {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.qw-empty-wait {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px 0;
+}
+
+
+/* ============================================================
+   5. BADGES DE POSICIÓN EN TABLA
+   ============================================================ */
+.pos-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pos-badge.calling   { background: rgba(0,255,148,0.1); color: var(--success); border: 1px solid rgba(0,255,148,0.25); }
+.pos-badge.ramp      { background: rgba(0,200,255,0.1); color: var(--primary); border: 1px solid rgba(0,200,255,0.25); }
+.pos-badge.outside   { background: rgba(255,184,0,0.1); color: var(--gold);    border: 1px solid rgba(255,184,0,0.25); }
+.pos-badge.waiting   { background: rgba(100,116,139,0.1); color: var(--text-muted); border: 1px solid var(--border); }
+.pos-badge.departed  { background: rgba(0,255,148,0.06); color: var(--text-muted); border: 1px solid var(--border); }
+.pos-badge.cancelled { background: rgba(255,68,68,0.1); color: var(--danger); border: 1px solid rgba(255,68,68,0.25); }
+
+
+/* ============================================================
+   BOTONES DE ACCIÓN EN COLA
+   ============================================================ */
+.q-act-group {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.q-act-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: background .2s, color .2s, border-color .2s;
+  color: var(--text-muted);
+}
+
+.q-act-btn:hover { filter: brightness(1.25); }
+
+.q-act-cancel   { color: var(--danger,#ef4444);  border-color: rgba(239,68,68,.35); }
+.q-act-cancel:hover { background: rgba(239,68,68,.15); }
+
+.q-act-last     { color: var(--primary,#1b96d0); border-color: rgba(27,150,208,.35); }
+.q-act-last:hover { background: rgba(27,150,208,.15); }
+
+.q-act-sanction { color: var(--gold,#f59e0b);    border-color: rgba(245,158,11,.35); }
+.q-act-sanction:hover { background: rgba(245,158,11,.15); }
+
+
+/* ============================================================
+   6. RESPONSIVE
+   ============================================================ */
+@media (max-width: 1100px) {
+  .dashboard-row { flex-direction: column; }
+  .qw-terminal-card { max-width: 100%; }
+}
+
+@media (max-width: 600px) {
+  .qw-ramp-row { grid-template-columns: 1fr; }
+}

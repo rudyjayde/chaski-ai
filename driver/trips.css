@@ -1,0 +1,364 @@
+/* ============================================================
+   driver/trips.css — Estilos de la página Mis Viajes
+   Chaski AI v2.0
+   ============================================================ */
+
+/* Lista de viajes estilo tarjeta */
+.dt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dt-trip-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.2s;
+}
+
+.dt-trip-card:hover { border-color: rgba(0,200,255,0.3); }
+
+.dt-trip-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  opacity: 0.4;
+  min-width: 40px;
+  text-align: center;
+}
+
+.dt-trip-body { flex: 1; min-width: 0; }
+
+.dt-trip-route {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.dt-trip-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dt-trip-meta span { display: flex; align-items: center; gap: 4px; }
+.dt-trip-meta i    { color: var(--primary); font-size: 11px; }
+
+.dt-trip-stats {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.dt-stat { }
+
+.dt-stat-val {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+}
+
+.dt-stat-val.gold { color: var(--gold); }
+
+.dt-stat-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.dt-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.dt-empty i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+  opacity: 0.3;
+}
+
+/* ── Filtros ── */
+.tr-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 0;
+}
+
+.tr-view-tabs {
+  display: flex;
+  gap: 6px;
+  border-right: 1px solid var(--border);
+  padding-right: 16px;
+}
+
+.tr-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tr-tab.active {
+  background: rgba(29,155,209,0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.tr-period-btns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tr-period-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tr-period-btn.active, .tr-period-btn:hover {
+  background: rgba(29,155,209,0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.tr-period-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+/* Day picker */
+.tr-day-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tr-day-nav {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.tr-day-nav:hover { border-color: var(--primary); color: var(--primary); }
+
+.tr-day-display {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tr-day-display input[type="date"] {
+  position: absolute;
+  width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+#dayLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 6px 12px;
+  background: rgba(29,155,209,0.06);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* Payment mini badges */
+.dt-pay-mini {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.dpm {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dpm.cash    { background: rgba(16,185,129,0.1); color: var(--success); }
+.dpm.yape    { background: rgba(29,155,209,0.1); color: var(--primary); }
+
+/* ── Resumen del día ── */
+.day-summary-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+}
+
+.ds-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ds-header i { color: var(--gold); }
+
+.ds-stats {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.ds-item { text-align: center; }
+
+.ds-val {
+  display: block;
+  font-family: var(--font-title);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.ds-val.primary { color: var(--primary); }
+.ds-val.success { color: var(--success); }
+.ds-val.gold    { color: var(--gold); }
+.ds-val         { color: var(--text); }
+
+.ds-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.ds-pay-breakdown {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.ds-pay-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.ds-pay-item strong { font-weight: 700; }
+.ds-pay-item i { font-size: 0.8rem; }
+.ds-pay-logo { width: 18px; height: 18px; object-fit: contain; }
+.dpm-logo    { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
+.ds-pay-item.cash    { color: var(--success); background: rgba(16,185,129,0.06); }
+.ds-pay-item.yape    { color: var(--primary); background: rgba(29,155,209,0.06); }
+.ds-pay-item.plin    { color: var(--accent);  background: rgba(99,102,241,0.06); }
+.ds-pay-item.digital { color: var(--gold);    background: rgba(251,191,36,0.06); }
+
+/* ── Vueltas ── */
+.vuelta-block {
+  margin-bottom: 18px;
+}
+
+.vuelta-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  margin-bottom: 6px;
+}
+
+.vuelta-num {
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.vuelta-half-badge {
+  font-size: 0.68rem;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.vuelta-trip {
+  margin-left: 12px;
+  margin-bottom: 6px;
+}
+
+.vuelta-dir-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(29,155,209,0.08);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dt-empty p { font-size: 0.88rem; margin-top: 6px; }
+
+@media (max-width: 600px) {
+  .dt-trip-stats { display: none; }
+  .tr-filter-bar { flex-direction: column; align-items: flex-start; }
+}

@@ -1,0 +1,527 @@
+/* ============================================================
+   admin/assistant-widget.css — Widget flotante del Asistente IA
+   Chaski AI v2.0
+   ============================================================ */
+
+/* ── Botón flotante ─────────────────────────────────────────── */
+#aiFloatBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1D9BD1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(29,155,209,0.45);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  outline: none;
+}
+
+#aiFloatBtn:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 8px 28px rgba(29,155,209,0.6);
+  background: #2aaee3;
+}
+
+#aiFloatBtn:active {
+  transform: scale(0.96);
+}
+
+/* Anillo de pulso cuando está cerrado */
+#aiFloatBtn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(29,155,209,0.35);
+  animation: ai-ring-pulse 2.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ai-ring-pulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  70%  { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* Ocultar el anillo cuando el panel está abierto */
+#aiFloatBtn.open::before { display: none; }
+
+/* Badge de mensajes no leídos */
+#aiFloatBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #050810;
+  display: none;
+}
+
+#aiFloatBadge.visible { display: flex; }
+
+/* Ícono dentro del botón — cambia entre robot y X */
+#aiFloatBtn .ai-icon-robot { display: flex; }
+#aiFloatBtn .ai-icon-close { display: none; }
+#aiFloatBtn.open .ai-icon-robot { display: none; }
+#aiFloatBtn.open .ai-icon-close { display: flex; }
+
+/* ── Panel flotante ─────────────────────────────────────────── */
+#aiWidgetPanel {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  z-index: 9998;
+  width: 380px;
+  height: 520px;
+  background: #161b22;
+  border: 0.5px solid #30363d;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 60px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.04);
+
+  /* Estado inicial — oculto */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px) scale(0.97);
+  transform-origin: bottom right;
+  transition: opacity 0.22s ease, transform 0.25s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+#aiWidgetPanel.open {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Header del panel ───────────────────────────────────────── */
+.aw-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  background: #0d1117;
+  border-bottom: 0.5px solid #30363d;
+  flex-shrink: 0;
+}
+
+.aw-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(29,155,209,0.2), rgba(99,102,241,0.2));
+  border: 1px solid rgba(29,155,209,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #1D9BD1;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.aw-status-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2px solid #0d1117;
+  animation: aw-pulse 2s infinite;
+}
+
+@keyframes aw-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+}
+
+.aw-header-info { flex: 1; min-width: 0; }
+
+.aw-header-info h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e6edf3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aw-header-info span {
+  font-size: 0.65rem;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aw-header-info span::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.aw-close-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid #30363d;
+  border-radius: 7px;
+  color: #8b949e;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: border-color 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.aw-close-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+/* ── Área de mensajes ───────────────────────────────────────── */
+.aw-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.aw-messages::-webkit-scrollbar { width: 3px; }
+.aw-messages::-webkit-scrollbar-track { background: transparent; }
+.aw-messages::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+/* Mensaje de bienvenida */
+.aw-welcome {
+  text-align: center;
+  padding: 20px 10px 10px;
+  color: #8b949e;
+}
+
+.aw-welcome .aw-welcome-icon {
+  font-size: 2.2rem;
+  color: #1D9BD1;
+  opacity: 0.55;
+  margin-bottom: 10px;
+}
+
+.aw-welcome h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  color: #e6edf3;
+  margin-bottom: 5px;
+}
+
+.aw-welcome p {
+  font-size: 0.73rem;
+  line-height: 1.5;
+  color: #8b949e;
+}
+
+/* Fila de mensaje */
+.aw-msg {
+  display: flex;
+  gap: 7px;
+  align-items: flex-end;
+  max-width: 100%;
+}
+
+.aw-msg.user { flex-direction: row-reverse; }
+
+.aw-msg-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  flex-shrink: 0;
+}
+
+.aw-msg.ai   .aw-msg-avatar { background: rgba(29,155,209,0.12); color: #1D9BD1; border: 1px solid #30363d; }
+.aw-msg.user .aw-msg-avatar { background: rgba(29,155,209,0.1);  color: #1D9BD1; }
+
+.aw-bubble {
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  max-width: 272px;
+  word-wrap: break-word;
+}
+
+.aw-msg.ai   .aw-bubble { background: #0d1117; border: 1px solid #30363d; border-radius: 4px 12px 12px 12px; color: #e6edf3; }
+.aw-msg.user .aw-bubble { background: rgba(29,155,209,0.12); border: 1px solid rgba(29,155,209,0.2); border-radius: 12px 4px 12px 12px; color: #e6edf3; }
+
+.aw-time {
+  font-size: 0.58rem;
+  color: #8b949e;
+  margin-top: 3px;
+  padding: 0 2px;
+}
+
+.aw-msg.user .aw-time { text-align: right; }
+.aw-msg-content { display: flex; flex-direction: column; max-width: calc(100% - 32px); }
+.aw-msg.user .aw-msg-content { align-items: flex-end; }
+
+/* KPI mini-cards dentro del chat */
+.aw-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 272px;
+}
+
+.aw-kpi {
+  background: rgba(29,155,209,0.06);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.aw-kpi-lbl { font-size: 0.6rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.07em; display: block; }
+.aw-kpi-val { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: #1D9BD1; display: block; }
+.aw-kpi-val.gold  { color: #fbbf24; }
+.aw-kpi-val.green { color: #10b981; }
+
+/* Mini tabla */
+.aw-table-wrap {
+  margin-top: 8px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.aw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.aw-table th {
+  background: rgba(29,155,209,0.06);
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b949e;
+  border-bottom: 1px solid #30363d;
+  white-space: nowrap;
+}
+
+.aw-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: #e6edf3;
+  white-space: nowrap;
+}
+
+.aw-table tr:last-child td { border-bottom: none; }
+
+/* Tarjeta de exportar PDF */
+.aw-export-card {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.22);
+  border-radius: 10px;
+  padding: 10px 12px;
+  max-width: 272px;
+}
+
+.aw-export-icon {
+  width: 32px; height: 32px;
+  background: rgba(251,191,36,0.1);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fbbf24;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.aw-export-info { flex: 1; min-width: 0; }
+.aw-export-info strong { display: block; color: #e6edf3; font-size: 0.74rem; }
+.aw-export-info span   { font-size: 0.62rem; color: #8b949e; }
+
+.aw-export-btn {
+  background: #fbbf24;
+  color: #0a0a0a;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.2s;
+  flex-shrink: 0;
+}
+
+.aw-export-btn:hover { filter: brightness(1.1); }
+
+/* Indicador de typing */
+.aw-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 12px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 4px 12px 12px 12px;
+}
+
+.aw-typing span {
+  width: 5px; height: 5px;
+  background: #1D9BD1;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: aw-bounce 1.4s infinite;
+}
+
+.aw-typing span:nth-child(1) { animation-delay: 0s; }
+.aw-typing span:nth-child(2) { animation-delay: 0.2s; }
+.aw-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes aw-bounce {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40%           { opacity: 1;   transform: translateY(-4px); }
+}
+
+/* ── Chips de sugerencias ───────────────────────────────────── */
+.aw-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px 12px 4px;
+  flex-shrink: 0;
+  border-top: 0.5px solid #30363d;
+}
+
+.aw-chip {
+  background: rgba(29,155,209,0.06);
+  border: 1px solid #30363d;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.68rem;
+  color: #8b949e;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+}
+
+.aw-chip:hover {
+  background: rgba(29,155,209,0.12);
+  border-color: rgba(29,155,209,0.3);
+  color: #1D9BD1;
+}
+
+/* ── Input ──────────────────────────────────────────────────── */
+.aw-input-row {
+  display: flex;
+  gap: 7px;
+  align-items: flex-end;
+  padding: 10px 12px 14px;
+  flex-shrink: 0;
+  border-top: 0.5px solid #30363d;
+  background: #0d1117;
+}
+
+.aw-input-wrap {
+  flex: 1;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  padding: 8px 10px;
+  transition: border-color 0.2s;
+}
+
+.aw-input-wrap:focus-within { border-color: #1D9BD1; }
+
+.aw-input-wrap i { color: #1D9BD1; font-size: 0.75rem; flex-shrink: 0; margin-bottom: 1px; }
+
+#awInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #e6edf3;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  resize: none;
+  max-height: 80px;
+  min-height: 20px;
+}
+
+#awInput::placeholder { color: rgba(139,148,158,0.5); }
+
+.aw-send-btn {
+  width: 36px;
+  height: 36px;
+  background: #1D9BD1;
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.aw-send-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+.aw-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Responsive (móvil) ─────────────────────────────────────── */
+@media (max-width: 480px) {
+  #aiWidgetPanel {
+    width: calc(100vw - 24px);
+    right: 12px;
+    bottom: 80px;
+    height: 480px;
+  }
+
+  #aiFloatBtn { right: 16px; bottom: 16px; }
+}

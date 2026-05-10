@@ -1,0 +1,631 @@
+/* ============================================================
+   manifests.css — Estilos de la página de Manifiestos
+   Chaski AI v2.0
+   ============================================================
+   Secciones:
+   1.  Panel de búsqueda y filtros
+   2.  KPI mini-row
+   3.  Tabla de manifiestos (sortable, badges de estado)
+   4.  Paginación
+   5.  Modal de detalle de manifiesto
+   6.  Responsive
+   ============================================================ */
+
+/* ============================================================
+   1. PANEL DE BÚSQUEDA Y FILTROS
+   ============================================================ */
+.mf-search-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.mf-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Campo de búsqueda por texto */
+.mf-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.mf-input-wrap i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.mf-input-wrap input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s;
+}
+
+.mf-input-wrap input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Selects de filtro */
+.mf-select {
+  padding: 9px 12px;
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  min-width: 160px;
+  transition: border-color 0.2s;
+}
+
+.mf-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Inputs de fecha */
+.mf-date-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mf-date-wrap label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mf-date {
+  padding: 9px 12px;
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  width: 140px;
+  transition: border-color 0.2s;
+}
+
+.mf-date:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Botones de la barra de filtros */
+.mf-btn-search {
+  padding: 9px 18px;
+  background: var(--primary);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.mf-btn-search:hover {
+  background: #00aadd;
+  transform: translateY(-1px);
+}
+
+.mf-btn-clear {
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.mf-btn-clear:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Línea de resultados + exportar */
+.mf-results-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.mf-results-info span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.mf-results-info strong {
+  color: var(--text-main);
+}
+
+.mf-export-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.mf-btn-exp {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.mf-btn-exp:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+
+/* ============================================================
+   2. KPI MINI-ROW
+   ============================================================ */
+.mf-kpi-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.mf-kpi {
+  flex: 1;
+  min-width: 150px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mf-kpi i {
+  font-size: 20px;
+  color: var(--primary);
+  width: 24px;
+  text-align: center;
+}
+
+.mf-kpi-val {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.mf-kpi-val.gold { color: var(--gold); }
+
+.mf-kpi-lbl {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+
+/* ============================================================
+   3. TABLA DE MANIFIESTOS
+   ============================================================ */
+
+/* Cabeceras ordenables */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+th.sortable:hover {
+  color: var(--primary);
+}
+
+th.sortable.asc  i::before { content: '\f0de'; } /* fa-sort-up */
+th.sortable.desc i::before { content: '\f0dd'; } /* fa-sort-down */
+
+/* Badge de estado */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.status-badge.completed {
+  background: rgba(0, 255, 148, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(0, 255, 148, 0.25);
+}
+
+.status-badge.pending {
+  background: rgba(255, 184, 0, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(255, 184, 0, 0.25);
+}
+
+.status-badge.transit {
+  background: rgba(0, 200, 255, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+}
+
+/* Botones de acción en la tabla */
+.tbl-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tbl-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.tbl-btn:hover          { border-color: var(--primary); color: var(--primary); }
+.tbl-btn.danger:hover   { border-color: var(--danger);  color: var(--danger);  }
+.tbl-btn.success:hover  { border-color: var(--success); color: var(--success); }
+
+/* Código de vehículo destacado */
+.vehicle-code {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Número de manifiesto */
+.manifest-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+/* Nombre de empresa (badge pequeño) */
+.company-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  background: rgba(0, 200, 255, 0.08);
+  color: var(--text-sub);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   4. PAGINACIÓN
+   ============================================================ */
+.mf-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 0 4px;
+  flex-wrap: wrap;
+}
+
+.pg-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.pg-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pg-btn.active {
+  background: var(--primary);
+  color: #000;
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+.pg-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pg-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 0 6px;
+}
+
+
+/* ============================================================
+   5. MODAL DE DETALLE DE MANIFIESTO
+   ============================================================ */
+.mf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 24, 0.88);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.mf-modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.mf-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px 32px;
+  max-width: 860px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mf-modal-overlay.open .mf-modal {
+  transform: translateY(0) scale(1);
+}
+
+/* Scrollbar del modal */
+.mf-modal::-webkit-scrollbar       { width: 5px; }
+.mf-modal::-webkit-scrollbar-track { background: transparent; }
+.mf-modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* Header del modal */
+.mf-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mf-modal-header h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 4px;
+}
+
+.mf-modal-header h2 i {
+  color: var(--primary);
+  margin-right: 8px;
+}
+
+.mf-modal-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.mf-modal-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mf-modal-close:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Grid de info del viaje */
+.mf-modal-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.mi-item {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.mi-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.mi-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Título de sección en el modal */
+.mf-modal-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-sub);
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mf-modal-section-title i { color: var(--primary); }
+
+/* Resumen del modal */
+.mf-modal-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.ms-item {
+  text-align: center;
+  padding: 12px;
+  background: var(--dark-2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.ms-val {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+}
+
+.ms-val.gold { color: var(--gold); }
+
+.ms-lbl {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Botones de acción del modal */
+.mf-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.mf-btn-act {
+  padding: 9px 20px;
+  border-radius: 9px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: transform 0.15s, filter 0.2s;
+}
+
+.mf-btn-act:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+.mf-btn-act.primary { background: var(--primary); color: #000; }
+.mf-btn-act.success { background: #25D366; color: #000; }
+.mf-btn-act.ghost   {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   6. RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .mf-search-row { flex-direction: column; align-items: stretch; }
+  .mf-select, .mf-date  { min-width: unset; width: 100%; }
+  .mf-btn-search { justify-content: center; }
+  .mf-kpi-row { gap: 8px; }
+  .mf-kpi     { min-width: 140px; }
+}
+
+@media (max-width: 600px) {
+  .mf-modal { padding: 18px 16px; }
+  .mf-modal-actions { justify-content: stretch; }
+  .mf-btn-act { flex: 1; justify-content: center; }
+}

@@ -1,0 +1,644 @@
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║              CHASKI AI 2.0 — DOCUMENTACIÓN TÉCNICA COMPLETA DEL SISTEMA         ║
+║          Asociación de Transportistas Virgen de Fátima · Juli, Puno, Perú        ║
+║                         Versión 1.0 · Abril 2026                                 ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+
+  Proyecto de Tesis · UPC · Ingeniería de Sistemas de Información
+  Autores: Rudy Jayde Choque Cruz · Celso Angel Arturo Salvador Pomalaza
+  Curso: Taller de Desempeño Profesional
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ÍNDICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. RESUMEN DEL SISTEMA
+  2. ESTRUCTURA DE CARPETAS
+  3. FRONTEND — Estado actual y pendientes
+  4. BACKEND — Estado actual y pendientes
+  5. BASE DE DATOS — Tablas y propósito
+  6. IOT — Integración Teltonika FMC130
+  7. OPCIÓN A — Detección de Anomalías en Conducción (POR IMPLEMENTAR)
+  8. OPCIÓN C — Asistente Claude AI (POR IMPLEMENTAR)
+  9. VARIABLES DE ENTORNO
+  10. ESTADO GLOBAL DEL PROYECTO (qué está listo / qué falta)
+  11. CREDENCIALES DE DEMO
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1. RESUMEN DEL SISTEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  CHASKI AI es una plataforma web para digitalizar y optimizar la gestión
+  operativa de la Asociación de Transportistas Virgen de Fátima, que opera la
+  ruta Juli–Puno (98.5 km) con más de 60 vehículos socios.
+
+  PROBLEMA QUE RESUELVE:
+    · Control de cola de salida hecho a mano (conflictos entre conductores)
+    · Manifiestos de viaje en papel (se pierden, ilegibles, lentos)
+    · Sin visibilidad GPS de la flota en tiempo real
+    · Sin reportes de ingresos ni desempeño de conductores
+
+  TECNOLOGÍAS USADAS:
+    · Frontend  : HTML5 + CSS3 + JavaScript Vanilla
+    · Backend   : Node.js + Express.js
+    · Base datos: PostgreSQL
+    · Tiempo real: Socket.io (WebSockets)
+    · Mapas     : Leaflet.js
+    · Animación : Three.js (landing page), GSAP
+    · Auth      : JWT + bcryptjs
+    · IoT       : Teltonika FMC130 (dispositivo GPS, protocolo Codec 8 TCP)
+    · IA        : Claude API de Anthropic (Opción C, por implementar)
+
+  RUTA DE LA ASOCIACIÓN: Juli (Chucuito, Puno) → Puno · 98.5 km · S/ 7.00
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  2. ESTRUCTURA DE CARPETAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Chaski AI 2.0/
+  │
+  ├── index.html              ← Landing page pública (Three.js 3D Earth)
+  ├── index.css               ← Estilos de la landing
+  ├── main.js                 ← Animación Three.js de la landing
+  ├── login.html              ← Login dual (Admin / Conductor)
+  ├── login.css
+  ├── login.js                ← Lógica de autenticación (demo hardcodeado)
+  │
+  ├── admin/                  ← Panel del Administrador
+  │   ├── index.html          ← Dashboard principal con mapa GPS
+  │   ├── index.js
+  │   ├── index.css
+  │   ├── drivers.html        ← Gestión de conductores socios
+  │   ├── drivers.js
+  │   ├── drivers.css
+  │   ├── manifests.html      ← Manifiestos de viaje digitales
+  │   ├── manifests.js
+  │   ├── manifests.css
+  │   ├── queue.html          ← Cola de salida diaria (FIFO)
+  │   ├── queue.js
+  │   ├── queue.css
+  │   ├── reports.html        ← Reportes de ingresos y desempeño
+  │   ├── reports.js
+  │   ├── reports.css
+  │   ├── trips.html          ← Historial de viajes y alertas de velocidad
+  │   ├── trips.js
+  │   ├── trips.css
+  │   ├── vehicles.html       ← Gestión de vehículos con FMC130
+  │   └── vehicles.js
+  │       vehicles.css
+  │
+  ├── driver/                 ← Panel del Conductor
+  │   ├── index.html          ← Dashboard conductor (GPS, estado, cola)
+  │   ├── index.js
+  │   ├── index.css
+  │   ├── manifest.html       ← Registro de pasajeros del viaje
+  │   ├── manifest.js
+  │   ├── manifest.css
+  │   ├── queue.html          ← Estado del conductor en la cola
+  │   ├── queue.js
+  │   ├── queue.css
+  │   ├── trips.html          ← Historial de viajes del conductor
+  │   └── trips.js
+  │       trips.css
+  │
+  ├── css/
+  │   ├── main.css            ← Sistema de diseño global (variables, reset)
+  │   └── driver.css          ← Estilos base del panel conductor
+  │
+  ├── img/                    ← Imágenes del sistema
+  │   ├── logo oscuro.png
+  │   ├── Chaski-asistente.png
+  │   ├── conductor.png
+  │   ├── fondochaski.png
+  │   ├── robotlogo.png
+  │   ├── virgen de fatima.jpg
+  │   ├── yape.png, plin.png, visa.png, soles.png
+  │
+  ├── img-conductores/        ← Fotos de perfil de conductores
+  │   └── conductor-eloy-mamani.jpg
+  │
+  ├── backend/                ← API REST + Servidor TCP IoT (Node.js)
+  │   ├── package.json        ← Dependencias del backend
+  │   ├── .env.example        ← Plantilla de variables de entorno
+  │   ├── server.js           ← [PENDIENTE] Servidor HTTP Express
+  │   ├── tcp-server.js       ← [PENDIENTE] Servidor TCP Codec 8 para FMC130
+  │   ├── routes/             ← [PENDIENTE] Endpoints de la API REST
+  │   ├── middleware/         ← [PENDIENTE] Auth JWT, validaciones
+  │   └── services/           ← [PENDIENTE] Lógica de negocio, anomalías, IA
+  │
+  ├── database/
+  │   └── schema.sql          ← Esquema completo PostgreSQL (listo)
+  │
+  └── Docs/
+      └── SISTEMA_TOTAL.txt   ← Este archivo
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  3. FRONTEND — Estado actual
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ESTADO: Completo en estructura visual. Usa datos DEMO (hardcodeados en JS).
+  Pendiente: conectar cada página a la API REST real del backend.
+
+  DISEÑO:
+    · Paleta: Azul profundo #1D9BD1 · Ámbar dorado #FBBF24 · Fondos oscuros
+    · Fuentes: Space Grotesk (títulos) · DM Sans (cuerpo)
+    · Estilo: Glassmorphism (backdrop-blur, bordes semitransparentes)
+    · Responsive: Mobile-first, sidebar colapsable en admin
+
+  ── LANDING PAGE (index.html) ────────────────────────────────────────────────
+    · Animación 3D con Three.js (globo terráqueo giratorio)
+    · Hero con slogan y botones CTA
+    · Sección de características del sistema (6 cards)
+    · Stack tecnológico
+    · Footer con info de la asociación
+    PENDIENTE: Ninguno (estático, no requiere backend)
+
+  ── LOGIN (login.html / login.js) ────────────────────────────────────────────
+    · Toggle visual Admin / Conductor
+    · Campo usuario + contraseña
+    · Animaciones de entrada
+    PENDIENTE: Reemplazar validación demo por llamada a POST /api/auth/login
+    DEMO ACTUAL: usuario "admin" / contraseña "admin123" (hardcodeado en login.js)
+
+  ── ADMIN: DASHBOARD (admin/index.html) ──────────────────────────────────────
+    · KPI cards: viajes del día, ingresos, pasajeros, alertas
+    · Mapa Leaflet con posiciones demo de 6 vehículos en ruta Juli–Puno
+    · Lista de actividad reciente
+    · Panel de alertas operativas
+    PENDIENTE:
+      - Conectar mapa a datos reales via Socket.io (cuando backend TCP esté listo)
+      - Conectar KPIs a GET /api/dashboard/stats
+      - Actualizar posiciones GPS en tiempo real
+
+  ── ADMIN: CONDUCTORES (admin/drivers.html) ──────────────────────────────────
+    · Tabla de conductores con foto, DNI, licencia, estado, vehículo asignado
+    · Botones: ver detalle, editar, desactivar
+    PENDIENTE:
+      - Cargar datos desde GET /api/drivers
+      - Implementar formulario de edición con PUT /api/drivers/:id
+
+  ── ADMIN: MANIFIESTOS (admin/manifests.html) ────────────────────────────────
+    · Lista de manifiestos del día con estado (abierto/cerrado/exportado)
+    · Vista detalle de pasajeros por manifiesto
+    · Botón de exportar PDF y enviar por WhatsApp
+    PENDIENTE:
+      - Conectar a GET /api/manifests
+      - Implementar generación real de PDF (librería: PDFKit o html2pdf)
+      - Implementar envío por WhatsApp API (Twilio o WhatsApp Business API)
+
+  ── ADMIN: COLA DE SALIDA (admin/queue.html) ─────────────────────────────────
+    · Lista FIFO de vehículos registrados para el día
+    · Estados: Esperando → Llamando → En ruta → Finalizado
+    · Botones para avanzar estado manualmente
+    PENDIENTE:
+      - Conectar a GET /api/queue/today
+      - Implementar Socket.io para actualización automática en tiempo real
+      - Conectar botones de estado a PUT /api/queue/:id/status
+
+  ── ADMIN: VIAJES (admin/trips.html) ─────────────────────────────────────────
+    · Historial de viajes con velocidad máxima y alertas
+    · Indicador de alerta si velocidad > 90 km/h
+    PENDIENTE:
+      - Conectar a GET /api/trips
+      - Vincular alertas de velocidad a tabla speed_alerts de la BD
+
+  ── ADMIN: VEHÍCULOS (admin/vehicles.html) ───────────────────────────────────
+    · Tabla de flota con placa, modelo, capacidad, GPS device (FMC130), estado
+    PENDIENTE:
+      - Conectar a GET /api/vehicles
+      - Agregar estado de conexión GPS en tiempo real (Socket.io)
+
+  ── ADMIN: REPORTES (admin/reports.html) ─────────────────────────────────────
+    · Gráficas de ingresos por empresa, viajes por semana, ocupación
+    · Filtros por fecha y empresa
+    PENDIENTE:
+      - Conectar a GET /api/reports?from=&to=&company=
+      - [OPCIÓN C] Agregar botón "Generar resumen con IA" → Claude API
+
+  ── CONDUCTOR: DASHBOARD (driver/index.html) ─────────────────────────────────
+    · Estado del conductor: posición en cola, próximo viaje
+    · Mini mapa GPS con posición actual del vehículo
+    · Panel info del dispositivo GPS (Teltonika FMC130)
+    · GPS simulado con setInterval (datos random para demo)
+    PENDIENTE:
+      - Conectar a GET /api/driver/me (datos reales del conductor)
+      - Reemplazar GPS simulado por Socket.io con datos reales del FMC130
+
+  ── CONDUCTOR: MANIFIESTO (driver/manifest.html) ─────────────────────────────
+    · Formulario para agregar pasajeros al viaje activo
+    · Campo DNI, nombre, asiento, tipo de pago (efectivo/Yape/Plin)
+    · Resumen de ingresos del viaje
+    PENDIENTE:
+      - Conectar a POST /api/manifests/:id/passengers
+      - Conectar a GET /api/manifests/active (manifiesto abierto del conductor)
+
+  ── CONDUCTOR: COLA (driver/queue.html) ──────────────────────────────────────
+    · Registro del conductor en la cola del día
+    · Horario de apertura: 18:30 (lógica en JS)
+    · Muestra posición actual en la cola
+    PENDIENTE:
+      - Conectar a POST /api/queue/register
+      - Conectar a GET /api/queue/my-position
+
+  ── CONDUCTOR: VIAJES (driver/trips.html) ────────────────────────────────────
+    · Historial de viajes del conductor autenticado
+    PENDIENTE:
+      - Conectar a GET /api/trips?driver=me
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  4. BACKEND — Estado actual y estructura a construir
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ESTADO: Solo tiene package.json y .env.example. Todo lo demás está PENDIENTE.
+  PRIORIDAD: Este es el componente más urgente del proyecto.
+
+  DEPENDENCIAS INSTALADAS (package.json):
+    · express       ^4.18.2   → Servidor HTTP y API REST
+    · pg            ^8.11.3   → Conexión a PostgreSQL
+    · jsonwebtoken  ^9.0.2    → Autenticación JWT
+    · bcryptjs      ^2.4.3    → Hash de contraseñas
+    · socket.io     ^4.7.2    → WebSockets (GPS tiempo real, cola)
+    · multer        ^1.4.5    → Subida de archivos (fotos conductores)
+    · uuid          ^9.0.0    → Generación de IDs únicos
+    · dotenv        ^16.3.1   → Variables de entorno
+    · cors          ^2.8.5    → CORS para el frontend
+    PENDIENTE INSTALAR:
+    · @anthropic-ai/sdk       → Claude API (Opción C)
+    · net (nativo Node.js)    → Servidor TCP para FMC130 (ya incluido en Node)
+
+  ── ARCHIVOS A CREAR ─────────────────────────────────────────────────────────
+
+  backend/server.js
+    · Inicializa Express en puerto 3000
+    · Configura CORS, JSON parser, rutas
+    · Inicializa Socket.io para tiempo real
+    · Llama a tcp-server.js al arrancar
+
+  backend/tcp-server.js  [HITO 4 DEL CHARTER]
+    · Servidor TCP en puerto 5027
+    · Recibe paquetes binarios del FMC130 (protocolo Codec 8)
+    · Decodifica: latitud, longitud, velocidad, acelerómetro (x,y,z)
+    · Guarda en tabla gps_positions de PostgreSQL
+    · Emite via Socket.io al dashboard admin (mapa en tiempo real)
+    · Genera alertas automáticas en speed_alerts si speed > 90 km/h
+
+  backend/routes/auth.js
+    · POST /api/auth/login    → Valida usuario/contraseña, retorna JWT
+    · POST /api/auth/logout   → Invalida sesión
+    · GET  /api/auth/me       → Datos del usuario autenticado
+
+  backend/routes/drivers.js
+    · GET    /api/drivers              → Lista todos los conductores
+    · GET    /api/drivers/:id          → Detalle de un conductor
+    · POST   /api/drivers              → Crear conductor
+    · PUT    /api/drivers/:id          → Editar conductor
+    · DELETE /api/drivers/:id          → Desactivar conductor
+
+  backend/routes/vehicles.js
+    · GET    /api/vehicles             → Lista vehículos con estado GPS
+    · GET    /api/vehicles/:id/gps     → Última posición GPS de un vehículo
+    · PUT    /api/vehicles/:id         → Editar datos del vehículo
+
+  backend/routes/queue.js
+    · GET    /api/queue/today          → Cola de salida del día actual
+    · POST   /api/queue/register       → Conductor se registra en la cola
+    · PUT    /api/queue/:id/status     → Avanzar estado (waiting→ready→departed)
+    · GET    /api/queue/my-position    → Posición del conductor autenticado
+
+  backend/routes/manifests.js
+    · GET    /api/manifests            → Lista manifiestos (filtros: fecha, estado)
+    · GET    /api/manifests/active     → Manifiesto abierto del conductor actual
+    · POST   /api/manifests            → Crear nuevo manifiesto
+    · POST   /api/manifests/:id/passengers → Agregar pasajero al manifiesto
+    · PUT    /api/manifests/:id/close  → Cerrar manifiesto del viaje
+    · GET    /api/manifests/:id/pdf    → Generar y descargar PDF del manifiesto
+
+  backend/routes/trips.js
+    · GET    /api/trips                → Historial de viajes (filtros opcionales)
+    · POST   /api/trips                → Iniciar un viaje
+    · PUT    /api/trips/:id/end        → Finalizar viaje
+
+  backend/routes/reports.js
+    · GET    /api/reports/summary      → KPIs del dashboard
+    · GET    /api/reports/revenue      → Ingresos por empresa y fecha
+    · GET    /api/reports/drivers      → Desempeño por conductor
+    · GET    /api/reports/alerts       → Historial de alertas de velocidad
+
+  backend/routes/ai.js               [OPCIÓN C — por implementar]
+    · POST   /api/ai/query             → Recibe pregunta en texto, responde con Claude
+
+  backend/services/anomalyService.js [OPCIÓN A — por implementar]
+    · Analiza datos GPS del FMC130 (acelerómetro + velocidad)
+    · Calcula Z-score por conductor
+    · Registra eventos en speed_alerts y route_alerts
+
+  backend/services/claudeService.js  [OPCIÓN C — por implementar]
+    · Wrapper de la Claude API de Anthropic
+    · Construye prompts con datos reales de la BD
+    · Retorna resúmenes en lenguaje natural en español
+
+  backend/middleware/auth.js
+    · Verifica JWT en headers de cada petición protegida
+    · Inyecta req.user con datos del conductor/admin
+
+  backend/db/pool.js
+    · Pool de conexiones a PostgreSQL con pg
+    · Configurado con variables de entorno de .env
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  5. BASE DE DATOS — PostgreSQL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ESTADO: Esquema completo en database/schema.sql · LISTO para ejecutar.
+  Ejecutar en pgAdmin: crear DB "chaski ai2" y correr el script SQL.
+
+  TABLAS Y SU PROPÓSITO:
+
+  associations        → Agrupa asociaciones (Virgen de Fátima, TipCar, etc.)
+  companies           → Empresas de transporte dentro de cada asociación
+  vehicle_types       → Tipos de vehículo (HiAce 12p, Sprinter 19p, Master 15p)
+  users               → Usuarios del sistema (admin, driver, supervisor) + JWT auth
+  vehicles            → Flota de vehículos con campo gps_device_id (FMC130)
+  drivers             → Conductores socios vinculados a usuario y vehículo
+  routes              → Rutas definidas (Juli→Puno, Puno→Juli · 98.5 km · S/7.00)
+  exit_queue          → Cola de salida diaria FIFO con estados
+  manifests           → Manifiestos de viaje (cabecera: vehículo, conductor, ruta)
+  manifest_passengers → Pasajeros de cada manifiesto (DNI, asiento, pago)
+  trips               → Viajes realizados (velocidad media, máxima, duración)
+  gps_positions       → Telemetría GPS del FMC130 (lat, lon, speed, altitud, sat)
+  speed_alerts        → Alertas de velocidad (>90 km/h) con severidad y ACK
+  route_alerts        → Alertas de desvío de ruta, paradas no programadas
+  system_alerts       → Notificaciones generales del sistema para el panel admin
+
+  JERARQUÍA DE DATOS:
+    Asociación → Empresa → Vehículo → Driver → Trip → Manifest → Passengers
+                                    ↑
+                            gps_positions (FMC130)
+                            speed_alerts
+                            route_alerts
+
+  ÍNDICES CREADOS (rendimiento):
+    · gps_positions  → idx_gps_vehicle_time (vehicle_id + recorded_at DESC)
+    · gps_positions  → idx_gps_trip
+    · vehicles       → idx_vehicles_company, idx_vehicles_code
+    · manifests      → idx_manifests_vehicle, idx_manifests_date
+    · trips          → idx_trips_vehicle, idx_trips_date
+    · exit_queue     → idx_exit_queue_date
+    · speed_alerts   → idx_speed_alerts_vehicle
+
+  DATOS DEMO INCLUIDOS EN EL SCRIPT:
+    · 1 asociación: Asociación de Transportistas TipCar
+    · 5 empresas: Virgen de Fátima, Surandino, San Francisco de Borja,
+                  Virgen de Fátima II, San Miguel
+    · 2 rutas: Juli→Puno y Puno→Juli
+    · 1 admin: admin.tipcar / admin123
+    · 5 conductores: eloy.mamani, jose.quispe, abraham.morales,
+                     juan.perez, carlos.ticona
+    · 5 vehículos: PUN-001 a PUN-005
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  6. IOT — INTEGRACIÓN TELTONIKA FMC130
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ESTADO: Base de datos lista. Servidor TCP PENDIENTE (Hito 4, 16/05–05/06/2026)
+
+  DISPOSITIVO: Teltonika FMC130
+    · Conectividad: 4G LTE Cat 1 / 3G / 2G (fallback automático)
+    · GNSS: GPS + GLONASS + BeiDou + Galileo (precisión 2–5 metros)
+    · Protocolo: Codec 8 sobre TCP (binario comprimido)
+    · Alimentación: 10–30V DC (batería del vehículo)
+    · Memoria: 128 MB store & forward (guarda datos sin cobertura)
+    · Acelerómetro: triaxial (detecta frenazos, aceleración agresiva, impactos)
+
+  FLUJO DE DATOS:
+    [FMC130 en vehículo]
+         │ TCP puerto 5027
+         ↓
+    [backend/tcp-server.js]   ← decodifica Codec 8
+         │
+         ├─ INSERT en gps_positions (lat, lon, speed, heading, accel xyz)
+         ├─ Si speed > 90 → INSERT en speed_alerts
+         ├─ Si accel anómalo → llama a anomalyService.js (Opción A)
+         └─ Socket.io emit('gps:update') → mapa Leaflet admin en tiempo real
+
+  CONFIGURACIÓN DEL DISPOSITIVO (con Teltonika Configurator — Windows):
+    · Server IP  : IP del VPS DigitalOcean (ej. 142.93.12.34)
+    · Server Port: 5027
+    · Protocol   : Codec 8
+    · Min Period : 10 segundos (en movimiento) / 60 segundos (estático)
+    · Min Distance: 50 metros
+    · Acelerometer: habilitado, sensibilidad media
+
+  ESTRUCTURA DEL PAQUETE CODEC 8 (simplificado):
+    [2 bytes: zeros] [4 bytes: data length] [1 byte: Codec ID=0x08]
+    [1 byte: AVL count] [ AVL records... ] [1 byte: AVL count]
+    [4 bytes: CRC-16]
+
+    Cada AVL record contiene:
+      · Timestamp (8 bytes, Unix ms)
+      · Lat, Lon (4 bytes cada uno, factor 10^7)
+      · Altitude, Speed, Heading
+      · IO Elements: incluye acelerómetro (ID 17: X, 18: Y, 19: Z)
+
+  PILOTO: Se inicia con 1 dispositivo FMC130 (S/300). Luego se escala a 60.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  7. OPCIÓN A — DETECCIÓN DE ANOMALÍAS EN CONDUCCIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ESTADO: POR IMPLEMENTAR (después de que el servidor TCP esté funcionando)
+  ARCHIVO: backend/services/anomalyService.js
+
+  QUÉ DETECTA:
+    · Frenazo brusco      → acelerómetro eje Z < -0.4g
+    · Aceleración agresiva → acelerómetro eje Z > 0.4g
+    · Curva agresiva       → acelerómetro eje X o Y > 0.3g
+    · Velocidad excesiva   → speed > 90 km/h (ya en BD como speed_alerts)
+    · Patrón anómalo       → Z-score > 2 desviaciones estándar del historial
+
+  ALGORITMO Z-SCORE (sin librerías externas):
+    1. Obtener historial de los últimos 30 días del conductor
+    2. Calcular media (μ) y desviación estándar (σ) por métrica
+    3. Para cada nueva lectura: Z = (valor - μ) / σ
+    4. Si |Z| > 2.0 → evento anómalo → registrar en speed_alerts con
+       severity = 'warning' (Z > 2) o 'critical' (Z > 3)
+
+  PUNTAJE DE CONDUCCIÓN (0-10 por conductor):
+    · Base 10 puntos
+    · -0.5 por cada alerta 'warning'
+    · -1.0 por cada alerta 'critical'
+    · Mostrado en admin/drivers.html y en admin/reports.html
+
+  OUTPUT EN EL SISTEMA:
+    · Panel admin → sección "Alertas" con conductor, tipo, severidad, ubicación
+    · Panel admin → tabla conductores con columna "Puntaje de conducción"
+    · [Opción C] → Claude AI puede generar un resumen narrativo de las anomalías
+
+  VALOR PARA LA TESIS:
+    Usa el acelerómetro triaxial del FMC130 (dato técnico real del charter).
+    Es el componente de "Inteligencia" que justifica el nombre CHASKI AI.
+    Defensa ante jurado: "Sistema de scoring de conducción basado en análisis
+    estadístico de telemetría IoT con detección de anomalías por Z-score"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  8. OPCIÓN C — ASISTENTE CLAUDE AI (Anthropic)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ESTADO: POR IMPLEMENTAR
+  ARCHIVOS: backend/services/claudeService.js + backend/routes/ai.js
+  INSTALAR: npm install @anthropic-ai/sdk
+
+  MODELO RECOMENDADO: claude-haiku-4-5 (rápido, económico, suficiente para reportes)
+  COSTO ESTIMADO: ~$2–5 USD/mes para uso moderado (60 conductores, consultas diarias)
+
+  FUNCIONALIDADES A IMPLEMENTAR:
+
+  1. GENERADOR DE REPORTES EN LENGUAJE NATURAL (Panel Admin → Reportes)
+     · Admin escribe: "Dame el resumen de esta semana"
+     · Sistema consulta BD: viajes, ingresos, alertas de los últimos 7 días
+     · Claude genera: párrafo narrativo en español con insights principales
+     · Ejemplo output: "Esta semana se realizaron 142 viajes con ingresos totales
+       de S/ 2,840. El conductor Mamani registró el mayor número de viajes (18).
+       Se generaron 4 alertas de velocidad, 3 de ellas en el tramo Ilave-Zepita."
+
+  2. ANÁLISIS DE CONDUCTOR ESPECÍFICO
+     · Admin pregunta: "¿Cómo estuvo el conductor Quispe este mes?"
+     · Claude recibe: historial de viajes, alertas, puntaje de conducción
+     · Output: evaluación personalizada con recomendaciones
+
+  3. ALERTAS INTELIGENTES (en lugar de alertas genéricas)
+     · En vez de: "Alerta: velocidad 98 km/h"
+     · Con Claude: "El conductor José Quispe superó 90 km/h a las 14:32
+       en el tramo Ilave–Pomata (km 45). Es la segunda alerta del mes."
+
+  4. ASISTENTE DE CONDUCTOR (Panel Driver — futuro)
+     · Conductor pregunta: "¿A qué hora me toca salir?"
+     · Claude consulta posición en cola y responde en lenguaje natural
+
+  INTEGRACIÓN TÉCNICA:
+    Variable de entorno:  ANTHROPIC_API_KEY=sk-ant-xxxxx
+    Endpoint del backend: POST /api/ai/query
+    Body: { "query": "texto de la pregunta", "context": "driver|admin" }
+    Response: { "response": "texto generado por Claude" }
+
+  FLUJO INTERNO:
+    1. Frontend envía pregunta al endpoint POST /api/ai/query
+    2. claudeService.js consulta datos relevantes de la BD (según contexto)
+    3. Construye prompt con los datos reales + pregunta del usuario
+    4. Llama a Claude API (claude-haiku-4-5)
+    5. Retorna respuesta en español al frontend
+    6. Frontend muestra en un panel de chat o en la sección de reportes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  9. VARIABLES DE ENTORNO (.env)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Archivo: backend/.env  (copiar desde .env.example y completar)
+  NUNCA subir .env a GitHub. Solo subir .env.example.
+
+  PORT=3000                          → Puerto del servidor HTTP
+  NODE_ENV=development               → development | production
+  TCP_PORT=5027                      → Puerto del servidor TCP para FMC130
+
+  DB_HOST=localhost                  → Host PostgreSQL (localhost en dev)
+  DB_PORT=5432                       → Puerto PostgreSQL
+  DB_NAME=chaski ai2                 → Nombre de la base de datos
+  DB_USER=postgres                   → Usuario de PostgreSQL
+  DB_PASSWORD=tu_contraseña_aqui     → Contraseña de PostgreSQL
+
+  JWT_SECRET=clave_super_secreta     → Clave para firmar tokens JWT (cambiar)
+  JWT_EXPIRES_IN=24h                 → Duración del token de sesión
+
+  FRONTEND_URL=http://localhost:5500 → URL del frontend (para CORS)
+
+  MAX_SPEED_LIMIT=90                 → Límite de velocidad en km/h para alertas
+  SPEED_ALERT_DURATION_MINUTES=4    → Duración mínima de alerta para registrar
+
+  ANTHROPIC_API_KEY=sk-ant-xxxxxxx  → [OPCIÓN C] API key de Claude (Anthropic)
+                                       Obtener en: console.anthropic.com
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  10. ESTADO GLOBAL DEL PROYECTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ╔══════════════════════════════════════╦════════════╦═════════════════════╗
+  ║ COMPONENTE                           ║  ESTADO    ║ HITO DEL CHARTER    ║
+  ╠══════════════════════════════════════╬════════════╬═════════════════════╣
+  ║ Landing page (index.html)            ║ ✅ LISTO   ║ —                   ║
+  ║ Login (login.html)                   ║ ✅ LISTO   ║ —                   ║
+  ║ Panel Admin — todas las páginas      ║ ✅ LISTO   ║ Hito 3              ║
+  ║ Panel Conductor — todas las páginas  ║ ✅ LISTO   ║ Hito 5              ║
+  ║ Diseño UI/UX (CSS, glassmorphism)    ║ ✅ LISTO   ║ —                   ║
+  ║ Imágenes y assets                    ║ ✅ LISTO   ║ —                   ║
+  ╠══════════════════════════════════════╬════════════╬═════════════════════╣
+  ║ Base de datos PostgreSQL (schema)    ║ ✅ LISTO   ║ Hito 2              ║
+  ║ Datos demo en BD                     ║ ✅ LISTO   ║ —                   ║
+  ╠══════════════════════════════════════╬════════════╬═════════════════════╣
+  ║ Backend server.js (Express)          ║ ⏳ PENDIENTE║ Hito 3 · 01/05     ║
+  ║ API REST — Auth (JWT)                ║ ⏳ PENDIENTE║ Hito 3 · 01/05     ║
+  ║ API REST — Conductores               ║ ⏳ PENDIENTE║ Hito 3 · 15/05     ║
+  ║ API REST — Cola de salida            ║ ⏳ PENDIENTE║ Hito 3 · 15/05     ║
+  ║ API REST — Manifiestos               ║ ⏳ PENDIENTE║ Hito 3 · 15/05     ║
+  ║ API REST — Viajes y reportes         ║ ⏳ PENDIENTE║ Hito 5 · 20/06     ║
+  ╠══════════════════════════════════════╬════════════╬═════════════════════╣
+  ║ Servidor TCP Codec 8 (FMC130)        ║ ⏳ PENDIENTE║ Hito 4 · 16/05     ║
+  ║ Mapa GPS con datos reales (Socket.io)║ ⏳ PENDIENTE║ Hito 4 · 05/06     ║
+  ╠══════════════════════════════════════╬════════════╬═════════════════════╣
+  ║ Opción A — Detección de anomalías    ║ ⏳ PENDIENTE║ Hito 4–5            ║
+  ║ Opción C — Asistente Claude AI       ║ ⏳ PENDIENTE║ Hito 5              ║
+  ╠══════════════════════════════════════╬════════════╬═════════════════════╣
+  ║ Pruebas funcionales con usuarios     ║ ⏳ PENDIENTE║ Hito 6 · 21/06     ║
+  ║ Pruebas de campo ruta Juli–Puno      ║ ⏳ PENDIENTE║ Hito 6 · 30/06     ║
+  ║ Validación directiva asociación      ║ ⏳ PENDIENTE║ Hito 7 · 08/07     ║
+  ║ Documentación final + despliegue     ║ ⏳ PENDIENTE║ Hito 8–9 · 30/07   ║
+  ╚══════════════════════════════════════╩════════════╩═════════════════════╝
+
+  ORDEN DE TRABAJO RECOMENDADO:
+    1. backend/server.js + db/pool.js + middleware/auth.js
+    2. routes/auth.js (login real con JWT)
+    3. routes/queue.js + routes/manifests.js (core operativo)
+    4. tcp-server.js (integración FMC130) ← Hito 4
+    5. services/anomalyService.js (Opción A)
+    6. services/claudeService.js + routes/ai.js (Opción C)
+    7. Conectar frontend a API (reemplazar datos demo)
+    8. Pruebas de campo + validación
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  11. CREDENCIALES DE DEMO (solo para desarrollo local)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  IMPORTANTE: Estas credenciales son solo para pruebas locales.
+              Cambiar todas antes del despliegue en producción.
+
+  PANEL ADMIN:
+    Usuario   : admin
+    Contraseña: admin123
+
+  PANEL CONDUCTOR (5 conductores demo):
+    Usuario   : conductor
+    Contraseña: 1234
+
+  BASE DE DATOS (demo en schema.sql):
+    Admin BD  : admin.tipcar / admin123
+    Conductores: eloy.mamani, jose.quispe, abraham.morales,
+                 juan.perez, carlos.ticona  (todos con contraseña: admin123)
+
+  CLAVE JWT (cambiar en .env antes de producción):
+    JWT_SECRET: chaski_ai_super_secret_key_2050_tipcar
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FIN DEL DOCUMENTO · Actualizar cada vez que se complete un componente
+  Última actualización: Abril 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

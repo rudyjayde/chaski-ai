@@ -1,0 +1,195 @@
+/* ============================================================
+   drivers.css — Estilos de la página de Conductores
+   Chaski AI v2.0
+   ============================================================
+   Secciones:
+   1.  Grid de perfiles de conductores
+   2.  Tarjeta de conductor
+   3.  Avatar del conductor
+   4.  Stats de rendimiento en modal
+   5.  Responsive
+   ============================================================ */
+
+/* ============================================================
+   1. GRID DE PERFILES
+   ============================================================ */
+.dr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.dr-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.dr-empty i {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+
+/* ============================================================
+   2. TARJETA DE CONDUCTOR
+   ============================================================ */
+.dr-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.25s, transform 0.2s, box-shadow 0.2s;
+}
+
+.dr-card:hover {
+  border-color: rgba(0, 200, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Nombre */
+.dr-card-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 10px 0 4px;
+}
+
+/* Empresa */
+.dr-card-company {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mini stats debajo del nombre */
+.dr-card-mini {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 10px;
+}
+
+.dr-mini-item { text-align: center; }
+
+.dr-mini-val {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+}
+
+.dr-mini-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   3. AVATAR DEL CONDUCTOR
+   ============================================================ */
+.dr-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: #fff;
+  border: 2px solid var(--border);
+  background: linear-gradient(135deg, #0a1628, #1a2d4a);
+}
+
+/* Avatar grande en modal */
+.dr-modal-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: #fff;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #0a1628, #1a2d4a);
+  border: 2px solid var(--primary);
+}
+
+/* Colores de avatar por índice */
+.dr-avatar.c0, .dr-modal-avatar.c0 { border-color: rgba(0,200,255,0.5); }
+.dr-avatar.c1, .dr-modal-avatar.c1 { border-color: rgba(0,255,148,0.5); }
+.dr-avatar.c2, .dr-modal-avatar.c2 { border-color: rgba(255,184,0,0.5);  }
+.dr-avatar.c3, .dr-modal-avatar.c3 { border-color: rgba(255,68,68,0.5);  }
+.dr-avatar.c4, .dr-modal-avatar.c4 { border-color: rgba(138,80,255,0.5); }
+
+
+/* ============================================================
+   4. STATS DE RENDIMIENTO EN MODAL
+   ============================================================ */
+.dr-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.dr-stat-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+
+.dr-stat-val {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.dr-stat-val.primary { color: var(--primary); }
+.dr-stat-val.success { color: var(--success); }
+.dr-stat-val.gold    { color: var(--gold);    }
+.dr-stat-val.danger  { color: var(--danger);  }
+
+.dr-stat-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+
+/* ============================================================
+   5. RESPONSIVE
+   ============================================================ */
+@media (max-width: 700px) {
+  .dr-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 400px) {
+  .dr-grid { grid-template-columns: 1fr; }
+}

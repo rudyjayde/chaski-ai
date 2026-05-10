@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaski AI — Cola de Salida</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/driver.css">
+  <link rel="stylesheet" href="queue.css">
+</head>
+<body class="driver-body">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sb-logo">
+      <img src="../img/Logo oscuro.png" alt="Chaski AI">
+      <div>
+        <span class="sb-logo-name">CHASKI AI</span>
+        <span class="sb-logo-sub">TipCar · Juli</span>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-driver-card">
+    <div class="sdc-avatar">
+      <img src="../img/conductor.png" alt="Conductor">
+      <span class="sdc-status-dot online"></span>
+    </div>
+    <div class="sdc-info">
+      <strong id="sidebarDriverName">—</strong>
+      <span id="sidebarVehicle">—</span>
+      <span id="sidebarCompany" class="sdc-company">—</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="index.html"    class="sb-link"><i class="fas fa-home"></i><span>Inicio</span></a>
+    <a href="manifest.html" class="sb-link"><i class="fas fa-file-invoice"></i><span>Nuevo Manifiesto</span></a>
+    <a href="queue.html"    class="sb-link active"><i class="fas fa-list-ol"></i><span>Cola de Salida</span></a>
+    <a href="trips.html"    class="sb-link"><i class="fas fa-route"></i><span>Mis Viajes</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="../index.html" class="sb-link sb-link-logout"><i class="fas fa-home"></i><span>Inicio Web</span></a>
+    <button onclick="logout()" class="sb-link sb-link-logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></button>
+  </div>
+</aside>
+
+<main class="driver-main">
+  <header class="driver-header">
+    <div class="dh-left">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div>
+        <h1 class="dh-title">Cola de Salida</h1>
+        <span class="dh-subtitle" id="dateDisplay">—</span>
+      </div>
+    </div>
+    <div class="dh-right">
+      <div class="dh-time" id="clockDisplay">00:00</div>
+    </div>
+  </header>
+
+  <div class="driver-content">
+
+    <!-- ══ MI TURNO — Tarjeta destacada ══ -->
+    <div class="dq-my-turn-hero" id="myTurnCard">
+      <div class="dq-turn-left">
+        <div class="dq-turn-badge">MI POSICIÓN</div>
+        <div class="dq-turn-num" id="myTurnNum">#—</div>
+        <div class="dq-turn-meta">
+          <span id="myTurnPos">Calculando...</span>
+        </div>
+      </div>
+      <div class="dq-turn-center">
+        <div class="dq-wait-info">
+          <i class="fas fa-clock"></i>
+          <div>
+            <span class="dq-wait-val" id="myWaitTime">—</span>
+            <span class="dq-wait-label">Espera aprox.</span>
+          </div>
+        </div>
+        <div class="dq-route-info">
+          <i class="fas fa-road"></i>
+          <div>
+            <span class="dq-wait-val">Juli → Puno</span>
+            <span class="dq-wait-label">Ruta asignada</span>
+          </div>
+        </div>
+      </div>
+      <div class="dq-turn-right">
+        <button class="dq-btn-register" id="btnRegister" onclick="registerInQueue()">
+          <i class="fas fa-user-plus"></i>
+          <span>Inscribirme</span>
+          <small>para mañana</small>
+        </button>
+        <button class="dq-btn-absent" onclick="reportAbsence()">
+          <i class="fas fa-user-times"></i>
+          <span>No saldré hoy</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ ESTADO EN TIEMPO REAL ══ -->
+    <div class="dq-live-bar">
+      <div class="dq-live-item calling">
+        <i class="fas fa-bullhorn"></i>
+        <div>
+          <span class="dq-live-label">LLAMANDO</span>
+          <span class="dq-live-val" id="liveCallingUnit">—</span>
+        </div>
+      </div>
+      <div class="dq-live-sep"><i class="fas fa-arrow-right"></i></div>
+      <div class="dq-live-item ramp">
+        <i class="fas fa-bus"></i>
+        <div>
+          <span class="dq-live-label">EN RAMPA</span>
+          <span class="dq-live-val" id="liveRampUnits">— / —</span>
+        </div>
+      </div>
+      <div class="dq-live-sep"><i class="fas fa-arrow-right"></i></div>
+      <div class="dq-live-item ready">
+        <i class="fas fa-check-circle"></i>
+        <div>
+          <span class="dq-live-label">LISTOS</span>
+          <span class="dq-live-val" id="liveReadyUnits">—</span>
+        </div>
+      </div>
+      <div class="dq-live-clock">
+        <i class="fas fa-satellite-dish pulse-icon"></i>
+        <span>EN VIVO</span>
+      </div>
+    </div>
+
+    <!-- ══ COLA COMPLETA ══ -->
+    <div class="d-card">
+      <div class="d-card-header">
+        <h3><i class="fas fa-list-ol"></i> Cola del Día — <span id="queueDateLabel" style="color:var(--primary);font-weight:400;font-size:0.9rem">—</span></h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="queueTotalBadge" class="card-badge">0 unidades</span>
+          <span class="card-badge live">EN VIVO</span>
+        </div>
+      </div>
+      <div class="dq-full-list" id="fullQueueList">
+        <!-- Generado por queue.js -->
+      </div>
+    </div>
+
+    <!-- ══ REGLAS ══ -->
+    <div class="d-card dq-rules-card">
+      <div class="d-card-header" onclick="this.parentElement.classList.toggle('expanded')" style="cursor:pointer">
+        <h3><i class="fas fa-info-circle"></i> Reglamento de la Cola</h3>
+        <i class="fas fa-chevron-down" style="color:var(--text-muted);transition:transform 0.3s"></i>
+      </div>
+      <div class="dq-rules" style="display:none">
+        <div class="dq-rule-item">
+          <div class="dq-rule-icon"><i class="fas fa-clock"></i></div>
+          <div>
+            <strong>Inscripción: 6:30 PM – 11:59 PM</strong>
+            <p>Puedes inscribirte para el día siguiente solo dentro de este horario.</p>
+          </div>
+        </div>
+        <div class="dq-rule-item">
+          <div class="dq-rule-icon warning"><i class="fas fa-bus"></i></div>
+          <div>
+            <strong>5 unidades mínimas en terminal</strong>
+            <p>1 llamando, 2 en rampa y 2 en exterior. Debes llegar antes de tu turno.</p>
+          </div>
+        </div>
+        <div class="dq-rule-item">
+          <div class="dq-rule-icon danger"><i class="fas fa-tachometer-alt"></i></div>
+          <div>
+            <strong>Velocidad máxima: 90 km/h</strong>
+            <p>Solo se permite superar 90 km/h por máximo 4 minutos para adelantar.</p>
+          </div>
+        </div>
+        <div class="dq-rule-item">
+          <div class="dq-rule-icon gold"><i class="fas fa-user-check"></i></div>
+          <div>
+            <strong>Presentación: 15 minutos antes</strong>
+            <p>Debes llegar al terminal 15 minutos antes de tu turno para no perder tu lugar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="queue.js"></script>
+
+</body>
+</html>

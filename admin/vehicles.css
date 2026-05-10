@@ -1,0 +1,320 @@
+/* ============================================================
+   vehicles.css — Estilos de la página de Vehículos
+   Chaski AI v2.0
+   ============================================================
+   Secciones:
+   1.  Barra de filtros
+   2.  KPI strip de flota
+   3.  Vista cuadrícula (tarjetas de vehículo)
+   4.  Badge de estado del vehículo
+   5.  Toggle vista cuadrícula / lista
+   6.  Responsive
+   ============================================================ */
+
+/* ============================================================
+   1. BARRA DE FILTROS
+   ============================================================ */
+.vh-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+/* Toggle vista */
+.vh-view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.vh-view-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.vh-view-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #000;
+}
+
+.vh-view-btn:hover:not(.active) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+
+/* ============================================================
+   2. KPI STRIP DE FLOTA
+   ============================================================ */
+.vh-kpi-strip {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.vh-kpi-item {
+  flex: 1;
+  background: var(--card-bg);
+  padding: 14px 20px;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.vh-kpi-item:hover { background: var(--dark-2); }
+
+.vh-kpi-num {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.vh-kpi-lbl {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* Color accent por tipo de estado */
+.vh-kpi-item.active      .vh-kpi-num { color: var(--success); }
+.vh-kpi-item.waiting     .vh-kpi-num { color: var(--gold);    }
+.vh-kpi-item.maintenance .vh-kpi-num { color: #f97316;        }
+.vh-kpi-item.inactive    .vh-kpi-num { color: var(--text-muted); }
+
+
+/* ============================================================
+   3. VISTA CUADRÍCULA — TARJETAS DE VEHÍCULO
+   ============================================================ */
+.vh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+/* Tarjeta individual */
+.vh-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  transition: border-color 0.25s, transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.vh-card:hover {
+  border-color: rgba(0, 200, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Banda de color lateral según estado */
+.vh-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 14px 0 0 14px;
+}
+
+.vh-card.active      ::before,
+.vh-card.active.vh-card::before      { background: var(--success); }
+.vh-card.waiting.vh-card::before     { background: var(--gold);    }
+.vh-card.maintenance.vh-card::before { background: #f97316;        }
+.vh-card.inactive.vh-card::before    { background: var(--border);  }
+
+/* Encabezado de la tarjeta */
+.vh-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.vh-card-code {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.vh-card-plate {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Ícono GPS + indicador de velocidad */
+.vh-card-gps {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.vh-gps-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.vh-gps-dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+.vh-gps-speed {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.vh-gps-speed.alert { color: var(--danger); font-weight: 700; }
+
+/* Info de la empresa y conductor */
+.vh-card-company {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vh-card-driver {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 12px;
+}
+
+.vh-card-driver i { color: var(--primary); font-size: 11px; }
+
+/* Mini stats dentro de la tarjeta */
+.vh-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.vh-stat {
+  text-align: center;
+}
+
+.vh-stat-val {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-main);
+}
+
+.vh-stat-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+
+/* ============================================================
+   4. BADGE DE ESTADO
+   ============================================================ */
+.vh-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+}
+
+.vh-status-badge.active {
+  background: rgba(0, 255, 148, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(0, 255, 148, 0.25);
+}
+
+.vh-status-badge.waiting {
+  background: rgba(255, 184, 0, 0.1);
+  color: var(--gold);
+  border: 1px solid rgba(255, 184, 0, 0.25);
+}
+
+.vh-status-badge.maintenance {
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.vh-status-badge.inactive {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+
+/* ============================================================
+   5. MENSAJE "SIN RESULTADOS"
+   ============================================================ */
+.vh-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.vh-empty i {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+
+/* ============================================================
+   6. RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .vh-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .vh-kpi-strip { flex-wrap: wrap; }
+  .vh-kpi-item { min-width: 100px; }
+}
+
+@media (max-width: 600px) {
+  .vh-filter-bar { flex-direction: column; align-items: stretch; }
+  .vh-view-toggle { margin-left: 0; justify-content: flex-end; }
+}

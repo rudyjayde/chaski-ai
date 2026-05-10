@@ -1,0 +1,437 @@
+/* ============================================================
+   driver/queue.css — Estilos de la Cola de Salida del conductor
+   Chaski AI v2.0
+   ============================================================ */
+
+/* Tarjeta de "mi turno" */
+.dq-my-turn-card {
+  background: linear-gradient(135deg, rgba(0,200,255,0.08), rgba(0,200,255,0.02));
+  border: 1px solid rgba(0,200,255,0.3);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dq-turn-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dq-turn-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.dq-turn-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.dq-turn-pos {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.dq-btn-register {
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.dq-btn-register:hover    { background: #00aadd; transform: translateY(-1px); }
+.dq-btn-register:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Reglas */
+.dq-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dq-rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px;
+  background: var(--dark-2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.dq-rule-item i {
+  color: var(--primary);
+  font-size: 16px;
+  margin-top: 2px;
+  width: 20px;
+  text-align: center;
+}
+
+.dq-rule-item strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 3px;
+}
+
+.dq-rule-item p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Lista completa */
+.dq-full-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dq-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.2s;
+}
+
+.dq-list-item.is-you {
+  border-color: rgba(0,200,255,0.4);
+  background: rgba(0,200,255,0.04);
+}
+
+.dq-list-item.departed { opacity: 0.45; }
+
+.dq-list-pos {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 30px;
+  text-align: center;
+}
+
+.dq-list-pos.active { color: var(--primary); }
+
+.dq-list-unit {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 40px;
+}
+
+.dq-list-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dq-list-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dq-list-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.dq-list-wait {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.dq-you-tag {
+  background: var(--primary);
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  letter-spacing: 0.05em;
+}
+
+.dq-list-company {
+  font-size: 11px;
+  color: var(--text-muted);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .dq-list-company { display: none; }
+}
+
+/* ── Mi turno hero ── */
+.dq-my-turn-hero {
+  background: var(--card-bg);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  align-items: center;
+  box-shadow: 0 0 40px rgba(29,155,209,0.1);
+}
+
+.dq-turn-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.dq-turn-num {
+  font-family: var(--font-title);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.dq-turn-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.dq-turn-center {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.dq-wait-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,10,30,0.4);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.dq-wait-info i { color: var(--gold); font-size: 1.2rem; }
+
+.dq-wait-val {
+  display: block;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dq-wait-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.dq-route-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,10,30,0.4);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.dq-route-info i { color: var(--success); font-size: 1.2rem; }
+
+.dq-turn-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dq-btn-register {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-d));
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 0 18px rgba(29,155,209,0.3);
+}
+
+.dq-btn-register span { font-size: 0.9rem; }
+.dq-btn-register small { font-size: 0.68rem; opacity: 0.8; font-weight: 400; }
+.dq-btn-register:hover { box-shadow: 0 0 30px rgba(29,155,209,0.5); transform: translateY(-1px); }
+
+.dq-btn-absent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.06);
+  color: var(--danger);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.dq-btn-absent:hover { background: rgba(239,68,68,0.14); border-color: var(--danger); }
+
+/* ── Barra EN VIVO ── */
+.dq-live-bar {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dq-live-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.dq-live-item i { font-size: 1.4rem; }
+.dq-live-item.calling i { color: var(--gold); }
+.dq-live-item.ramp    i { color: var(--primary); }
+.dq-live-item.ready   i { color: var(--success); }
+
+.dq-live-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dq-live-val {
+  display: block;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dq-live-sep {
+  color: rgba(255,255,255,0.1);
+  font-size: 0.7rem;
+}
+
+.dq-live-clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--success);
+  margin-left: auto;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+@keyframes pulse-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.pulse-icon { animation: pulse-anim 1.5s ease infinite; }
+
+/* ── Reglas colapsables ── */
+.dq-rules-card .dq-rules { display: none; padding: 0 20px 16px; }
+.dq-rules-card.expanded .dq-rules { display: block; }
+.dq-rules-card.expanded .fa-chevron-down { transform: rotate(180deg); }
+
+.dq-rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.dq-rule-item:last-child { border-bottom: none; }
+
+.dq-rule-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(29,155,209,0.1);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.dq-rule-icon.warning { background: rgba(251,191,36,0.1); color: var(--gold); border-color: var(--border-gold); }
+.dq-rule-icon.danger  { background: rgba(239,68,68,0.1);  color: var(--danger); }
+.dq-rule-icon.gold    { background: rgba(251,191,36,0.1); color: var(--gold); border-color: var(--border-gold); }
+
+.dq-rule-item strong { font-size: 0.9rem; color: var(--text); display: block; margin-bottom: 3px; }
+.dq-rule-item p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+
+@media (max-width: 768px) {
+  .dq-my-turn-hero { grid-template-columns: 1fr; gap: 16px; }
+  .dq-turn-center   { flex-direction: column; }
+  .dq-live-bar      { gap: 12px; }
+}

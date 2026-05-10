@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaski AI</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Estilos: globales + página -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- ============================================================
+    BARRA DE NAVEGACIÓN
+  ============================================================ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <!-- Logo texto -->
+      <a href="#" class="nav-logo">
+        <span class="logo-label">CHASKI <span class="c-accent">AI</span></span>
+      </a>
+
+      <!-- Links de navegación -->
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#servicios">Servicios</a></li>
+        <li><a href="#stats">Estadísticas</a></li>
+        <li><a href="#tecnologia">Tecnología</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+      </ul>
+
+      <!-- Acciones -->
+      <div class="nav-actions">
+        <a href="login.html" class="btn-nav-login">
+          <i class="fas fa-sign-in-alt"></i> Ingresar
+        </a>
+      </div>
+
+      <!-- Toggle mobile -->
+      <button class="nav-toggle" id="navToggle" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+
+  <!-- ============================================================
+    SECCIÓN HERO — ANIMACIÓN DE INTRODUCCIÓN
+    Secuencia:
+      0.4s  → Earth aparece + comienza a girar
+      0.4s  → Chaski comienza a correr por el borde
+      0.4–4.4s → Chaski completa 1 órbita, anillo de energía se traza
+      4.4s  → Anillo se completa (pulso de brillo)
+      5.0s  → Botón "Ingresar" aparece centrado
+  ============================================================ -->
+  <section id="hero">
+
+    <!-- WebGL: espacio + red de rutas -->
+    <canvas id="scene"></canvas>
+
+    <!-- Globo terrestre 3D -->
+    <canvas id="earthCanvas" class="hero-earth-canvas" aria-hidden="true"></canvas>
+
+    <!-- Contenido de texto -->
+    <div class="hero-content" id="heroContent">
+
+      <div class="hero-badge" id="heroBadge">
+        <span class="hb-dot"></span>
+        Inteligencia artificial aplicada al transporte
+      </div>
+
+      <h1 class="hero-title" id="heroTitle">
+        CHASKI <span class="ht-ai" id="htAi">AI</span>
+      </h1>
+
+      <p class="hero-sub" id="heroSub">
+        Gestión inteligente de flotas. <em>Control total en tiempo real.</em>
+      </p>
+
+      <a href="login.html" class="btn-enter" id="btnEnter">
+        <span class="btn-glass-bg"></span>
+        <span class="btn-shimmer"></span>
+        <span class="btn-text">INGRESAR</span>
+        <i class="fas fa-arrow-right btn-arrow"></i>
+      </a>
+
+    </div>
+
+    <!-- Indicador de scroll -->
+    <div class="scroll-indicator" id="scrollIndicator">
+      <span class="si-line"></span>
+      <span class="si-label">SCROLL</span>
+    </div>
+
+    <!-- Viñeta inferior -->
+    <div class="hero-fade-bottom" aria-hidden="true"></div>
+
+  </section><!-- /hero -->
+
+
+  <!-- ============================================================
+    SECCIÓN ESTADÍSTICAS — Términos genéricos
+  ============================================================ -->
+  <section id="stats" class="section-stats">
+    <div class="container">
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap"><i class="fas fa-bus"></i></div>
+          <span class="stat-number" data-target="60">0</span>
+          <span class="stat-title">Vehículos operando</span>
+          <span class="stat-sub">en tiempo real</span>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap"><i class="fas fa-building"></i></div>
+          <span class="stat-number" data-target="5">0</span>
+          <span class="stat-title">Empresas activas</span>
+          <span class="stat-sub">dentro de la plataforma</span>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap"><i class="fas fa-route"></i></div>
+          <span class="stat-number" data-target="12">0</span>
+          <span class="stat-title">Rutas monitoreadas</span>
+          <span class="stat-sub">con GPS continuo</span>
+        </div>
+
+        <div class="stat-card highlight">
+          <div class="stat-icon-wrap gold"><i class="fas fa-shield-alt"></i></div>
+          <span class="stat-number gold" data-target="340">0</span>
+          <span class="stat-title">Accidentes prevenidos</span>
+          <span class="stat-sub">gracias a alertas automáticas</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+    SECCIÓN SERVICIOS
+  ============================================================ -->
+  <section id="servicios" class="section-services">
+    <div class="container">
+
+      <div class="section-header">
+        <span class="badge-label">Plataforma completa</span>
+        <h2>Todo lo que tu operación necesita</h2>
+        <p>Del registro manual al control total — digitaliza cada proceso de tu flota</p>
+      </div>
+
+      <div class="services-grid">
+
+        <div class="svc-card" data-anim-delay="0">
+          <div class="svc-icon"><i class="fas fa-map-marked-alt"></i></div>
+          <h3>Rastreo GPS en tiempo real</h3>
+          <p>Visualiza el estado y posición de todas tus unidades en un mapa interactivo, con alertas de velocidad y desvíos de ruta.</p>
+        </div>
+
+        <div class="svc-card" data-anim-delay="100">
+          <div class="svc-icon"><i class="fas fa-file-invoice"></i></div>
+          <h3>Manifiestos digitales</h3>
+          <p>Genera, guarda y comparte el manifiesto de pasajeros al instante — PDF o WhatsApp con un solo toque desde cualquier dispositivo.</p>
+        </div>
+
+        <div class="svc-card" data-anim-delay="200">
+          <div class="svc-icon"><i class="fas fa-list-ol"></i></div>
+          <h3>Cola de salida automatizada</h3>
+          <p>Los conductores se inscriben en el sistema y reciben alertas automáticas según su turno. Sin llamadas, sin confusión.</p>
+        </div>
+
+        <div class="svc-card" data-anim-delay="300">
+          <div class="svc-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Reportes y dashboard</h3>
+          <p>Panel ejecutivo estilo Power BI con recaudación, viajes, pasajeros y alertas, filtrable por empresa, unidad y fecha.</p>
+        </div>
+
+        <div class="svc-card" data-anim-delay="400">
+          <div class="svc-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <h3>Alertas de seguridad</h3>
+          <p>Detecta automáticamente cuando una unidad supera límites de velocidad o se desvía de la ruta establecida.</p>
+        </div>
+
+        <div class="svc-card" data-anim-delay="500">
+          <div class="svc-icon"><i class="fas fa-network-wired"></i></div>
+          <h3>Multi-empresa</h3>
+          <p>Gestiona varias empresas dentro de una misma asociación — cada una con sus vehículos, conductores y reportes independientes.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+    SECCIÓN TECNOLOGÍA
+  ============================================================ -->
+  <section id="tecnologia" class="section-tech">
+    <div class="container">
+      <div class="tech-wrap">
+
+        <!-- Izquierda: lista de características -->
+        <div class="tech-text">
+          <span class="badge-label">Tecnología de punta</span>
+          <h2>Construido para el transporte del futuro</h2>
+          <p>Combinamos las mejores herramientas disponibles para dar a los operadores de cualquier tamaño el control que merecen.</p>
+
+          <ul class="tech-features">
+            <li>
+              <span class="feat-check"><i class="fas fa-check"></i></span>
+              <div>
+                <strong>GPS de alta precisión</strong>
+                <span>Integración con dispositivos GPS industriales de grado profesional</span>
+              </div>
+            </li>
+            <li>
+              <span class="feat-check"><i class="fas fa-check"></i></span>
+              <div>
+                <strong>QR para cobro digital</strong>
+                <span>Genera QR vinculado a billeteras digitales en segundos</span>
+              </div>
+            </li>
+            <li>
+              <span class="feat-check"><i class="fas fa-check"></i></span>
+              <div>
+                <strong>Exportación WhatsApp / PDF</strong>
+                <span>Comparte documentos oficiales con un toque — listos para cualquier autoridad</span>
+              </div>
+            </li>
+            <li>
+              <span class="feat-check"><i class="fas fa-check"></i></span>
+              <div>
+                <strong>Alertas automáticas inteligentes</strong>
+                <span>Velocidad, ruta, manifiestos — todo notificado en tiempo real</span>
+              </div>
+            </li>
+            <li>
+              <span class="feat-check"><i class="fas fa-check"></i></span>
+              <div>
+                <strong>Base de datos centralizada</strong>
+                <span>Historial completo de viajes, pasajeros e incidencias por unidad</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Derecha: tarjeta preview del sistema -->
+        <div class="tech-preview-card">
+          <div class="tpc-header">
+            <div class="tpc-dots">
+              <span class="dot-r"></span>
+              <span class="dot-y"></span>
+              <span class="dot-g"></span>
+            </div>
+            <span class="tpc-title">Chaski AI · Panel de Control</span>
+          </div>
+          <div class="tpc-body">
+            <div class="tpc-stats">
+              <div class="tpc-s active"><span>60</span><small>En línea</small></div>
+              <div class="tpc-s">      <span>12</span><small>En ruta</small></div>
+              <div class="tpc-s danger"><span>2</span><small>Alertas</small></div>
+            </div>
+            <div class="tpc-bars">
+              <div class="tpc-bar-row">
+                <span>Empresa A</span>
+                <div class="tpc-bar-outer"><div class="tpc-bar-fill" style="width:82%"></div></div>
+                <span class="tpc-pct">82%</span>
+              </div>
+              <div class="tpc-bar-row">
+                <span>Empresa B</span>
+                <div class="tpc-bar-outer"><div class="tpc-bar-fill" style="width:67%"></div></div>
+                <span class="tpc-pct">67%</span>
+              </div>
+              <div class="tpc-bar-row">
+                <span>Empresa C</span>
+                <div class="tpc-bar-outer"><div class="tpc-bar-fill" style="width:91%"></div></div>
+                <span class="tpc-pct">91%</span>
+              </div>
+            </div>
+            <div class="tpc-map">
+              <span class="tpc-map-dot" style="left:15%;top:50%"></span>
+              <span class="tpc-map-dot" style="left:48%;top:35%"></span>
+              <span class="tpc-map-dot" style="left:82%;top:50%"></span>
+              <div class="tpc-map-line"></div>
+              <span class="tpc-map-label" style="left:8%">Origen</span>
+              <span class="tpc-map-label" style="right:5%">Destino</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+    SECCIÓN CONTACTO
+  ============================================================ -->
+  <section id="contacto" class="section-contact">
+    <div class="container">
+      <div class="contact-wrap">
+
+        <div class="contact-info">
+          <span class="badge-label">Contáctanos</span>
+          <h2>¿Listo para digitalizar tu operación?</h2>
+          <p>Cuéntanos sobre tu flota y en menos de 48 horas te presentamos una propuesta personalizada.</p>
+          <div class="contact-items">
+            <div class="ci-item">
+              <i class="fas fa-envelope"></i>
+              <span>hola@chaskiai.pe</span>
+            </div>
+            <div class="ci-item">
+              <i class="fab fa-whatsapp"></i>
+              <span>+51 900 000 000</span>
+            </div>
+          </div>
+        </div>
+
+        <form class="contact-form" id="contactForm">
+          <div class="cf-row">
+            <div class="cf-group">
+              <label>Nombre</label>
+              <input type="text" placeholder="Tu nombre completo" required>
+            </div>
+            <div class="cf-group">
+              <label>Empresa / Asociación</label>
+              <input type="text" placeholder="Nombre de tu empresa" required>
+            </div>
+          </div>
+          <div class="cf-group">
+            <label>Email o WhatsApp</label>
+            <input type="text" placeholder="tu@email.com o +51 9XX XXX XXX" required>
+          </div>
+          <div class="cf-group">
+            <label>¿Cuántos vehículos tiene tu flota?</label>
+            <select>
+              <option value="">Seleccionar</option>
+              <option>1–10</option>
+              <option>11–30</option>
+              <option>31–60</option>
+              <option>Más de 60</option>
+            </select>
+          </div>
+          <div class="cf-group">
+            <label>Mensaje</label>
+            <textarea rows="4" placeholder="¿Qué necesitas gestionar? (GPS, manifiestos, turnos, reportes...)"></textarea>
+          </div>
+          <button type="submit" class="btn-contact-submit">
+            <i class="fab fa-whatsapp"></i>
+            Enviar por WhatsApp
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+    PIE DE PÁGINA
+  ============================================================ -->
+  <footer class="footer">
+    <div class="footer-glow-line"></div>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="fb-logo">
+            <span>CHASKI <strong>AI</strong></span>
+          </div>
+          <p>Soluciones de gestión inteligente para flotas de transporte. Automatización, trazabilidad y control en una sola plataforma.</p>
+          <div class="fb-socials">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+            <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4>Plataforma</h4>
+          <ul>
+            <li><a href="login.html">Panel Administrador</a></li>
+            <li><a href="login.html">Portal Conductor</a></li>
+            <li><a href="#servicios">GPS Tracking</a></li>
+            <li><a href="#servicios">Manifiestos</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Empresa</h4>
+          <ul>
+            <li><a href="#tecnologia">Tecnología</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+            <li><a href="#">Privacidad</a></li>
+            <li><a href="#">Términos</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 Chaski AI · Todos los derechos reservados</span>
+        <span class="footer-ver">v2.0.0</span>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+    SCRIPTS
+  ============================================================ -->
+  <!-- Three.js + GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaski AI — Panel del Conductor</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/driver.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="driver-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sb-logo">
+      <img src="../img/Logo oscuro.png" alt="Chaski AI">
+      <div>
+        <span class="sb-logo-name">CHASKI AI</span>
+        <span class="sb-logo-sub">TipCar · Juli</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-driver-card">
+    <div class="sdc-avatar">
+      <img src="../img/conductor.png" alt="Conductor">
+      <span class="sdc-status-dot online"></span>
+    </div>
+    <div class="sdc-info">
+      <strong id="sidebarDriverName">—</strong>
+      <span id="sidebarVehicle">Unidad 001 · PUN-001</span>
+      <span id="sidebarCompany" class="sdc-company">Virgen de Fátima</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="index.html" class="sb-link active">
+      <i class="fas fa-home"></i>
+      <span>Inicio</span>
+    </a>
+    <a href="manifest.html" class="sb-link">
+      <i class="fas fa-file-invoice"></i>
+      <span>Nuevo Manifiesto</span>
+    </a>
+    <a href="queue.html" class="sb-link">
+      <i class="fas fa-list-ol"></i>
+      <span>Cola de Salida</span>
+      <span class="sb-badge" id="queueBadge">—</span>
+    </a>
+    <a href="trips.html" class="sb-link">
+      <i class="fas fa-route"></i>
+      <span>Mis Viajes</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="../index.html" class="sb-link sb-link-logout">
+      <i class="fas fa-home"></i>
+      <span>Inicio Web</span>
+    </a>
+    <button onclick="logout()" class="sb-link sb-link-logout">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Cerrar Sesión</span>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="driver-main">
+  <!-- Header -->
+  <header class="driver-header">
+    <div class="dh-left">
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div>
+        <h1 class="dh-title">Panel del Conductor</h1>
+        <span class="dh-subtitle" id="dateDisplay">—</span>
+      </div>
+    </div>
+    <div class="dh-right">
+      <div class="dh-time" id="clockDisplay">00:00</div>
+      <!-- Campana con dropdown de notificaciones -->
+      <div class="notif-bell-wrap" id="notifBellWrap">
+        <button class="dh-alert-bell" id="notifBellBtn" onclick="toggleNotifPanel()">
+          <i class="fas fa-bell"></i>
+          <span class="bell-count" id="bellCount" style="display:none">0</span>
+        </button>
+        <!-- Panel desplegable -->
+        <div class="notif-panel" id="notifPanel" style="display:none">
+          <div class="notif-panel-header">
+            <span><i class="fas fa-bell"></i> Notificaciones</span>
+            <button onclick="markAllRead()" class="notif-mark-all">Marcar leídas</button>
+          </div>
+          <div class="notif-list" id="notifList">
+            <!-- generado por index.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="driver-content">
+
+    <!-- Banner de alerta -->
+    <div class="driver-alert" id="driverAlert">
+      <i class="fas fa-bell"></i>
+      <span id="alertMsg">Cargando...</span>
+      <button onclick="this.parentElement.style.display='none'">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="driver-stats-row">
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-list-ol"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="queuePos">—</span>
+          <span class="dstat-label">Tu posición en la cola</span>
+        </div>
+      </div>
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-route"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="tripsToday">0</span>
+          <span class="dstat-label">Viajes hoy</span>
+        </div>
+      </div>
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-users"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="passengersToday">0</span>
+          <span class="dstat-label">Pasajeros hoy</span>
+        </div>
+      </div>
+      <div class="dstat-card highlight">
+        <div class="dstat-icon gold"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val gold" id="revenueToday">S/ 0.00</span>
+          <span class="dstat-label">Recaudado hoy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid 2 cols -->
+    <div class="driver-grid">
+
+      <!-- Columna izquierda -->
+      <div class="driver-col">
+
+        <!-- Acciones rápidas -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
+          </div>
+          <div class="quick-actions">
+            <a href="manifest.html" class="qa-btn primary">
+              <i class="fas fa-plus-circle"></i>
+              <span>Nuevo Manifiesto</span>
+              <small>Registrar pasajeros</small>
+            </a>
+            <a href="queue.html" class="qa-btn">
+              <i class="fas fa-list-check"></i>
+              <span>Ver mi turno</span>
+              <small>Cola de salida</small>
+            </a>
+            <button class="qa-btn" onclick="registerQueue()">
+              <i class="fas fa-user-plus"></i>
+              <span>Inscribirme</span>
+              <small>Cola para mañana</small>
+            </button>
+            <button class="qa-btn danger" onclick="reportAbsence()">
+              <i class="fas fa-user-times"></i>
+              <span>No saldré hoy</span>
+              <small>Reportar ausencia</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado de la cola -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-traffic-light"></i> Estado de la Cola</h3>
+            <span class="card-badge live">EN VIVO</span>
+          </div>
+          <div class="queue-status">
+            <div class="qs-header">
+              <span>Cola para hoy</span>
+              <span class="qs-date" id="queueDateDisplay">—</span>
+            </div>
+            <div class="queue-mini-list" id="queueMiniList">
+              <!-- Generado por index.js -->
+            </div>
+            <p class="qs-note" id="queueNote">
+              <i class="fas fa-info-circle"></i>
+              Cargando cola...
+            </p>
+          </div>
+        </div>
+
+      </div><!-- /driver-col izquierda -->
+
+      <!-- Columna derecha -->
+      <div class="driver-col">
+
+        <!-- IAPE / QR -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-qrcode"></i> Mi IAPE / Cobro Digital</h3>
+          </div>
+          <div class="iape-panel">
+            <div class="iape-qr-wrap">
+              <div class="iape-qr-placeholder" id="iapeQrBox">
+                <i class="fas fa-qrcode"></i>
+                <span>QR no configurado</span>
+              </div>
+              <div class="iape-actions">
+                <button class="btn-iape" onclick="uploadQr()">
+                  <i class="fas fa-upload"></i> Subir QR de IAPE
+                </button>
+                <button class="btn-iape" onclick="generateQr()">
+                  <i class="fas fa-magic"></i> Generar QR con mi número
+                </button>
+              </div>
+            </div>
+            <div class="iape-info">
+              <div class="iape-phone-row">
+                <i class="fas fa-mobile-alt"></i>
+                <span id="iapePhone">No configurado</span>
+                <button onclick="editPhone()"><i class="fas fa-edit"></i></button>
+              </div>
+              <p class="iape-note">Muestra este QR a los pasajeros para cobro con Yape o Plin</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Último manifiesto -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-file-alt"></i> Último Manifiesto</h3>
+            <a href="trips.html" class="card-link">Ver todos</a>
+          </div>
+          <div class="last-manifest" id="lastManifest">
+            <div class="lm-empty">
+              <i class="fas fa-clipboard"></i>
+              <p>No has creado manifiestos hoy</p>
+              <a href="manifest.html" class="btn-primary"
+                 style="font-size:0.85rem;padding:10px 20px;">
+                <i class="fas fa-plus"></i> Crear manifiesto
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado GPS -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-satellite"></i> Estado GPS</h3>
+            <span class="card-badge" id="gpsBadge">BUSCANDO</span>
+          </div>
+          <div class="gps-status-panel">
+            <div class="gsp-row">
+              <span>Dispositivo</span>
+              <span class="gsp-val">Teltonika FMC130</span>
+            </div>
+            <div class="gsp-row">
+              <span>Señal</span>
+              <div class="gps-bars">
+                <span class="gb active"></span>
+                <span class="gb active"></span>
+                <span class="gb active"></span>
+                <span class="gb"></span>
+              </div>
+            </div>
+            <div class="gsp-row">
+              <span>Velocidad actual</span>
+              <span class="gsp-val" id="currentSpeed">0 km/h</span>
+            </div>
+            <div class="gsp-row">
+              <span>Última posición</span>
+              <span class="gsp-val" id="lastPos">Juli - Plaza</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /driver-col derecha -->
+    </div><!-- /driver-grid -->
+  </div><!-- /driver-content -->
+</main>
+
+<script src="index.js"></script>
+
+</body>
+</html>
