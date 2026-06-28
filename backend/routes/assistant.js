@@ -5,6 +5,7 @@
 const express = require('express');
 const router  = express.Router();
 const pool    = require('../config/db');
+const { aiLimiter } = require('../middleware/rateLimiter');
 
 // ── Detección de intención y consulta SQL ────────────────────
 
@@ -301,7 +302,7 @@ Nunca inventes datos. Si no hay datos disponibles o la base de datos no está co
 
 // ── Endpoint principal ───────────────────────────────────────
 
-router.post('/chat', async (req, res) => {
+router.post('/chat', aiLimiter, async (req, res) => {
   const { message, history = [] } = req.body;
 
   if (!message || typeof message !== 'string') {

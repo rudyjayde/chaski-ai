@@ -62,44 +62,47 @@ function closeRecoverModal(e) {
   document.getElementById('recoverOverlay').classList.remove('open');
 }
 
-function verifyRecoverIdentity() {
+async function verifyRecoverIdentity() {
   const username = (document.getElementById('recUser').value || '').trim().toLowerCase();
-  const dni      = (document.getElementById('recDni').value  || '').trim();
   const errBox   = document.getElementById('recoverError');
   const errText  = document.getElementById('recoverErrorText');
 
   errBox.classList.remove('show');
 
-  if (!username || !dni) {
-    errText.textContent = 'Completa todos los campos.';
+  if (!username) {
+    errText.textContent = 'Ingresa tu nombre de usuario.';
     errBox.classList.add('show');
     return;
   }
 
-  const user = window.DEMO_USERS && window.DEMO_USERS[username];
+  try {
+    const res  = await fetch('/api/auth/forgot-password', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username }),
+    });
+    const data = await res.json();
 
-  if (!user || user.role !== 'driver') {
-    errText.textContent = 'Usuario no encontrado.';
+    if (!res.ok) {
+      errText.textContent = data.error || 'Error al solicitar restablecimiento.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    // Guardar el resetToken para el siguiente paso
+    _recoverUsername = username;
+    window._resetToken = data.resetToken || null;
+
+    document.getElementById('recoverStep1').style.display = 'none';
+    document.getElementById('recoverStep2').style.display = '';
+    document.getElementById('recPass1').value  = '';
+    document.getElementById('recPass2').value  = '';
+    document.getElementById('recoverError2').classList.remove('show');
+    setTimeout(() => document.getElementById('recPass1').focus(), 80);
+  } catch {
+    errText.textContent = 'No se pudo conectar con el servidor.';
     errBox.classList.add('show');
-    return;
   }
-
-  /* Verificar contra localStorage primero (si ya se cambió antes), luego vs. dato base */
-  const storedDni = localStorage.getItem('chaski_dni_' + username) || user.dni;
-
-  if (storedDni !== dni) {
-    errText.textContent = 'DNI incorrecto. Verifica el número.';
-    errBox.classList.add('show');
-    return;
-  }
-
-  _recoverUsername = username;
-  document.getElementById('recoverStep1').style.display = 'none';
-  document.getElementById('recoverStep2').style.display = '';
-  document.getElementById('recPass1').value  = '';
-  document.getElementById('recPass2').value  = '';
-  document.getElementById('recoverError2').classList.remove('show');
-  setTimeout(() => document.getElementById('recPass1').focus(), 80);
 }
 
 function toggleRecoverPass() {
@@ -110,7 +113,7 @@ function toggleRecoverPass() {
   ico.className = hidden ? 'fas fa-eye-slash input-eye' : 'fas fa-eye input-eye';
 }
 
-function submitRecovery() {
+async function submitRecovery() {
   const pass1  = document.getElementById('recPass1').value;
   const pass2  = document.getElementById('recPass2').value;
   const errBox = document.getElementById('recoverError2');
@@ -118,8 +121,8 @@ function submitRecovery() {
 
   errBox.classList.remove('show');
 
-  if (!pass1 || pass1.length < 6) {
-    errTxt.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+  if (!pass1 || pass1.length < 8) {
+    errTxt.textContent = 'La contraseña debe tener al menos 8 caracteres.';
     errBox.classList.add('show');
     return;
   }
@@ -130,14 +133,33 @@ function submitRecovery() {
     return;
   }
 
-  /* Actualizar en memoria + localStorage para persistir entre recargas */
-  if (window.DEMO_USERS && _recoverUsername) {
-    window.DEMO_USERS[_recoverUsername].password = pass1;
-    localStorage.setItem('chaski_pass_' + _recoverUsername, pass1);
+  if (!window._resetToken) {
+    errTxt.textContent = 'Token de restablecimiento no disponible. Vuelve al paso anterior.';
+    errBox.classList.add('show');
+    return;
   }
 
-  document.getElementById('recoverStep2').style.display = 'none';
-  document.getElementById('recoverStep3').style.display = '';
+  try {
+    const res  = await fetch('/api/auth/reset-password', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token: window._resetToken, newPassword: pass1 }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errTxt.textContent = data.error || 'Error al restablecer la contraseña.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    window._resetToken = null;
+    document.getElementById('recoverStep2').style.display = 'none';
+    document.getElementById('recoverStep3').style.display = '';
+  } catch {
+    errTxt.textContent = 'No se pudo conectar con el servidor.';
+    errBox.classList.add('show');
+  }
 }
 
 window.openRecoverModal   = openRecoverModal;
@@ -175,22 +197,6 @@ window.submitRecovery     = submitRecovery;
   const submitBtn  = document.querySelector('.btn-submit-login');
 
   if (!form) return;
-
-  /* ---- Credenciales demo ----
-     En producción reemplazar con llamada a:
-     POST /api/auth/login  →  { token, role, name }
-  ---------------------------------------------------------------- */
-  const DEMO_USERS = {
-    'admin.tipcar':    { password: 'admin123', role: 'admin',  name: 'Administrador TipCar', redirect: '/admin/dashboard',  dni: null },
-    'eloy.mamani':     { password: 'admin123', role: 'driver', name: 'Eloy Mamani',           redirect: 'driver/index.html', dni: '40123456' },
-    'jose.quispe':     { password: 'admin123', role: 'driver', name: 'José Quispe',            redirect: 'driver/index.html', dni: '40234567' },
-    'abraham.morales': { password: 'admin123', role: 'driver', name: 'Abraham Morales',        redirect: 'driver/index.html', dni: '40345678' },
-    'juan.perez':      { password: 'admin123', role: 'driver', name: 'Juan Pérez',             redirect: 'driver/index.html', dni: '40456789' },
-    'carlos.ticona':   { password: 'admin123', role: 'driver', name: 'Carlos Ticona',          redirect: 'driver/index.html', dni: '40567890' },
-  };
-
-  /* Exponer DEMO_USERS para que el módulo de recuperación pueda mutarlo */
-  window.DEMO_USERS = DEMO_USERS;
 
   /* ---- Mostrar error ---- */
   function showError(msg) {
@@ -247,8 +253,10 @@ window.submitRecovery     = submitRecovery;
       /* Guardar sesión */
       localStorage.setItem('chaski_user', JSON.stringify({
         ...data.user,
-        token:     data.token,
-        loginTime: new Date().toISOString(),
+        token:        data.token,
+        refreshToken: data.refreshToken || null,
+        csrfToken:    data.csrfToken    || null,
+        loginTime:    new Date().toISOString(),
       }));
 
       const redirect = data.user.role === 'admin' ? '/admin/dashboard' : 'driver/index.html';

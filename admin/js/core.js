@@ -16,8 +16,80 @@
   if (nameEl) nameEl.textContent = session.name || session.username || 'Admin';
 })();
 
+/* ── authFetch global — con CSRF y auto-refresh ──────────────── */
+window.authFetch = async function authFetch(url, options = {}) {
+  const session = JSON.parse(localStorage.getItem('chaski_user') || '{}');
+
+  const headers = {
+    ...(options.headers || {}),
+    ...(session.token      ? { 'Authorization': 'Bearer ' + session.token }      : {}),
+    ...(session.csrfToken  ? { 'X-CSRF-Token':  session.csrfToken }               : {}),
+  };
+
+  let res = await fetch(url, { ...options, headers });
+
+  // Intento de renovación de token cuando expira
+  if (res.status === 401 && session.refreshToken) {
+    try {
+      const refreshRes = await fetch('/api/auth/refresh', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ refreshToken: session.refreshToken }),
+      });
+
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        const updated = {
+          ...session,
+          token:        data.token,
+          refreshToken: data.refreshToken,
+          csrfToken:    data.csrfToken,
+        };
+        localStorage.setItem('chaski_user', JSON.stringify(updated));
+
+        // Reintentar la petición original con el nuevo token
+        res = await fetch(url, {
+          ...options,
+          headers: {
+            ...(options.headers || {}),
+            'Authorization': 'Bearer ' + data.token,
+            'X-CSRF-Token':  data.csrfToken,
+          },
+        });
+      } else {
+        window.logout();
+        return res;
+      }
+    } catch {
+      window.logout();
+      return res;
+    }
+  }
+
+  return res;
+};
+
 /* ── Logout ──────────────────────────────────────────────────── */
-window.logout = function () {
+window.logout = async function () {
+  const session = JSON.parse(localStorage.getItem('chaski_user') || '{}');
+
+  // Notificar al backend para revocar el refresh token
+  if (session.token && session.refreshToken) {
+    try {
+      await fetch('/api/auth/logout', {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + session.token,
+          'X-CSRF-Token':  session.csrfToken || '',
+        },
+        body: JSON.stringify({ refreshToken: session.refreshToken }),
+      });
+    } catch {
+      // No bloquear el logout local si el servidor no responde
+    }
+  }
+
   localStorage.removeItem('chaski_user');
   window.location.href = '/login';
 };
