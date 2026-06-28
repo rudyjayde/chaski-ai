@@ -240,7 +240,38 @@
 
 
 /* ============================================================
-   6. RESPONSIVE
+   6. TABS DE RUTA
+   ============================================================ */
+.aq-route-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255,255,255,.1));
+  border-radius: 8px;
+  color: var(--text-sub, #8ba3b8);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.aq-route-tab:hover {
+  background: rgba(0, 200, 255, 0.08);
+  color: var(--text-main, #fff);
+}
+
+.aq-route-tab.active {
+  background: rgba(0, 200, 255, 0.15);
+  border-color: var(--primary, #00C8FF);
+  color: var(--primary, #00C8FF);
+}
+
+
+/* ============================================================
+   7. RESPONSIVE
    ============================================================ */
 @media (max-width: 1100px) {
   .dashboard-row { flex-direction: column; }

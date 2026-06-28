@@ -181,7 +181,7 @@ window.submitRecovery     = submitRecovery;
      POST /api/auth/login  →  { token, role, name }
   ---------------------------------------------------------------- */
   const DEMO_USERS = {
-    'admin.tipcar':    { password: 'admin123', role: 'admin',  name: 'Administrador TipCar', redirect: 'admin/index.html',  dni: null },
+    'admin.tipcar':    { password: 'admin123', role: 'admin',  name: 'Administrador TipCar', redirect: '/admin/dashboard',  dni: null },
     'eloy.mamani':     { password: 'admin123', role: 'driver', name: 'Eloy Mamani',           redirect: 'driver/index.html', dni: '40123456' },
     'jose.quispe':     { password: 'admin123', role: 'driver', name: 'José Quispe',            redirect: 'driver/index.html', dni: '40234567' },
     'abraham.morales': { password: 'admin123', role: 'driver', name: 'Abraham Morales',        redirect: 'driver/index.html', dni: '40345678' },
@@ -205,8 +205,8 @@ window.submitRecovery     = submitRecovery;
     });
   });
 
-  /* ---- Submit ---- */
-  form.addEventListener('submit', (e) => {
+  /* ---- Submit — llama a la API real ---- */
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const username = (document.getElementById('username')?.value || '').trim().toLowerCase();
@@ -217,46 +217,47 @@ window.submitRecovery     = submitRecovery;
       return;
     }
 
-    const user = DEMO_USERS[username];
-
-    /* Validar existencia */
-    if (!user) {
-      showError('Usuario no encontrado. Verifica tu nombre de usuario.');
-      return;
-    }
-
-    /* Validar contraseña (acepta la guardada en localStorage si fue cambiada) */
-    const effectivePassword = localStorage.getItem('chaski_pass_' + username) || user.password;
-    if (effectivePassword !== password) {
-      showError('Contraseña incorrecta.');
-      return;
-    }
-
-    /* Validar rol seleccionado */
-    if (user.role !== currentRole) {
-      const label = user.role === 'admin' ? 'Administrador' : 'Conductor';
-      showError(`Esta cuenta es de tipo "${label}". Selecciona el rol correcto.`);
-      return;
-    }
-
-    /* ---- Guardar sesión en localStorage ---- */
-    localStorage.setItem('chaski_user', JSON.stringify({
-      username,
-      role:      user.role,
-      name:      user.name,
-      loginTime: new Date().toISOString(),
-    }));
-
-    /* ---- Estado de carga ---- */
     if (submitBtn) {
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ingresando...';
       submitBtn.disabled  = true;
     }
 
-    /* ---- Redirigir después de un breve delay (UX) ---- */
-    setTimeout(() => {
-      window.location.href = user.redirect;
-    }, 750);
+    try {
+      const res  = await fetch('http://localhost:3005/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'Credenciales incorrectas.');
+        if (submitBtn) { submitBtn.innerHTML = 'INGRESAR'; submitBtn.disabled = false; }
+        return;
+      }
+
+      /* Validar rol seleccionado vs. rol real */
+      if (data.user.role !== currentRole && !(currentRole === 'admin' && data.user.role === 'supervisor')) {
+        const label = data.user.role === 'admin' ? 'Administrador' : 'Conductor';
+        showError(`Esta cuenta es de tipo "${label}". Selecciona el rol correcto.`);
+        if (submitBtn) { submitBtn.innerHTML = 'INGRESAR'; submitBtn.disabled = false; }
+        return;
+      }
+
+      /* Guardar sesión */
+      localStorage.setItem('chaski_user', JSON.stringify({
+        ...data.user,
+        token:     data.token,
+        loginTime: new Date().toISOString(),
+      }));
+
+      const redirect = data.user.role === 'admin' ? '/admin/dashboard' : 'driver/index.html';
+      setTimeout(() => { window.location.href = redirect; }, 500);
+
+    } catch (err) {
+      showError('No se pudo conectar con el servidor. Verifica que el backend esté corriendo.');
+      if (submitBtn) { submitBtn.innerHTML = 'INGRESAR'; submitBtn.disabled = false; }
+    }
   });
 
 })();

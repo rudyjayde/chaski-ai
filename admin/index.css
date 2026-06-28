@@ -1070,6 +1070,87 @@
   .ah-date       { display: none; }
 }
 
+/* ============================================================
+   16. PANEL DE COMUNICADOS
+   ============================================================ */
+.comm-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.comm-item:last-child { border-bottom: none; }
+.comm-item:hover { background: rgba(255,255,255,0.03); }
+
+.comm-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.comm-body { flex: 1; min-width: 0; }
+.comm-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.comm-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.comm-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.comm-del-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.comm-del-btn:hover { color: #FF6B6B; background: rgba(255,107,107,0.1); }
+
+.comms-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  color: var(--text-muted);
+  gap: 8px;
+  font-size: 13px;
+}
+.comms-empty i { font-size: 24px; opacity: .4; }
+
+/* reutiliza .modal-overlay / .modal-box / .form-group del vehicles.css  */
+
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr; }
   .admin-header { padding: 12px 16px; }

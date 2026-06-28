@@ -22,7 +22,7 @@
 (function checkAuth() {
   const session = JSON.parse(localStorage.getItem('chaski_user') || 'null');
   if (!session || session.role !== 'admin') {
-    window.location.href = '../login.html';
+    window.location.href = '/login';
     return;
   }
   const nameEl = document.getElementById('adminUserName');
@@ -31,7 +31,7 @@
 
 function logout() {
   localStorage.removeItem('chaski_user');
-  window.location.href = '../login.html';
+  window.location.href = '/login';
 }
 window.logout = logout;
 

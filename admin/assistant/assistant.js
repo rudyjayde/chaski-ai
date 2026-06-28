@@ -13,7 +13,7 @@ let isLoading  = false;
 (function checkAuth() {
   const user = JSON.parse(localStorage.getItem('chaski_user') || '{}');
   if (!user.username || user.role !== 'admin') {
-    window.location.href = '../login.html';
+    window.location.href = '/login';
     return;
   }
   const nameEl = document.getElementById('adminUserName');
@@ -23,7 +23,7 @@ let isLoading  = false;
 // ── Logout ───────────────────────────────────────────────────
 function logout() {
   localStorage.removeItem('chaski_user');
-  window.location.href = '../login.html';
+  window.location.href = '/login';
 }
 
 // ── Reloj en tiempo real ─────────────────────────────────────

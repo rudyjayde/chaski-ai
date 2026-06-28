@@ -23,7 +23,7 @@
 (function checkAuth() {
   const user = JSON.parse(localStorage.getItem('chaski_user') || '{}');
   if (!user.username || user.role !== 'admin') {
-    window.location.href = '../login.html';
+    window.location.href = '/login';
   }
   const nameEl = document.getElementById('adminUserName');
   if (nameEl) nameEl.textContent = user.name || 'Administrador';
@@ -241,92 +241,44 @@
 
 
 /* ============================================================
-   6. MAPA GPS (Leaflet.js)
-   Las coordenadas simulan la ruta Juli–Puno en Puno, Perú.
+   6. MAPA GPS (Leaflet.js) — datos reales desde /api/gps/live
    ============================================================ */
 (function initGPSMap() {
 
-  /* Coordenadas de la ruta Juli → Puno */
+  const API_BASE = 'http://localhost:3005';
+
   const ROUTE_COORDS = [
-    [-16.2060, -69.4600], /* Juli */
+    [-16.2060, -69.4600],
     [-16.1500, -69.5200],
     [-16.0800, -69.5800],
     [-16.0100, -69.6400],
     [-15.9200, -69.8500],
     [-15.8400, -70.0200],
-    [-15.8028, -70.0219], /* Puno */
+    [-15.8028, -70.0219],
   ];
 
-  /* Vehículos demo con posiciones aproximadas a lo largo de la ruta */
-  const VEHICLES_DEMO = [
-    { code: '001', driver: 'E. Mamani',   pos: ROUTE_COORDS[1], status: 'moving',    route: 'Juli→Puno' },
-    { code: '003', driver: 'A. Morales',  pos: ROUTE_COORDS[3], status: 'moving',    route: 'Juli→Puno' },
-    { code: '007', driver: 'R. Quispe',   pos: ROUTE_COORDS[4], status: 'moving',    route: 'Juli→Puno' },
-    { code: '012', driver: 'H. Condori',  pos: ROUTE_COORDS[5], status: 'stopped',   route: 'Puno→Juli' },
-    { code: '018', driver: 'L. Flores',   pos: ROUTE_COORDS[2], status: 'moving',    route: 'Puno→Juli' },
-    { code: '025', driver: 'F. Mamani',   pos: ROUTE_COORDS[0], status: 'terminal',  route: 'Juli' },
-  ];
+  let map        = null;
+  let markers    = {};
+  let refreshInt = null;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const mapEl = document.getElementById('gpsMap');
-    if (!mapEl || typeof L === 'undefined') return;
-
-    const map = L.map('gpsMap', { zoomControl: true, attributionControl: false })
-      .setView([-15.97, -69.75], 10);
-
-    /* Capa de mapa oscura */
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 18,
-    }).addTo(map);
-
-    /* Línea de ruta */
-    L.polyline(ROUTE_COORDS, {
-      color: 'rgba(0,200,255,0.6)',
-      weight: 3,
-      dashArray: '6,4',
-    }).addTo(map);
-
-    /* Color de icono según estado */
-    const COLOR_MAP = {
-      moving:   '#00C8FF',
-      stopped:  '#FFB800',
-      terminal: '#7B8FAA',
-    };
-
-    /* Marcadores de vehículos */
-    VEHICLES_DEMO.forEach(v => {
-      const color = COLOR_MAP[v.status] || '#fff';
-
-      const icon = L.divIcon({
-        className: '',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-        html: `
-          <div style="
-            width:28px;height:28px;border-radius:50%;
-            background:${color};
-            border:2px solid rgba(255,255,255,0.5);
-            display:flex;align-items:center;justify-content:center;
-            font-size:9px;font-weight:700;color:#050818;
-            box-shadow:0 0 10px ${color};
-          ">${v.code}</div>
-        `,
-      });
-
-      L.marker(v.pos, { icon })
-        .bindPopup(`
-          <div style="font-family:Inter,sans-serif;font-size:12px;min-width:140px">
-            <strong style="color:#00C8FF">Unidad ${v.code}</strong><br>
-            <span>Conductor: ${v.driver}</span><br>
-            <span>Ruta: ${v.route}</span><br>
-            <span>Estado: ${v.status}</span>
-          </div>
-        `)
-        .addTo(map);
+  function makeVehicleIcon(code, speed) {
+    const color = speed > 5 ? '#00C8FF' : speed > 0 ? '#FFB800' : '#7B8FAA';
+    return L.divIcon({
+      className: '',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      html: `<div style="
+        width:30px;height:30px;border-radius:50%;
+        background:${color};border:2px solid rgba(255,255,255,0.5);
+        display:flex;align-items:center;justify-content:center;
+        font-size:9px;font-weight:700;color:#050818;
+        box-shadow:0 0 10px ${color};
+      ">${code}</div>`,
     });
+  }
 
-    /* Puntos de inicio y fin */
-    const endIcon = (label) => L.divIcon({
+  function makeEndIcon(label) {
+    return L.divIcon({
       className: '',
       iconSize: [50, 22],
       html: `<div style="
@@ -335,12 +287,75 @@
         padding:3px 6px;border-radius:4px;white-space:nowrap;
       ">${label}</div>`,
     });
+  }
 
-    L.marker(ROUTE_COORDS[0], { icon: endIcon('JULI') }).addTo(map);
-    L.marker(ROUTE_COORDS[ROUTE_COORDS.length - 1], { icon: endIcon('PUNO') }).addTo(map);
+  function formatTime(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function loadVehicles() {
+    try {
+      const res  = await fetch(`${API_BASE}/api/gps/live`);
+      const data = await res.json();
+      if (!data.ok) return;
+
+      const withGPS = data.vehicles.filter(v => v.lat && v.lon);
+
+      withGPS.forEach(v => {
+        const latlng = [v.lat, v.lon];
+        const icon   = makeVehicleIcon(v.code, v.speed || 0);
+        const popup  = `
+          <div style="font-family:Inter,sans-serif;font-size:12px;min-width:150px">
+            <strong style="color:#00C8FF">Unidad ${v.code}</strong><br>
+            <span>Placa: ${v.plate}</span><br>
+            <span>Conductor: ${v.driver}</span><br>
+            <span>Velocidad: ${v.speed || 0} km/h</span><br>
+            <span>Última señal: ${formatTime(v.timestamp)}</span>
+          </div>`;
+
+        if (markers[v.vehicle_id]) {
+          markers[v.vehicle_id].setLatLng(latlng).setIcon(icon).setPopupContent(popup);
+        } else {
+          markers[v.vehicle_id] = L.marker(latlng, { icon })
+            .bindPopup(popup)
+            .addTo(map);
+        }
+      });
+
+      // Actualizar badge GPS en sidebar
+      const gpsCountEl = document.getElementById('gpsActiveCount');
+      if (gpsCountEl) gpsCountEl.textContent = withGPS.length;
+
+    } catch (err) {
+      console.warn('[GPS Map] No se pudo cargar /api/gps/live:', err.message);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const mapEl = document.getElementById('gpsMap');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    map = L.map('gpsMap', { zoomControl: true, attributionControl: false })
+      .setView([-15.97, -69.75], 10);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 18,
+    }).addTo(map);
+
+    L.polyline(ROUTE_COORDS, {
+      color: 'rgba(0,200,255,0.6)',
+      weight: 3,
+      dashArray: '6,4',
+    }).addTo(map);
+
+    L.marker(ROUTE_COORDS[0], { icon: makeEndIcon('JULI') }).addTo(map);
+    L.marker(ROUTE_COORDS[ROUTE_COORDS.length - 1], { icon: makeEndIcon('PUNO') }).addTo(map);
+
+    loadVehicles();
+    refreshInt = setInterval(loadVehicles, 10000); // actualizar cada 10s
   });
 
-  /* Filtro de ruta (los botones cambian la capa visible — simplificado) */
   window.filterRoute = function(type, btn) {
     document.querySelectorAll('.dc-btn[data-route]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -562,6 +577,6 @@
 window.logout = function() {
   if (confirm('¿Cerrar sesión?')) {
     localStorage.removeItem('chaski_user');
-    window.location.href = '../login.html';
+    window.location.href = '/login';
   }
 };

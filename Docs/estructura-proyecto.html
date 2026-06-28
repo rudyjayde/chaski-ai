@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Chaski AI 2.0 — Estructura del Proyecto</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; color: #1a1a1a; font-family: 'Times New Roman', serif; padding: 40px 60px; max-width: 900px; margin: 0 auto; }
+
+  .figure { margin: 36px 0; border: 1px solid #ccc; }
+  .figure-caption { padding: 10px 14px; background: #f5f5f5; border-bottom: 1px solid #ccc; }
+  .figure-caption strong { font-size: 0.92rem; }
+  .figure-caption em { font-size: 0.88rem; color: #444; display: block; margin-top: 2px; }
+  .figure-body { display: flex; gap: 0; }
+
+  /* ÁRBOL DE CARPETAS */
+  .file-tree {
+    background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.78rem; padding: 14px 16px; width: 260px; min-width: 260px;
+    border-right: 1px solid #ccc; line-height: 1.7;
+  }
+  .file-tree .root { color: #569cd6; font-weight: bold; }
+  .file-tree .folder { color: #569cd6; }
+  .file-tree .file-html { color: #f1c40f; }
+  .file-tree .file-js { color: #ce9178; }
+  .file-tree .file-css { color: #9cdcfe; }
+  .file-tree .file-sql { color: #4ec9b0; }
+  .file-tree .file-json { color: #d19a66; }
+  .file-tree .file-env { color: #98c379; }
+  .file-tree .selected { background: #094771; display: block; margin: 0 -16px; padding: 0 16px; }
+
+  /* CÓDIGO */
+  .code-panel {
+    background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace;
+    font-size: 0.75rem; padding: 14px 0; flex: 1; overflow-x: auto; line-height: 1.6;
+  }
+  .code-line { display: flex; padding: 0 14px; }
+  .code-line:hover { background: #2a2a2a; }
+  .code-line .ln { color: #555; min-width: 28px; text-align: right; margin-right: 14px; user-select: none; }
+  .kw { color: #c586c0; }
+  .fn { color: #dcdcaa; }
+  .str { color: #ce9178; }
+  .cmt { color: #6a9955; }
+  .var { color: #9cdcfe; }
+  .op { color: #d4d4d4; }
+  .cls { color: #4ec9b0; }
+
+  /* DESCRIPCIÓN */
+  .figure-desc { padding: 12px 14px; font-size: 0.88rem; line-height: 1.7; text-align: justify; border-top: 1px solid #ccc; }
+
+  /* DEPLOY */
+  .deploy-diagram {
+    background: #f8f9fa; padding: 20px 24px; flex: 1;
+    font-family: 'Segoe UI', sans-serif; font-size: 0.82rem;
+  }
+  .deploy-row { display: flex; gap: 12px; margin: 12px 0; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+  .deploy-box {
+    border: 1.5px solid #2563eb; border-radius: 6px; padding: 10px 14px;
+    background: #eff6ff; text-align: center; min-width: 130px;
+  }
+  .deploy-box.green { border-color: #16a34a; background: #f0fdf4; }
+  .deploy-box.orange { border-color: #ea580c; background: #fff7ed; }
+  .deploy-box.purple { border-color: #7c3aed; background: #f5f3ff; }
+  .deploy-box.gray { border-color: #64748b; background: #f8fafc; }
+  .deploy-box .icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+  .deploy-box .label { font-weight: 700; font-size: 0.8rem; color: #1e293b; }
+  .deploy-box .sub { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+  .arrow { font-size: 1.2rem; color: #94a3b8; display: flex; align-items: center; margin: 0 2px; }
+  .deploy-section { margin: 8px 0; }
+  .deploy-section-title { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; text-align: center; }
+
+  h2 { font-size: 1rem; margin: 30px 0 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h2>4.X Estructura del Sistema Chaski AI 2.0</h2>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- FIGURA 1 — FRONTEND                                   -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-caption">
+    <strong>Figura 1</strong>
+    <em>Estructura del frontend de la aplicación</em>
+  </div>
+  <div class="figure-body">
+    <!-- Árbol -->
+    <div class="file-tree">
+      <div><span class="root">▼ CHASKI-AI 2.0 (frontend)</span></div>
+      <div>&nbsp;├─ <span class="file-html">index.html</span></div>
+      <div>&nbsp;├─ <span class="file-css">index.css</span></div>
+      <div>&nbsp;├─ <span class="file-js">main.js</span></div>
+      <div>&nbsp;├─ <span class="file-html">login.html</span></div>
+      <div>&nbsp;├─ <span class="file-js">login.js</span></div>
+      <div>&nbsp;├─ <span class="folder">▼ admin/</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">index.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">drivers.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">manifests.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">queue.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">reports.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">trips.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">vehicles.html</span></div>
+      <div class="selected">&nbsp;│&nbsp;&nbsp;└─ <span class="file-html">assistant.html</span></div>
+      <div>&nbsp;├─ <span class="folder">▼ driver/</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">index.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">manifest.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;├─ <span class="file-html">queue.html</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;└─ <span class="file-html">trips.html</span></div>
+      <div>&nbsp;├─ <span class="folder">▼ css/</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;└─ <span class="file-css">main.css</span></div>
+      <div>&nbsp;└─ <span class="folder">▼ img/</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;└─ logos, fondos, íconos</div>
+    </div>
+    <!-- Código representativo -->
+    <div class="code-panel">
+      <div class="code-line"><span class="ln">1</span><span class="cmt">// admin/assistant.js — Módulo del asistente IA</span></div>
+      <div class="code-line"><span class="ln">2</span><span class="kw">const</span> <span class="var">API_BASE</span> <span class="op">=</span> <span class="str">'http://localhost:3005/api'</span><span class="op">;</span></div>
+      <div class="code-line"><span class="ln">3</span></div>
+      <div class="code-line"><span class="ln">4</span><span class="fn">async function</span> <span class="fn">sendMessage</span><span class="op">(</span><span class="var">message</span><span class="op">) {</span></div>
+      <div class="code-line"><span class="ln">5</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="var">token</span> <span class="op">=</span> <span class="fn">localStorage</span><span class="op">.</span><span class="fn">getItem</span><span class="op">(</span><span class="str">'token'</span><span class="op">);</span></div>
+      <div class="code-line"><span class="ln">6</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="var">res</span> <span class="op">=</span> <span class="kw">await</span> <span class="fn">fetch</span><span class="op">(`${</span><span class="var">API_BASE</span><span class="op">}/assistant/chat`, {</span></div>
+      <div class="code-line"><span class="ln">7</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">method</span><span class="op">:</span> <span class="str">'POST'</span><span class="op">,</span></div>
+      <div class="code-line"><span class="ln">8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">headers</span><span class="op">: {</span></div>
+      <div class="code-line"><span class="ln">9</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'Content-Type'</span><span class="op">:</span> <span class="str">'application/json'</span><span class="op">,</span></div>
+      <div class="code-line"><span class="ln">10</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'Authorization'</span><span class="op">:</span> <span class="str">`Bearer ${</span><span class="var">token</span><span class="str">}`</span></div>
+      <div class="code-line"><span class="ln">11</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="op">},</span></div>
+      <div class="code-line"><span class="ln">12</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">body</span><span class="op">:</span> <span class="cls">JSON</span><span class="op">.</span><span class="fn">stringify</span><span class="op">({ </span><span class="var">message</span><span class="op">, </span><span class="var">history</span> <span class="op">})</span></div>
+      <div class="code-line"><span class="ln">13</span>&nbsp;&nbsp;<span class="op">});</span></div>
+      <div class="code-line"><span class="ln">14</span>&nbsp;&nbsp;<span class="kw">return</span> <span class="var">res</span><span class="op">.</span><span class="fn">json</span><span class="op">();</span></div>
+      <div class="code-line"><span class="ln">15</span><span class="op">}</span></div>
+      <div class="code-line"><span class="ln">16</span></div>
+      <div class="code-line"><span class="ln">17</span><span class="cmt">// Detectar rol y redirigir al panel correcto</span></div>
+      <div class="code-line"><span class="ln">18</span><span class="fn">function</span> <span class="fn">redirectByRole</span><span class="op">(</span><span class="var">role</span><span class="op">) {</span></div>
+      <div class="code-line"><span class="ln">19</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="var">routes</span> <span class="op">= {</span></div>
+      <div class="code-line"><span class="ln">20</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">admin</span><span class="op">:</span> <span class="str">'/admin/index.html'</span><span class="op">,</span></div>
+      <div class="code-line"><span class="ln">21</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">driver</span><span class="op">:</span> <span class="str">'/driver/index.html'</span></div>
+      <div class="code-line"><span class="ln">22</span>&nbsp;&nbsp;<span class="op">};</span></div>
+      <div class="code-line"><span class="ln">23</span>&nbsp;&nbsp;<span class="var">window</span><span class="op">.</span><span class="var">location</span><span class="op">.</span><span class="var">href</span> <span class="op">=</span> <span class="var">routes</span><span class="op">[</span><span class="var">role</span><span class="op">];</span></div>
+      <div class="code-line"><span class="ln">24</span><span class="op">}</span></div>
+    </div>
+  </div>
+  <div class="figure-desc">
+    En la Figura 1 se muestra la organización del frontend dentro del directorio raíz del proyecto. Para este sistema, se separaron las vistas según el rol del usuario en carpetas independientes. La carpeta <strong>admin/</strong> concentra los nueve módulos del administrador: dashboard con KPIs en tiempo real, gestión de conductores, manifiestos digitales, cola FIFO de salida, historial de viajes, flota de vehículos, reportes e insights, y el asistente IA; la carpeta <strong>driver/</strong> agrupa los cuatro módulos del conductor. La carpeta <strong>css/</strong> contiene el sistema de diseño global con variables Glassmorphism, y la carpeta <strong>img/</strong> los recursos gráficos. Esta arquitectura de módulos independientes permite mantener la separación de responsabilidades y facilita la escalabilidad del frontend sin dependencia de frameworks adicionales.
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- FIGURA 2 — BACKEND                                    -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-caption">
+    <strong>Figura 2</strong>
+    <em>Estructura del backend de la aplicación</em>
+  </div>
+  <div class="figure-body">
+    <!-- Árbol -->
+    <div class="file-tree">
+      <div><span class="root">▼ backend/</span></div>
+      <div>&nbsp;├─ <span class="file-js">server.js</span></div>
+      <div>&nbsp;├─ <span class="file-json">package.json</span></div>
+      <div>&nbsp;├─ <span class="file-env">.env</span></div>
+      <div>&nbsp;├─ <span class="folder">▼ config/</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;└─ <span class="file-js">db.js</span></div>
+      <div>&nbsp;├─ <span class="folder">▼ middleware/</span></div>
+      <div>&nbsp;│&nbsp;&nbsp;└─ <span class="file-js">auth.js</span></div>
+      <div>&nbsp;└─ <span class="folder">▼ routes/</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">index.js</span></div>
+      <div class="selected">&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">auth.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">drivers.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">vehicles.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">queue.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">manifests.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">trips.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;├─ <span class="file-js">reports.js</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;└─ <span class="file-js">assistant.js</span></div>
+    </div>
+    <!-- Código representativo -->
+    <div class="code-panel">
+      <div class="code-line"><span class="ln">1</span><span class="cmt">// routes/auth.js — Autenticación JWT</span></div>
+      <div class="code-line"><span class="ln">2</span><span class="kw">const</span> <span class="var">router</span> <span class="op">=</span> <span class="fn">express</span><span class="op">.</span><span class="fn">Router</span><span class="op">();</span></div>
+      <div class="code-line"><span class="ln">3</span></div>
+      <div class="code-line"><span class="ln">4</span><span class="cmt">/**</span></div>
+      <div class="code-line"><span class="ln">5</span><span class="cmt">&nbsp;* POST /api/auth/login</span></div>
+      <div class="code-line"><span class="ln">6</span><span class="cmt">&nbsp;* Verifica credenciales y devuelve token JWT</span></div>
+      <div class="code-line"><span class="ln">7</span><span class="cmt">&nbsp;*/</span></div>
+      <div class="code-line"><span class="ln">8</span><span class="var">router</span><span class="op">.</span><span class="fn">post</span><span class="op">(</span><span class="str">'/login'</span><span class="op">,</span> <span class="kw">async</span> <span class="op">(</span><span class="var">req</span><span class="op">,</span> <span class="var">res</span><span class="op">) => {</span></div>
+      <div class="code-line"><span class="ln">9</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="op">{</span> <span class="var">username</span><span class="op">,</span> <span class="var">password</span> <span class="op">} =</span> <span class="var">req</span><span class="op">.</span><span class="var">body</span><span class="op">;</span></div>
+      <div class="code-line"><span class="ln">10</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="op">{</span> <span class="var">rows</span> <span class="op">} =</span> <span class="kw">await</span> <span class="var">pool</span><span class="op">.</span><span class="fn">query</span><span class="op">(</span></div>
+      <div class="code-line"><span class="ln">11</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'SELECT * FROM users WHERE username=$1 AND active=true'</span><span class="op">,</span></div>
+      <div class="code-line"><span class="ln">12</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="op">[</span><span class="var">username</span><span class="op">]</span></div>
+      <div class="code-line"><span class="ln">13</span>&nbsp;&nbsp;<span class="op">);</span></div>
+      <div class="code-line"><span class="ln">14</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="var">valid</span> <span class="op">=</span> <span class="kw">await</span> <span class="fn">bcrypt</span><span class="op">.</span><span class="fn">compare</span><span class="op">(</span><span class="var">password</span><span class="op">,</span> <span class="var">rows</span><span class="op">[</span><span class="str">0</span><span class="op">].</span><span class="var">password_hash</span><span class="op">);</span></div>
+      <div class="code-line"><span class="ln">15</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="var">token</span> <span class="op">=</span> <span class="fn">jwt</span><span class="op">.</span><span class="fn">sign</span><span class="op">(</span><span class="var">payload</span><span class="op">,</span> <span class="var">process</span><span class="op">.</span><span class="var">env</span><span class="op">.</span><span class="var">JWT_SECRET</span><span class="op">);</span></div>
+      <div class="code-line"><span class="ln">16</span>&nbsp;&nbsp;<span class="var">res</span><span class="op">.</span><span class="fn">json</span><span class="op">({</span> <span class="var">token</span><span class="op">,</span> <span class="var">user</span> <span class="op">});</span></div>
+      <div class="code-line"><span class="ln">17</span><span class="op">});</span></div>
+      <div class="code-line"><span class="ln">18</span></div>
+      <div class="code-line"><span class="ln">19</span><span class="cmt">// middleware/auth.js — Verificación JWT</span></div>
+      <div class="code-line"><span class="ln">20</span><span class="kw">function</span> <span class="fn">auth</span><span class="op">(</span><span class="var">req</span><span class="op">,</span> <span class="var">res</span><span class="op">,</span> <span class="var">next</span><span class="op">) {</span></div>
+      <div class="code-line"><span class="ln">21</span>&nbsp;&nbsp;<span class="kw">const</span> <span class="var">token</span> <span class="op">=</span> <span class="var">req</span><span class="op">.</span><span class="var">headers</span><span class="op">[</span><span class="str">'authorization'</span><span class="op">]?.</span><span class="fn">slice</span><span class="op">(</span><span class="str">7</span><span class="op">);</span></div>
+      <div class="code-line"><span class="ln">22</span>&nbsp;&nbsp;<span class="var">req</span><span class="op">.</span><span class="var">user</span> <span class="op">=</span> <span class="fn">jwt</span><span class="op">.</span><span class="fn">verify</span><span class="op">(</span><span class="var">token</span><span class="op">,</span> <span class="var">process</span><span class="op">.</span><span class="var">env</span><span class="op">.</span><span class="var">JWT_SECRET</span><span class="op">);</span></div>
+      <div class="code-line"><span class="ln">23</span>&nbsp;&nbsp;<span class="fn">next</span><span class="op">();</span></div>
+      <div class="code-line"><span class="ln">24</span><span class="op">}</span></div>
+    </div>
+  </div>
+  <div class="figure-desc">
+    En la Figura 2 se muestra la estructura del backend implementado con <strong>Node.js y Express.js</strong>. Los módulos se organizaron dentro del directorio <em>backend/</em>, separando cada responsabilidad en capas. El archivo <strong>server.js</strong> contiene el punto de entrada, la configuración de CORS, Socket.io y el servidor TCP para el dispositivo GPS; <strong>config/db.js</strong> administra el pool de conexiones a PostgreSQL; la carpeta <strong>middleware/</strong> contiene la verificación de tokens JWT y el control de roles; y la carpeta <strong>routes/</strong> agrupa los nueve módulos de la API REST: autenticación, conductores, vehículos, cola de salida, manifiestos, viajes, reportes y el asistente de inteligencia artificial. Esta separación permite mantener una arquitectura limpia, modular y fácilmente escalable.
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- FIGURA 3 — DESPLIEGUE                                 -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="figure">
+  <div class="figure-caption">
+    <strong>Figura 3</strong>
+    <em>Arquitectura de despliegue de la aplicación</em>
+  </div>
+  <div class="figure-body" style="display:block;">
+    <div class="deploy-diagram">
+
+      <div class="deploy-section-title">Cliente</div>
+      <div class="deploy-row">
+        <div class="deploy-box">
+          <span class="icon">🖥️</span>
+          <span class="label">Navegador Web</span>
+          <span class="sub">Chrome / Edge</span>
+        </div>
+        <div class="deploy-box">
+          <span class="icon">📱</span>
+          <span class="label">Móvil Android</span>
+          <span class="sub">Panel Conductor</span>
+        </div>
+      </div>
+
+      <div style="text-align:center; color:#64748b; margin: 6px 0;">↓ HTTPS / WebSocket</div>
+
+      <div class="deploy-section-title">Servidor (DigitalOcean VPS — Ubuntu 22.04)</div>
+      <div class="deploy-row">
+        <div class="deploy-box green">
+          <span class="icon">🌐</span>
+          <span class="label">Nginx</span>
+          <span class="sub">Proxy inverso<br>Puerto 80 / 443</span>
+        </div>
+        <div class="arrow">→</div>
+        <div class="deploy-box orange">
+          <span class="icon">⚡</span>
+          <span class="label">Node.js / Express</span>
+          <span class="sub">API REST + Socket.io<br>Puerto 3005</span>
+        </div>
+        <div class="arrow">→</div>
+        <div class="deploy-box purple">
+          <span class="icon">🗄️</span>
+          <span class="label">PostgreSQL 15</span>
+          <span class="sub">15 tablas<br>Puerto 5432</span>
+        </div>
+      </div>
+
+      <div style="text-align:center; color:#64748b; margin: 6px 0;">↕ TCP Codec 8</div>
+
+      <div class="deploy-section-title">Hardware IoT</div>
+      <div class="deploy-row">
+        <div class="deploy-box gray">
+          <span class="icon">📡</span>
+          <span class="label">Teltonika FMC130</span>
+          <span class="sub">GPS 4G LTE<br>Puerto TCP 2223</span>
+        </div>
+        <div class="arrow">→</div>
+        <div class="deploy-box orange">
+          <span class="icon">🔌</span>
+          <span class="label">TCP Server</span>
+          <span class="sub">Decodifica Codec 8<br>→ gps_positions</span>
+        </div>
+        <div class="arrow">→</div>
+        <div class="deploy-box green">
+          <span class="icon">🗺️</span>
+          <span class="label">Mapa en tiempo real</span>
+          <span class="sub">Leaflet.js<br>vía Socket.io</span>
+        </div>
+      </div>
+
+      <div style="text-align:center; color:#64748b; margin: 6px 0;">↕ HTTPS API</div>
+
+      <div class="deploy-section-title">Servicios Externos</div>
+      <div class="deploy-row">
+        <div class="deploy-box purple">
+          <span class="icon">🤖</span>
+          <span class="label">Anthropic Claude</span>
+          <span class="sub">claude-haiku-4-5<br>Asistente IA</span>
+        </div>
+        <div class="deploy-box green">
+          <span class="icon">📲</span>
+          <span class="label">WhatsApp API</span>
+          <span class="sub">Envío manifiestos<br>(planificado)</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="figure-desc">
+    En la Figura 3 se muestra la arquitectura de despliegue de Chaski AI 2.0. El sistema se aloja en un servidor VPS de <strong>DigitalOcean</strong> con Ubuntu 22.04, donde Nginx actúa como proxy inverso gestionando el tráfico HTTPS hacia el servidor Node.js/Express en el puerto 3005. La base de datos PostgreSQL 15 corre en el mismo servidor. Los dispositivos GPS <strong>Teltonika FMC130</strong>, instalados en cada vehículo de la asociación, envían paquetes de telemetría mediante protocolo Codec 8 sobre TCP al puerto 2223; el servidor los decodifica y persiste en la tabla <em>gps_positions</em>, retransmitiendo las posiciones al dashboard del administrador en tiempo real mediante Socket.io. El módulo de inteligencia artificial se integra con la API de <strong>Anthropic Claude</strong> para procesar consultas en lenguaje natural sobre el estado operativo de la flota.
+  </div>
+</div>
+
+</body>
+</html>

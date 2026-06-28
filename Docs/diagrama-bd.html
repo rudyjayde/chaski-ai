@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Chaski AI 2.0 — Diagrama de Base de Datos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f1117; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; padding: 30px; }
+  h1 { text-align: center; color: #38bdf8; font-size: 1.6rem; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #64748b; font-size: 0.85rem; margin-bottom: 30px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .table {
+    background: #1e2330;
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 0.78rem;
+  }
+  .table.highlight { border-color: #38bdf8; }
+  .table.secondary { border-color: #a78bfa; }
+  .table.gps { border-color: #34d399; }
+  .table.alert { border-color: #f87171; }
+
+  .table-header {
+    padding: 8px 12px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+  }
+  .highlight .table-header { background: #0c4a6e; color: #38bdf8; }
+  .secondary .table-header { background: #2e1065; color: #a78bfa; }
+  .gps .table-header { background: #064e3b; color: #34d399; }
+  .alert .table-header { background: #450a0a; color: #f87171; }
+  .neutral .table-header { background: #1e293b; color: #94a3b8; }
+
+  .table-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 12px;
+    border-top: 1px solid #2d3748;
+    gap: 8px;
+  }
+  .table-row:hover { background: #2d3748; }
+  .col-name { color: #e2e8f0; flex: 1; }
+  .col-name.pk { color: #fbbf24; font-weight: 600; }
+  .col-name.fk { color: #818cf8; }
+  .col-type { color: #475569; font-size: 0.72rem; text-align: right; white-space: nowrap; }
+  .badge {
+    font-size: 0.6rem; padding: 1px 5px; border-radius: 3px;
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .pk-badge { background: #78350f; color: #fbbf24; }
+  .fk-badge { background: #1e1b4b; color: #818cf8; }
+  .uq-badge { background: #164e63; color: #67e8f9; }
+
+  .legend {
+    display: flex; gap: 20px; justify-content: center;
+    margin: 24px auto 0; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #94a3b8; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .relations {
+    max-width: 1400px; margin: 20px auto 0;
+    background: #1e2330; border: 1px solid #2d3748; border-radius: 10px; padding: 16px 20px;
+  }
+  .relations h3 { color: #94a3b8; font-size: 0.8rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .rel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .rel-item { font-size: 0.75rem; color: #64748b; padding: 4px 0; border-bottom: 1px solid #2d3748; }
+  .rel-item span { color: #38bdf8; }
+</style>
+</head>
+<body>
+
+<h1>Diagrama de Base de Datos — Chaski AI 2.0</h1>
+<p class="subtitle">PostgreSQL 12+ · 15 tablas · 13 índices · Asociación TipCar, Juli-Puno</p>
+
+<div class="grid">
+
+  <!-- ASSOCIATIONS -->
+  <div class="table highlight">
+    <div class="table-header">🏢 associations</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">name</span><span class="col-type">VARCHAR(150)</span></div>
+    <div class="table-row"><span class="col-name">code</span><span class="badge uq-badge">UQ</span><span class="col-type">VARCHAR(20)</span></div>
+    <div class="table-row"><span class="col-name">address</span><span class="col-type">TEXT</span></div>
+    <div class="table-row"><span class="col-name">phone / email</span><span class="col-type">VARCHAR</span></div>
+    <div class="table-row"><span class="col-name">active</span><span class="col-type">BOOLEAN</span></div>
+  </div>
+
+  <!-- COMPANIES -->
+  <div class="table secondary">
+    <div class="table-header">🏭 companies</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">association_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">name</span><span class="col-type">VARCHAR(150)</span></div>
+    <div class="table-row"><span class="col-name">code</span><span class="badge uq-badge">UQ</span><span class="col-type">VARCHAR(20)</span></div>
+    <div class="table-row"><span class="col-name">ruc</span><span class="col-type">VARCHAR(11)</span></div>
+    <div class="table-row"><span class="col-name">active</span><span class="col-type">BOOLEAN</span></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="table highlight">
+    <div class="table-header">👤 users</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">username</span><span class="badge uq-badge">UQ</span><span class="col-type">VARCHAR(50)</span></div>
+    <div class="table-row"><span class="col-name">password_hash</span><span class="col-type">VARCHAR(255)</span></div>
+    <div class="table-row"><span class="col-name">role</span><span class="col-type">admin|driver|supervisor</span></div>
+    <div class="table-row"><span class="col-name fk">association_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">last_login</span><span class="col-type">TIMESTAMP</span></div>
+  </div>
+
+  <!-- VEHICLE TYPES -->
+  <div class="table neutral">
+    <div class="table-header">🚐 vehicle_types</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">name</span><span class="col-type">VARCHAR(100)</span></div>
+    <div class="table-row"><span class="col-name">capacity</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">description</span><span class="col-type">TEXT</span></div>
+  </div>
+
+  <!-- VEHICLES -->
+  <div class="table highlight">
+    <div class="table-header">🚌 vehicles</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">company_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_type_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">association_code</span><span class="col-type">001–060</span></div>
+    <div class="table-row"><span class="col-name">plate</span><span class="badge uq-badge">UQ</span><span class="col-type">VARCHAR(10)</span></div>
+    <div class="table-row"><span class="col-name">brand / model / year</span><span class="col-type">VARCHAR / INT</span></div>
+    <div class="table-row"><span class="col-name">capacity</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">gps_device_id</span><span class="col-type">VARCHAR(50)</span></div>
+    <div class="table-row"><span class="col-name">status</span><span class="col-type">active|inactive|maint.</span></div>
+  </div>
+
+  <!-- DRIVERS -->
+  <div class="table secondary">
+    <div class="table-header">🧑‍✈️ drivers</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">user_id</span><span class="badge fk-badge">FK</span><span class="badge uq-badge">UQ</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">company_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">dni</span><span class="badge uq-badge">UQ</span><span class="col-type">VARCHAR(8)</span></div>
+    <div class="table-row"><span class="col-name">first_name / last_name</span><span class="col-type">VARCHAR(60)</span></div>
+    <div class="table-row"><span class="col-name">license_number / type</span><span class="col-type">VARCHAR</span></div>
+    <div class="table-row"><span class="col-name">license_expiry</span><span class="col-type">DATE</span></div>
+  </div>
+
+  <!-- ROUTES -->
+  <div class="table neutral">
+    <div class="table-header">🗺️ routes</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">name</span><span class="col-type">VARCHAR(100)</span></div>
+    <div class="table-row"><span class="col-name">origin / destination</span><span class="col-type">VARCHAR(100)</span></div>
+    <div class="table-row"><span class="col-name">distance_km</span><span class="col-type">DECIMAL(6,2)</span></div>
+    <div class="table-row"><span class="col-name">duration_minutes</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">fare</span><span class="col-type">DECIMAL(8,2)</span></div>
+  </div>
+
+  <!-- EXIT QUEUE -->
+  <div class="table secondary">
+    <div class="table-header">📋 exit_queue</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">driver_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">route_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">queue_date</span><span class="col-type">DATE</span></div>
+    <div class="table-row"><span class="col-name">position</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">status</span><span class="col-type">waiting|ready|departed…</span></div>
+    <div class="table-row"><span class="col-name">departure_time</span><span class="col-type">TIMESTAMP</span></div>
+  </div>
+
+  <!-- MANIFESTS -->
+  <div class="table highlight">
+    <div class="table-header">📄 manifests</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">manifest_number</span><span class="badge uq-badge">UQ</span><span class="col-type">VARCHAR(30)</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">driver_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">route_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">departure_time</span><span class="col-type">TIMESTAMP</span></div>
+    <div class="table-row"><span class="col-name">status</span><span class="col-type">open|closed|exported</span></div>
+    <div class="table-row"><span class="col-name">total_passengers</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">total_revenue</span><span class="col-type">DECIMAL(10,2)</span></div>
+    <div class="table-row"><span class="col-name">cash / digital</span><span class="col-type">DECIMAL(10,2)</span></div>
+  </div>
+
+  <!-- MANIFEST PASSENGERS -->
+  <div class="table secondary">
+    <div class="table-header">👥 manifest_passengers</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">manifest_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">passenger_order</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">dni / full_name</span><span class="col-type">VARCHAR</span></div>
+    <div class="table-row"><span class="col-name">origin / destination</span><span class="col-type">VARCHAR(100)</span></div>
+    <div class="table-row"><span class="col-name">seat_number</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">payment_type</span><span class="col-type">cash|yape|plin…</span></div>
+    <div class="table-row"><span class="col-name">fare</span><span class="col-type">DECIMAL(8,2)</span></div>
+  </div>
+
+  <!-- TRIPS -->
+  <div class="table highlight">
+    <div class="table-header">🚀 trips</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">driver_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">route_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">manifest_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">start_time / end_time</span><span class="col-type">TIMESTAMP</span></div>
+    <div class="table-row"><span class="col-name">avg_speed / max_speed</span><span class="col-type">DECIMAL(5,2)</span></div>
+    <div class="table-row"><span class="col-name">status</span><span class="col-type">active|completed|cancelled</span></div>
+    <div class="table-row"><span class="col-name">revenue</span><span class="col-type">DECIMAL(10,2)</span></div>
+  </div>
+
+  <!-- GPS POSITIONS -->
+  <div class="table gps">
+    <div class="table-header">📡 gps_positions</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">BIGSERIAL</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">trip_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">latitude / longitude</span><span class="col-type">DECIMAL(10,7)</span></div>
+    <div class="table-row"><span class="col-name">altitude</span><span class="col-type">DECIMAL(7,2)</span></div>
+    <div class="table-row"><span class="col-name">speed / heading</span><span class="col-type">DECIMAL(5,2)</span></div>
+    <div class="table-row"><span class="col-name">satellites</span><span class="col-type">INTEGER</span></div>
+    <div class="table-row"><span class="col-name">recorded_at</span><span class="col-type">TIMESTAMP</span></div>
+    <div class="table-row"><span class="col-name">device_id</span><span class="col-type">VARCHAR(50)</span></div>
+  </div>
+
+  <!-- SPEED ALERTS -->
+  <div class="table alert">
+    <div class="table-header">⚡ speed_alerts</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">driver_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">trip_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">max_speed / speed_limit</span><span class="col-type">DECIMAL(5,2)</span></div>
+    <div class="table-row"><span class="col-name">duration_minutes</span><span class="col-type">DECIMAL(5,2)</span></div>
+    <div class="table-row"><span class="col-name">severity</span><span class="col-type">info|warning|critical</span></div>
+    <div class="table-row"><span class="col-name">acknowledged</span><span class="col-type">BOOLEAN</span></div>
+    <div class="table-row"><span class="col-name">occurred_at</span><span class="col-type">TIMESTAMP</span></div>
+  </div>
+
+  <!-- ROUTE ALERTS -->
+  <div class="table alert">
+    <div class="table-header">🗺️ route_alerts</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">trip_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">alert_type</span><span class="col-type">deviation|stop|offline…</span></div>
+    <div class="table-row"><span class="col-name">deviation_km</span><span class="col-type">DECIMAL(6,2)</span></div>
+    <div class="table-row"><span class="col-name">resolved</span><span class="col-type">BOOLEAN</span></div>
+    <div class="table-row"><span class="col-name">occurred_at</span><span class="col-type">TIMESTAMP</span></div>
+  </div>
+
+  <!-- SYSTEM ALERTS -->
+  <div class="table alert">
+    <div class="table-header">🔔 system_alerts</div>
+    <div class="table-row"><span class="col-name pk">id</span><span class="badge pk-badge">PK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">type / severity</span><span class="col-type">VARCHAR</span></div>
+    <div class="table-row"><span class="col-name">title / message</span><span class="col-type">VARCHAR / TEXT</span></div>
+    <div class="table-row"><span class="col-name fk">vehicle_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name fk">driver_id</span><span class="badge fk-badge">FK</span><span class="col-type">UUID</span></div>
+    <div class="table-row"><span class="col-name">read</span><span class="col-type">BOOLEAN</span></div>
+    <div class="table-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMP</span></div>
+  </div>
+
+</div>
+
+<!-- RELACIONES -->
+<div class="relations">
+  <h3>Relaciones principales (Foreign Keys)</h3>
+  <div class="rel-grid">
+    <div class="rel-item"><span>companies</span> → associations (N:1)</div>
+    <div class="rel-item"><span>users</span> → associations (N:1)</div>
+    <div class="rel-item"><span>vehicles</span> → companies (N:1)</div>
+    <div class="rel-item"><span>vehicles</span> → vehicle_types (N:1)</div>
+    <div class="rel-item"><span>drivers</span> → users (1:1)</div>
+    <div class="rel-item"><span>drivers</span> → vehicles (N:1)</div>
+    <div class="rel-item"><span>drivers</span> → companies (N:1)</div>
+    <div class="rel-item"><span>exit_queue</span> → vehicles, drivers, routes (N:1)</div>
+    <div class="rel-item"><span>manifests</span> → vehicles, drivers, routes (N:1)</div>
+    <div class="rel-item"><span>manifest_passengers</span> → manifests (N:1) CASCADE</div>
+    <div class="rel-item"><span>trips</span> → vehicles, drivers, routes, manifests</div>
+    <div class="rel-item"><span>gps_positions</span> → vehicles, trips (N:1)</div>
+    <div class="rel-item"><span>speed_alerts</span> → vehicles, drivers, trips</div>
+    <div class="rel-item"><span>route_alerts</span> → vehicles, trips</div>
+    <div class="rel-item"><span>system_alerts</span> → vehicles, drivers</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot" style="background:#fbbf24"></div> PK — Clave primaria (UUID)</div>
+  <div class="legend-item"><div class="dot" style="background:#818cf8"></div> FK — Clave foránea</div>
+  <div class="legend-item"><div class="dot" style="background:#67e8f9"></div> UQ — Unique constraint</div>
+  <div class="legend-item"><div class="dot" style="background:#38bdf8"></div> Tablas principales</div>
+  <div class="legend-item"><div class="dot" style="background:#a78bfa"></div> Tablas secundarias</div>
+  <div class="legend-item"><div class="dot" style="background:#34d399"></div> GPS / IoT</div>
+  <div class="legend-item"><div class="dot" style="background:#f87171"></div> Alertas</div>
+</div>
+
+</body>
+</html>

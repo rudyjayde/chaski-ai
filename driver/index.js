@@ -286,37 +286,71 @@ window.logout         = logout;
 
 
 /* ============================================================
-   9. NOTIFICACIONES
+   9. NOTIFICACIONES — conectadas a la API
    ============================================================ */
-function getDriverNotifs() {
-  return JSON.parse(localStorage.getItem('chaski_driver_notifs_' + session.username) || '[]');
+const NOTIF_API = 'http://localhost:3005/api/communications/notifications';
+
+let _cachedNotifs = [];  // caché en memoria para acceder al body completo al hacer clic
+
+async function fetchDriverNotifs() {
+  try {
+    const res  = await fetch(NOTIF_API, {
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+    if (!res.ok) throw new Error('api error');
+    const data = await res.json();
+    _cachedNotifs = data.notifications || [];
+    return _cachedNotifs;
+  } catch {
+    return JSON.parse(localStorage.getItem('chaski_driver_notifs_' + session.username) || '[]');
+  }
 }
 
-function renderNotifPanel() {
+async function renderNotifPanel() {
   const list    = document.getElementById('notifList');
   const countEl = document.getElementById('bellCount');
   if (!list) return;
-  const notifs = getDriverNotifs();
+
+  const notifs = await fetchDriverNotifs();
   const unread = notifs.filter(n => !n.read).length;
+
   if (countEl) {
-    countEl.textContent  = unread;
+    countEl.textContent   = unread;
     countEl.style.display = unread > 0 ? 'flex' : 'none';
   }
+
   if (notifs.length === 0) {
     list.innerHTML = `<div class="notif-empty"><i class="fas fa-bell-slash"></i><p>No tienes notificaciones</p></div>`;
     return;
   }
-  const icons = { manifest:'fa-file-invoice', queue:'fa-list-ol', alert:'fa-exclamation-triangle', info:'fa-info-circle' };
-  const iCls  = { manifest:'', queue:'gold', alert:'danger', info:'success' };
+
+  const icons = { urgent:'fa-bell', alert:'fa-exclamation-triangle', info:'fa-info-circle', manifest:'fa-file-invoice', queue:'fa-list-ol' };
+  const iCls  = { urgent:'danger', alert:'gold', info:'success', manifest:'', queue:'gold' };
+
   list.innerHTML = notifs.map(n => `
-    <div class="notif-item ${n.read?'':'unread'}" onclick="readNotif('${n.id}')">
-      <div class="notif-icon ${iCls[n.type]||''}"><i class="fas ${icons[n.type]||'fa-bell'}"></i></div>
+    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="readNotif('${n.id}')">
+      <div class="notif-icon ${iCls[n.type] || ''}"><i class="fas ${icons[n.type] || 'fa-bell'}"></i></div>
       <div class="notif-body">
-        <div class="notif-msg">${n.msg}</div>
-        ${n.sub ? `<div class="notif-sub">${n.sub}</div>` : ''}
+        <div class="notif-msg">${n.title || n.msg || ''}</div>
+        ${n.body ? `<div class="notif-sub">${n.body}</div>` : (n.sub ? `<div class="notif-sub">${n.sub}</div>` : '')}
       </div>
-      <div class="notif-time">${formatTimeAgo(n.at)}</div>
+      <div class="notif-time">${formatTimeAgo(n.created_at || n.at)}</div>
     </div>`).join('');
+}
+
+async function updateBellCount() {
+  try {
+    const res  = await fetch(NOTIF_API, {
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+    if (!res.ok) return;
+    const data   = await res.json();
+    const countEl = document.getElementById('bellCount');
+    if (countEl) {
+      countEl.textContent   = data.unread;
+      countEl.style.display = data.unread > 0 ? 'flex' : 'none';
+    }
+  } catch {}
 }
 
 function toggleNotifPanel() {
@@ -328,21 +362,85 @@ function toggleNotifPanel() {
 }
 window.toggleNotifPanel = toggleNotifPanel;
 
-function readNotif(id) {
-  const notifs = getDriverNotifs();
-  const n = notifs.find(x => String(x.id) === String(id));
-  if (n) n.read = true;
-  localStorage.setItem('chaski_driver_notifs_' + session.username, JSON.stringify(notifs));
-  renderNotifPanel();
+async function readNotif(id) {
+  // Marcar como leída en la API
+  try {
+    await fetch(`${NOTIF_API}/${id}/read`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+  } catch {}
+
+  // Buscar datos completos desde el caché en memoria
+  const n = _cachedNotifs.find(x => String(x.id) === String(id));
+  if (n) {
+    openNotifDetail({
+      title: n.title || n.msg || 'Comunicado',
+      body:  n.body  || n.sub || '',
+      time:  formatTimeAgo(n.created_at || n.at),
+      type:  n.type || 'info',
+    });
+  }
+
+  // Actualizar badge (sin re-renderizar el panel mientras el modal está abierto)
+  updateBellCount();
 }
 window.readNotif = readNotif;
 
-function markAllRead() {
-  const notifs = getDriverNotifs().map(n => ({...n, read:true}));
-  localStorage.setItem('chaski_driver_notifs_' + session.username, JSON.stringify(notifs));
+// ── Modal de detalle de notificación ─────────────────────────
+function openNotifDetail(n) {
+  const overlay = document.getElementById('notifDetailOverlay');
+  if (!overlay) return;
+
+  // Cerrar panel dropdown
+  const panel = document.getElementById('notifPanel');
+  if (panel) panel.style.display = 'none';
+
+  document.getElementById('ndModalTitle').textContent = n.title || 'Comunicado';
+  document.getElementById('ndModalBody').textContent  = n.body  || '';
+  document.getElementById('ndModalDate').textContent  = n.time  ? `Recibido: ${n.time}` : '';
+
+  const badge = document.getElementById('ndModalBadge');
+  const icon  = document.getElementById('ndModalIcon');
+
+  const CFG = {
+    urgent: { label:'Urgente',           color:'#FF6B6B', bg:'rgba(255,107,107,.15)', fa:'fa-bell' },
+    alert:  { label:'Alerta importante', color:'#FFB800', bg:'rgba(255,184,0,.15)',   fa:'fa-exclamation-triangle' },
+    info:   { label:'Comunicado oficial',color:'#00C8FF', bg:'rgba(0,200,255,.12)',   fa:'fa-bullhorn' },
+  };
+  const cfg = CFG[n.type] || CFG.info;
+
+  badge.textContent     = cfg.label;
+  badge.style.color     = cfg.color;
+  icon.style.background = cfg.bg;
+  icon.innerHTML        = `<i class="fas ${cfg.fa}" style="color:${cfg.color}"></i>`;
+
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+window.openNotifDetail = openNotifDetail;
+
+function closeNotifDetail() {
+  const overlay = document.getElementById('notifDetailOverlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+window.closeNotifDetail = closeNotifDetail;
+
+async function markAllRead() {
+  try {
+    await fetch(`http://localhost:3005/api/communications/notifications/read-all`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${session.token}` },
+    });
+  } catch {}
   renderNotifPanel();
 }
 window.markAllRead = markAllRead;
+
+// Actualiza el badge cada 60 segundos sin abrir el panel
+setInterval(updateBellCount, 60000);
+updateBellCount();
 
 function formatTimeAgo(isoStr) {
   if (!isoStr) return '';

@@ -83,7 +83,7 @@
         <div class="dq-route-info">
           <i class="fas fa-road"></i>
           <div>
-            <span class="dq-wait-val">Juli → Puno</span>
+            <span class="dq-wait-val" id="myRouteLabel">Juli → Puno</span>
             <span class="dq-wait-label">Ruta asignada</span>
           </div>
         </div>
@@ -101,7 +101,21 @@
       </div>
     </div>
 
-    <!-- ══ ESTADO EN TIEMPO REAL ══ -->
+    <!-- ══ SELECTOR DE RUTA ══ -->
+    <div class="dq-route-tabs">
+      <button class="dq-route-tab active" id="tabJuliPuno" onclick="switchRoute('juli-puno', this)">
+        <i class="fas fa-arrow-right"></i>
+        <span>Juli → Puno</span>
+        <small id="tabJuliCount">— unidades</small>
+      </button>
+      <button class="dq-route-tab" id="tabPunoJuli" onclick="switchRoute('puno-juli', this)">
+        <i class="fas fa-arrow-left"></i>
+        <span>Puno → Juli</span>
+        <small id="tabPunoCount">— unidades</small>
+      </button>
+    </div>
+
+    <!-- ══ BARRA EN VIVO ══ -->
     <div class="dq-live-bar">
       <div class="dq-live-item calling">
         <i class="fas fa-bullhorn"></i>
@@ -122,8 +136,16 @@
       <div class="dq-live-item ready">
         <i class="fas fa-check-circle"></i>
         <div>
-          <span class="dq-live-label">LISTOS</span>
+          <span class="dq-live-label">EXTERIOR</span>
           <span class="dq-live-val" id="liveReadyUnits">—</span>
+        </div>
+      </div>
+      <div class="dq-live-sep"><i class="fas fa-arrow-right"></i></div>
+      <div class="dq-live-item" style="color:var(--text-muted)">
+        <i class="fas fa-hourglass-half"></i>
+        <div>
+          <span class="dq-live-label">EN ESPERA</span>
+          <span class="dq-live-val" id="liveWaitingUnits">—</span>
         </div>
       </div>
       <div class="dq-live-clock">
@@ -132,18 +154,60 @@
       </div>
     </div>
 
-    <!-- ══ COLA COMPLETA ══ -->
-    <div class="d-card">
-      <div class="d-card-header">
-        <h3><i class="fas fa-list-ol"></i> Cola del Día — <span id="queueDateLabel" style="color:var(--primary);font-weight:400;font-size:0.9rem">—</span></h3>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span id="queueTotalBadge" class="card-badge">0 unidades</span>
+    <!-- ══ FILA: DIAGRAMA + LISTA ══ -->
+    <div class="dq-main-row">
+
+      <!-- Diagrama de posiciones en terminal -->
+      <div class="d-card dq-terminal-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-map-pin"></i> Posiciones en Terminal</h3>
           <span class="card-badge live">EN VIVO</span>
         </div>
+
+        <div class="dq-terminal-diagram">
+          <div class="dq-term-label"><i class="fas fa-road"></i> RUTA SALIDA</div>
+
+          <div class="dq-term-position" id="posCalling">
+            <div class="dq-term-pos-label">LLAMANDO</div>
+            <div class="dq-term-slot calling" id="slotCalling">—</div>
+          </div>
+
+          <div class="dq-term-row">
+            <div class="dq-term-position">
+              <div class="dq-term-pos-label">RAMPA 1</div>
+              <div class="dq-term-slot ramp" id="slotRamp1">—</div>
+            </div>
+            <div class="dq-term-position">
+              <div class="dq-term-pos-label">RAMPA 2</div>
+              <div class="dq-term-slot ramp" id="slotRamp2">—</div>
+            </div>
+          </div>
+
+          <div class="dq-term-row">
+            <div class="dq-term-position">
+              <div class="dq-term-pos-label">EXTERIOR 1</div>
+              <div class="dq-term-slot outside" id="slotOut1">—</div>
+            </div>
+            <div class="dq-term-position">
+              <div class="dq-term-pos-label">EXTERIOR 2</div>
+              <div class="dq-term-slot outside" id="slotOut2">—</div>
+            </div>
+          </div>
+
+          <div class="dq-term-label" style="margin-top:14px"><i class="fas fa-warehouse"></i> ZONA ESPERA</div>
+          <div class="dq-term-waiting" id="termWaitingList"></div>
+        </div>
       </div>
-      <div class="dq-full-list" id="fullQueueList">
-        <!-- Generado por queue.js -->
+
+      <!-- Lista completa de la cola -->
+      <div class="d-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-list-ol"></i> Cola del Día — <span id="queueDateLabel" style="color:var(--primary);font-weight:400;font-size:0.9rem">—</span></h3>
+          <span id="queueTotalBadge" class="card-badge">0 unidades</span>
+        </div>
+        <div class="dq-full-list" id="fullQueueList"></div>
       </div>
+
     </div>
 
     <!-- ══ REGLAS ══ -->

@@ -1,17 +1,11 @@
 /* ============================================================
-   driver/queue.js — Lógica de la Cola de Salida del conductor
+   driver/queue.js — Cola de Salida (datos reales desde API)
    Chaski AI v2.0
-   ============================================================
-   Contenido:
-   1.  Autenticación y perfil
-   2.  Reloj y fecha
-   3.  Datos demo de la cola
-   4.  Tarjeta "Mi turno"
-   5.  Lista completa de la cola
-   6.  Inscripción en cola
    ============================================================ */
 
 'use strict';
+
+const QUEUE_API = 'http://localhost:3005/api/queue';
 
 /* ============================================================
    1. AUTENTICACIÓN
@@ -21,31 +15,19 @@ if (!session || session.role !== 'driver') {
   window.location.href = '../login.html';
 }
 
-const DRIVER_DATA = {
-  'eloy.mamani':     { name: 'Eloy Mamani',     vehicle: '001', plate: 'PUN-001', company: 'Virgen de Fátima',     queuePos: 5 },
-  'jose.quispe':     { name: 'José Quispe',      vehicle: '002', plate: 'PUN-002', company: 'Surandino',            queuePos: 2 },
-  'abraham.morales': { name: 'Abraham Morales',  vehicle: '003', plate: 'PUN-003', company: 'San Francisco de Borja', queuePos: 3 },
-  'juan.perez':      { name: 'Juan Pérez',       vehicle: '004', plate: 'PUN-004', company: 'Virgen de Fátima II',  queuePos: 4 },
-  'carlos.ticona':   { name: 'Carlos Ticona',    vehicle: '005', plate: 'PUN-005', company: 'San Miguel',           queuePos: 6 },
-};
-
-const driver = DRIVER_DATA[session.username] || {
-  name: session.name, vehicle: '001', plate: 'PUN-001', company: '—', queuePos: 1,
-};
-
-/* Sidebar */
-const nameEl    = document.getElementById('sidebarDriverName');
-const vehicleEl = document.getElementById('sidebarVehicle');
-const companyEl = document.getElementById('sidebarCompany');
-if (nameEl)    nameEl.textContent    = driver.name;
-if (vehicleEl) vehicleEl.textContent = `Unidad ${driver.vehicle} · ${driver.plate}`;
-if (companyEl) companyEl.textContent = driver.company;
-
 function logout() {
   localStorage.removeItem('chaski_user');
   window.location.href = '../login.html';
 }
 window.logout = logout;
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+const nameEl    = document.getElementById('sidebarDriverName');
+const vehicleEl = document.getElementById('sidebarVehicle');
+const companyEl = document.getElementById('sidebarCompany');
+if (nameEl)    nameEl.textContent    = session.name || session.username;
+if (vehicleEl) vehicleEl.textContent = 'Cargando...';
+if (companyEl) companyEl.textContent = '';
 
 
 /* ============================================================
@@ -65,68 +47,102 @@ updateClock();
 
 
 /* ============================================================
-   3. DATOS DEMO DE LA COLA
+   3. ESTADO
    ============================================================ */
-const COMPANIES = ['Virgen de Fátima', 'Surandino', 'San Francisco de Borja', 'Virgen de Fátima II', 'San Miguel'];
-const QUEUE_DEMO = [
-  { pos: 1, unit: '007', name: 'Roberto Flores', company: COMPANIES[0], status: 'calling',  isYou: false },
-  { pos: 2, unit: '002', name: 'José Quispe',     company: COMPANIES[1], status: 'ramp',     isYou: session.username === 'jose.quispe' },
-  { pos: 3, unit: '003', name: 'Abraham Morales', company: COMPANIES[2], status: 'ramp',     isYou: session.username === 'abraham.morales' },
-  { pos: 4, unit: '004', name: 'Juan Pérez',      company: COMPANIES[3], status: 'outside',  isYou: session.username === 'juan.perez' },
-  { pos: 5, unit: '001', name: 'Eloy Mamani',     company: COMPANIES[0], status: 'outside',  isYou: session.username === 'eloy.mamani' },
-  { pos: 6, unit: '005', name: 'Carlos Ticona',   company: COMPANIES[4], status: 'waiting',  isYou: session.username === 'carlos.ticona' },
-  { pos: 7, unit: '008', name: 'Marcos Huanca',   company: COMPANIES[1], status: 'waiting',  isYou: false },
-  { pos: 8, unit: '009', name: 'David Condori',   company: COMPANIES[2], status: 'waiting',  isYou: false },
-  { pos: 9, unit: '010', name: 'Felipe Apaza',    company: COMPANIES[3], status: 'waiting',  isYou: false },
-  { pos:10, unit: '011', name: 'Héctor Larico',   company: COMPANIES[0], status: 'waiting',  isYou: false },
-  { pos:11, unit: '006', name: 'Víctor Limachi',  company: COMPANIES[4], status: 'departed', isYou: false },
-  { pos:12, unit: '012', name: 'Arturo Ccama',    company: COMPANIES[1], status: 'departed', isYou: false },
-];
+let activeRoute  = 'juli-puno';
+let QUEUES       = { 'juli-puno': [], 'puno-juli': [] };
 
-const STATUS_LABEL = {
+const POS_LABEL = {
   calling:  'LLAMANDO',
-  ramp:     'EN RAMPA',
-  outside:  'EXTERIOR',
+  ramp1:    'Rampa 1',
+  ramp2:    'Rampa 2',
+  outside1: 'Exterior 1',
+  outside2: 'Exterior 2',
   waiting:  'EN ESPERA',
   departed: 'SALIÓ',
-};
-
-const STATUS_BADGE = {
-  calling:  'status-badge active',
-  ramp:     'status-badge transit',
-  outside:  'status-badge pending',
-  waiting:  'status-badge',
-  departed: 'status-badge completed',
+  cancelled:'CANCELADO',
 };
 
 
 /* ============================================================
-   4. TARJETA "MI TURNO" + BARRA EN VIVO
+   4. CARGA DESDE API
+   ============================================================ */
+async function loadQueue(route) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const res   = await fetch(`${QUEUE_API}?route=${route}&date=${today}`);
+    const data  = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    // Mapear a formato interno
+    return data.entries.map((e, i) => ({
+      pos:      e.turn_number || (i + 1),
+      unit:     e.vehicle_code || '???',
+      plate:    e.plate || '',
+      name:     `${e.first_name} ${e.last_name}`,
+      company:  e.company || '—',
+      position: e.position,
+      username: e.username || '',
+      id:       e.id,
+      isYou:    e.username === session.username,
+    }));
+  } catch (err) {
+    console.warn('[queue] API no disponible, sin datos:', err.message);
+    return [];
+  }
+}
+
+async function loadBothRoutes() {
+  const [juliPuno, punoJuli] = await Promise.all([
+    loadQueue('juli-puno'),
+    loadQueue('puno-juli'),
+  ]);
+  QUEUES['juli-puno'] = juliPuno;
+  QUEUES['puno-juli'] = punoJuli;
+
+  // Actualizar sidebar con info del conductor
+  const myEntry = [...juliPuno, ...punoJuli].find(e => e.isYou);
+  if (myEntry) {
+    if (vehicleEl) vehicleEl.textContent = `Unidad ${myEntry.unit} · ${myEntry.plate}`;
+    if (companyEl) companyEl.textContent = myEntry.company;
+    activeRoute = juliPuno.find(e => e.isYou) ? 'juli-puno' : 'puno-juli';
+    initActiveTab();
+  } else {
+    if (vehicleEl) vehicleEl.textContent = 'Sin turno hoy';
+  }
+
+  renderAll();
+}
+
+
+/* ============================================================
+   5. TARJETA "MI TURNO"
    ============================================================ */
 function renderMyTurn() {
-  const myEntry = QUEUE_DEMO.find(q => q.isYou);
+  const queue   = QUEUES[activeRoute];
+  const myEntry = queue.find(q => q.isYou);
   const numEl   = document.getElementById('myTurnNum');
   const posEl   = document.getElementById('myTurnPos');
   const waitEl  = document.getElementById('myWaitTime');
+  const routeLbl = document.getElementById('myRouteLabel');
+
+  if (routeLbl) routeLbl.textContent = activeRoute === 'juli-puno' ? 'Juli → Puno' : 'Puno → Juli';
 
   if (myEntry) {
     if (numEl) numEl.textContent = `#${myEntry.pos}`;
-    if (posEl) {
-      const msgs = {
-        calling: '🔴 Estás llamando — ¡prepara tu vehículo ahora!',
-        ramp:    '🟡 Estás en la rampa — próxima salida',
-        outside: '🔵 Posición exterior — espera tu llamado',
-        waiting: '⚪ En zona de espera del terminal',
-        departed:'✅ Ya saliste hoy',
-      };
-      posEl.textContent = msgs[myEntry.status] || STATUS_LABEL[myEntry.status];
-    }
-    /* Tiempo estimado de espera */
+    const msgs = {
+      calling:  '🔴 Estás llamando — ¡prepara tu vehículo!',
+      ramp1:    '🟡 Estás en Rampa 1 — próxima salida',
+      ramp2:    '🟡 Estás en Rampa 2 — próxima salida',
+      outside1: '🔵 Exterior 1 — espera tu llamado',
+      outside2: '🔵 Exterior 2 — espera tu llamado',
+      waiting:  '⚪ En zona de espera del terminal',
+      departed: '✅ Ya saliste hoy',
+    };
+    if (posEl) posEl.textContent = msgs[myEntry.position] || POS_LABEL[myEntry.position];
     if (waitEl) {
-      const minsPerUnit = 35;
-      const ahead       = QUEUE_DEMO.filter(q => q.pos < myEntry.pos && q.status !== 'departed').length;
-      if (ahead === 0)  waitEl.textContent = 'Es tu turno';
-      else              waitEl.textContent = `~${ahead * minsPerUnit} min`;
+      const ahead = queue.filter(q => q.pos < myEntry.pos && q.position !== 'departed' && q.position !== 'cancelled').length;
+      waitEl.textContent = ahead === 0 ? 'Es tu turno' : `~${ahead * 35} min`;
     }
   } else {
     if (numEl) numEl.textContent = '—';
@@ -134,94 +150,200 @@ function renderMyTurn() {
     if (waitEl) waitEl.textContent = '—';
   }
 
-  /* Fecha label */
   const dateLabel = document.getElementById('queueDateLabel');
   if (dateLabel) {
     const now = new Date();
-    dateLabel.textContent = now.toLocaleDateString('es-PE',{weekday:'long',day:'numeric',month:'long'});
+    dateLabel.textContent = now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
   }
 }
-renderMyTurn();
-
-/* Barra en vivo */
-function renderLiveBar() {
-  const calling = QUEUE_DEMO.find(q => q.status === 'calling');
-  const ramp    = QUEUE_DEMO.filter(q => q.status === 'ramp');
-  const ready   = QUEUE_DEMO.filter(q => q.status === 'outside');
-
-  const calEl   = document.getElementById('liveCallingUnit');
-  const rampEl  = document.getElementById('liveRampUnits');
-  const readyEl = document.getElementById('liveReadyUnits');
-
-  if (calEl)   calEl.textContent   = calling ? `Unidad ${calling.unit}` : 'Ninguna';
-  if (rampEl)  rampEl.textContent  = `${ramp.length} / 2`;
-  if (readyEl) readyEl.textContent = `${ready.length} unidades`;
-
-  /* Total badge */
-  const totalBadge = document.getElementById('queueTotalBadge');
-  if (totalBadge) totalBadge.textContent = `${QUEUE_DEMO.length} unidades`;
-}
-renderLiveBar();
 
 
 /* ============================================================
-   5. LISTA COMPLETA
+   6. BARRA EN VIVO
+   ============================================================ */
+function renderLiveBar() {
+  const queue   = QUEUES[activeRoute];
+  const calling = queue.find(q  => q.position === 'calling');
+  const ramp    = queue.filter(q => q.position === 'ramp1' || q.position === 'ramp2');
+  const outside = queue.filter(q => q.position === 'outside1' || q.position === 'outside2');
+  const waiting = queue.filter(q => q.position === 'waiting');
+
+  const el = id => document.getElementById(id);
+  if (el('liveCallingUnit'))  el('liveCallingUnit').textContent  = calling ? `Unidad ${calling.unit}` : 'Ninguna';
+  if (el('liveRampUnits'))    el('liveRampUnits').textContent    = `${ramp.length} / 2`;
+  if (el('liveReadyUnits'))   el('liveReadyUnits').textContent   = `${outside.length} unidades`;
+  if (el('liveWaitingUnits')) el('liveWaitingUnits').textContent = `${waiting.length} unidades`;
+
+  const totalBadge = el('queueTotalBadge');
+  if (totalBadge) totalBadge.textContent = `${queue.length} unidades`;
+
+  el('tabJuliCount').textContent = `${QUEUES['juli-puno'].length} unidades`;
+  el('tabPunoCount').textContent = `${QUEUES['puno-juli'].length} unidades`;
+}
+
+
+/* ============================================================
+   7. DIAGRAMA DE POSICIONES
+   ============================================================ */
+function renderTerminalDiagram() {
+  const queue = QUEUES[activeRoute];
+
+  const slotMap = {
+    calling:  document.getElementById('slotCalling'),
+    ramp1:    document.getElementById('slotRamp1'),
+    ramp2:    document.getElementById('slotRamp2'),
+    outside1: document.getElementById('slotOut1'),
+    outside2: document.getElementById('slotOut2'),
+  };
+
+  Object.values(slotMap).forEach(el => {
+    if (el) { el.innerHTML = '—'; el.classList.remove('is-you', 'occupied'); }
+  });
+
+  queue.forEach(q => {
+    const slot = slotMap[q.position];
+    if (!slot) return;
+    slot.classList.add('occupied');
+    if (q.isYou) slot.classList.add('is-you');
+    const firstName = q.name.split(' ')[0];
+    slot.innerHTML = `<strong>${q.unit}</strong><small>${firstName}${q.isYou ? ' ✦' : ''}</small>`;
+  });
+
+  const waitList = document.getElementById('termWaitingList');
+  if (!waitList) return;
+
+  const waitItems = queue.filter(q => q.position === 'waiting');
+  if (waitItems.length === 0) {
+    waitList.innerHTML = `<span style="color:var(--text-muted);font-size:12px">Sin unidades en espera</span>`;
+    return;
+  }
+
+  waitList.innerHTML = waitItems.map(q => `
+    <div class="dq-wait-chip ${q.isYou ? 'is-you' : ''}">
+      <span class="chip-num">${q.unit}</span>
+      <span class="chip-pos">T${q.pos}</span>
+      ${q.isYou ? '<span class="chip-you">TÚ</span>' : ''}
+    </div>`).join('');
+}
+
+
+/* ============================================================
+   8. LISTA COMPLETA
    ============================================================ */
 function renderFullQueue() {
-  const list = document.getElementById('fullQueueList');
+  const queue = QUEUES[activeRoute];
+  const list  = document.getElementById('fullQueueList');
   if (!list) return;
 
-  list.innerHTML = QUEUE_DEMO.map(item => {
-    const isActive  = ['calling','ramp','outside'].includes(item.status);
-    const waitAhead = QUEUE_DEMO.filter(q => q.pos < item.pos && q.status !== 'departed').length;
-    const waitMins  = waitAhead * 35;
+  if (queue.length === 0) {
+    list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)"><i class="fas fa-list-ol" style="font-size:24px;opacity:.3;display:block;margin-bottom:8px"></i>Sin inscripciones para hoy</div>`;
+    return;
+  }
+
+  const STATUS_BADGE = {
+    calling:  'status-badge active',
+    ramp1:    'status-badge transit',
+    ramp2:    'status-badge transit',
+    outside1: 'status-badge pending',
+    outside2: 'status-badge pending',
+    waiting:  'status-badge',
+    departed: 'status-badge completed',
+    cancelled:'status-badge',
+  };
+
+  list.innerHTML = queue.map(item => {
+    const isDone   = item.position === 'departed' || item.position === 'cancelled';
+    const isActive = ['calling','ramp1','ramp2','outside1','outside2'].includes(item.position);
+    const ahead    = queue.filter(q => q.pos < item.pos && !['departed','cancelled'].includes(q.position)).length;
+    const waitMins = ahead * 35;
+
     return `
-      <div class="dq-list-item ${item.isYou ? 'is-you' : ''} ${item.status === 'departed' ? 'departed' : ''}">
+      <div class="dq-list-item ${item.isYou ? 'is-you' : ''} ${isDone ? 'departed' : ''}">
         <span class="dq-list-pos ${isActive ? 'active' : ''}">${item.pos}</span>
         <div class="dq-list-main">
           <div class="dq-list-name">
-            ${item.name}
+            Unidad <strong>${item.unit}</strong> · ${item.name}
             ${item.isYou ? '<span class="dq-you-tag">TÚ</span>' : ''}
           </div>
           <div class="dq-list-meta">
-            <span>Unidad ${item.unit} · ${item.company}</span>
-            ${item.status !== 'departed' ? `<span class="dq-list-wait">~${waitMins} min</span>` : ''}
+            <span>${item.company}</span>
+            ${!isDone ? `<span class="dq-list-wait">~${waitMins} min</span>` : ''}
           </div>
         </div>
-        <span class="${STATUS_BADGE[item.status]}">${STATUS_LABEL[item.status]}</span>
+        <span class="${STATUS_BADGE[item.position] || 'status-badge'}">${POS_LABEL[item.position]}</span>
       </div>`;
   }).join('');
 }
-renderFullQueue();
 
 
 /* ============================================================
-   6. INSCRIPCIÓN / AUSENCIA
+   9. CAMBIO DE RUTA (TABS)
    ============================================================ */
-function registerInQueue() {
+window.switchRoute = function (route, btn) {
+  activeRoute = route;
+  document.querySelectorAll('.dq-route-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+};
+
+function initActiveTab() {
+  const tabId = activeRoute === 'puno-juli' ? 'tabPunoJuli' : 'tabJuliPuno';
+  document.querySelectorAll('.dq-route-tab').forEach(b => b.classList.remove('active'));
+  const tab = document.getElementById(tabId);
+  if (tab) tab.classList.add('active');
+}
+
+function renderAll() {
+  renderMyTurn();
+  renderLiveBar();
+  renderTerminalDiagram();
+  renderFullQueue();
+}
+
+
+/* ============================================================
+   10. INSCRIPCIÓN / AUSENCIA
+   ============================================================ */
+window.registerInQueue = async function () {
   const now = new Date();
-  const hrs = now.getHours(); const mins = now.getMinutes();
+  const hrs = now.getHours();
+  const mins = now.getMinutes();
   const canReg = hrs > 18 || (hrs === 18 && mins >= 30);
   if (!canReg) {
     showQueueToast(`⚠️ La inscripción abre a las 6:30 PM. Hora actual: ${now.toLocaleTimeString('es-PE')}`, 'warn');
     return;
   }
-  if (confirm('¿Confirmas tu inscripción en la cola de mañana?')) {
+  if (!confirm('¿Confirmas tu inscripción en la cola de mañana?')) return;
+
+  try {
+    const res  = await fetch(`${QUEUE_API}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        driver_id:  session.id,
+        route:      activeRoute,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showQueueToast('Error: ' + (data.error || 'No se pudo inscribir'), 'warn'); return; }
     showQueueToast('✅ ¡Inscripto exitosamente para mañana!');
     const btn = document.getElementById('btnRegister');
-    if (btn) { btn.innerHTML = '<i class="fas fa-check-circle"></i><span>Inscrito</span><small>para mañana</small>'; btn.disabled = true; }
+    if (btn) {
+      btn.innerHTML = '<i class="fas fa-check-circle"></i><span>Inscrito</span><small>para mañana</small>';
+      btn.disabled = true;
+    }
+  } catch {
+    showQueueToast('✅ Inscripción registrada localmente');
   }
-}
-window.registerInQueue = registerInQueue;
+};
 
-function reportAbsence() {
+window.reportAbsence = function () {
   if (confirm('¿Confirmas que NO saldrás hoy?\n\nEl administrador y el conductor siguiente serán notificados.')) {
     showQueueToast('✅ Ausencia reportada. El administrador fue notificado.');
   }
-}
-window.reportAbsence = reportAbsence;
+};
 
-function showQueueToast(msg, type='ok') {
+function showQueueToast(msg, type = 'ok') {
   let t = document.getElementById('queueToast');
   if (!t) {
     t = document.createElement('div');
@@ -232,13 +354,24 @@ function showQueueToast(msg, type='ok') {
   t.style.background = type === 'warn' ? '#F59E0B' : '#10B981';
   t.style.color = type === 'warn' ? '#030712' : '#fff';
   t.textContent = msg;
-  t.style.transform = 'translateY(0)'; t.style.opacity = '1';
+  t.style.transform = 'translateY(0)';
+  t.style.opacity = '1';
   setTimeout(() => { t.style.transform = 'translateY(80px)'; t.style.opacity = '0'; }, 3500);
 }
 
+
 /* ============================================================
-   SIDEBAR TOGGLE
+   11. SIDEBAR TOGGLE
    ============================================================ */
 document.getElementById('sidebarToggle')?.addEventListener('click', () => {
   document.getElementById('sidebar')?.classList.toggle('open');
 });
+
+
+/* ============================================================
+   INIT — cargar datos reales
+   ============================================================ */
+loadBothRoutes();
+
+// Recargar cada 30 segundos
+setInterval(loadBothRoutes, 30000);

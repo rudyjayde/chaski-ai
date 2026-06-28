@@ -430,8 +430,152 @@
 .dq-rule-item strong { font-size: 0.9rem; color: var(--text); display: block; margin-bottom: 3px; }
 .dq-rule-item p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
 
+/* ── Tabs de ruta ──────────────────────────────────────────── */
+.dq-route-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.dq-route-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: var(--font-body);
+}
+
+.dq-route-tab span { font-size: 14px; font-weight: 700; color: var(--text); }
+.dq-route-tab i    { font-size: 18px; margin-bottom: 2px; }
+.dq-route-tab small { font-size: 11px; }
+
+.dq-route-tab.active {
+  background: rgba(0,200,255,0.1);
+  border-color: rgba(0,200,255,0.4);
+  color: var(--primary);
+}
+.dq-route-tab.active span { color: var(--primary); }
+
+/* ── Fila principal: diagrama + lista ──────────────────────── */
+.dq-main-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Tarjeta del terminal (diagrama) ────────────────────────── */
+.dq-terminal-card { min-width: 0; }
+
+.dq-terminal-diagram {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dq-term-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  width: 100%;
+  text-align: center;
+}
+
+.dq-term-position { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.dq-term-pos-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.dq-term-slot {
+  width: 100px;
+  height: 64px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rajdhani', 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  gap: 2px;
+  transition: all .2s;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+}
+
+.dq-term-slot small { font-size: 11px; font-weight: 500; font-family: var(--font-body); }
+
+.dq-term-slot.occupied { color: var(--text); }
+.dq-term-slot.calling  { background: rgba(0,200,255,0.12); border-color: rgba(0,200,255,0.4); color: var(--primary); }
+.dq-term-slot.ramp     { background: rgba(255,184,0,0.1);  border-color: rgba(255,184,0,0.35); color: #FFB800; }
+.dq-term-slot.outside  { background: rgba(163,230,53,0.08); border-color: rgba(163,230,53,0.3); color: #a3e635; }
+
+.dq-term-slot.is-you {
+  box-shadow: 0 0 0 2px #00C8FF;
+  outline: 2px solid rgba(0,200,255,0.3);
+}
+
+.dq-term-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Zona de espera (chips) */
+.dq-term-waiting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+}
+
+.dq-wait-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.dq-wait-chip.is-you {
+  background: rgba(0,200,255,0.12);
+  border-color: rgba(0,200,255,0.4);
+  color: var(--primary);
+}
+
+.chip-num { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px; }
+.chip-pos { font-size: 10px; color: var(--text-muted); }
+.chip-you { font-size: 9px; font-weight: 700; color: var(--primary); letter-spacing: .05em; }
+
+@media (max-width: 900px) {
+  .dq-main-row { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
   .dq-my-turn-hero { grid-template-columns: 1fr; gap: 16px; }
   .dq-turn-center   { flex-direction: column; }
   .dq-live-bar      { gap: 12px; }
+  .dq-route-tabs    { flex-direction: column; }
 }
