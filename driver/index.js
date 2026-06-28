@@ -288,7 +288,7 @@ window.logout         = logout;
 /* ============================================================
    9. NOTIFICACIONES — conectadas a la API
    ============================================================ */
-const NOTIF_API = 'http://localhost:3005/api/communications/notifications';
+const NOTIF_API = '/api/communications/notifications';
 
 let _cachedNotifs = [];  // caché en memoria para acceder al body completo al hacer clic
 
@@ -429,7 +429,7 @@ window.closeNotifDetail = closeNotifDetail;
 
 async function markAllRead() {
   try {
-    await fetch(`http://localhost:3005/api/communications/notifications/read-all`, {
+    await fetch(`/api/communications/notifications/read-all`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${session.token}` },
     });

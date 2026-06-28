@@ -3,7 +3,7 @@
 // admin/assistant.js
 // ============================================================
 
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = '';
 
 // ── Estado ──────────────────────────────────────────────────
 let history    = [];   // { role: 'user'|'assistant', content: string }
@@ -459,7 +459,7 @@ async function sendMessage(overrideText) {
     appendMessageRow('ai', `
       <span style="color:#EF4444">
         <i class="fas fa-wifi" style="margin-right:6px"></i>
-        No se pudo conectar al backend. Verifica que el servidor esté corriendo en <strong>localhost:3000</strong>.
+        No se pudo conectar al backend. Verifica que el servidor esté corriendo en <strong>chaski-ai.onrender.com</strong>.
       </span>
       <br><small style="color:#6A8DB0;font-size:0.75rem;margin-top:6px;display:block">
         Inicia el servidor con: <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px">node backend/server.js</code>

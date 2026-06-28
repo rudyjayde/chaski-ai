@@ -245,7 +245,7 @@
    ============================================================ */
 (function initGPSMap() {
 
-  const API_BASE = 'http://localhost:3005';
+  const API_BASE = '';
 
   const ROUTE_COORDS = [
     [-16.2060, -69.4600],

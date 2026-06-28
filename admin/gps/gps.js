@@ -5,7 +5,7 @@
 
 'use strict';
 
-const API = 'http://localhost:3005';
+const API = '';
 
 // Auth guard
 (function () {

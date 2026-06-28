@@ -5,7 +5,7 @@
 
 'use strict';
 
-const QUEUE_API = 'http://localhost:3005/api/queue';
+const QUEUE_API = '/api/queue';
 
 /* ============================================================
    1. AUTENTICACIÓN

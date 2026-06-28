@@ -1,6 +1,6 @@
 'use strict';
 
-const COMM_API = 'http://localhost:3005/api/communications';
+const COMM_API = '/api/communications';
 
 // ── Carga y renderiza el panel de comunicados ─────────────────
 async function loadCommunications() {
