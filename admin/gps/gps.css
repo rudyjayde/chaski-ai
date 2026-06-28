@@ -89,13 +89,15 @@
   background: transparent;
   color: var(--text);
   font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .tbl-btn:hover { background: var(--dark2); border-color: var(--border2); }
-.tbl-btn.assign { color: #00C8FF; border-color: rgba(0,200,255,0.3); }
-.tbl-btn.assign:hover { background: rgba(0,200,255,0.08); }
+.tbl-btn.assign { color: #00C8FF; border-color: rgba(0,200,255,0.5); background: rgba(0,200,255,0.08); }
+.tbl-btn.assign:hover { background: rgba(0,200,255,0.16); border-color: rgba(0,200,255,0.7); }
 .tbl-btn.edit   { color: #FFB800; border-color: rgba(255,184,0,0.3); }
 .tbl-btn.edit:hover { background: rgba(255,184,0,0.08); }
 .tbl-btn.del    { color: #FF6B6B; border-color: rgba(255,68,68,0.3); }
