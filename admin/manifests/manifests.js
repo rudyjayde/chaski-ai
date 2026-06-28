@@ -525,14 +525,65 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
-/** Muestra ventana de impresión del manifiesto actual */
+function printManifestWindow(m) {
+  const passengers = generatePassengers(m);
+  const rows = passengers.map(p => `
+    <tr>
+      <td>${p.num}</td><td>${p.dni}</td><td>${p.name}</td>
+      <td>${p.origin}</td><td>${p.dest}</td><td>${p.seat}</td>
+      <td>${p.payment}</td><td>S/ ${p.fare.toFixed(2)}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Manifiesto ${m.num}</title>
+<style>
+body{font-family:Arial,sans-serif;font-size:12px;color:#000;margin:20px}
+h1{font-size:16px;text-align:center;margin-bottom:4px}
+.sub{text-align:center;font-size:11px;color:#555;margin-bottom:16px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;margin-bottom:16px;border:1px solid #ccc;padding:10px;border-radius:4px}
+.info-row{display:flex;gap:6px}
+.info-label{font-weight:bold;min-width:90px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th{background:#1a3a5c;color:#fff;padding:6px 8px;text-align:left;font-size:11px}
+td{border:1px solid #ddd;padding:5px 8px}
+tr:nth-child(even) td{background:#f5f5f5}
+.total{margin-top:10px;text-align:right;font-weight:bold}
+@media print{body{margin:0}}
+</style></head><body>
+<h1>CHASKI AI — Manifiesto de Pasajeros</h1>
+<div class="sub">Asociación ATIPCAR &nbsp;|&nbsp; Ruta Juli → Puno</div>
+<div class="info-grid">
+  <div class="info-row"><span class="info-label">N° Manifiesto:</span><span>${m.num}</span></div>
+  <div class="info-row"><span class="info-label">Empresa:</span><span>${m.company}</span></div>
+  <div class="info-row"><span class="info-label">Fecha:</span><span>${m.date}</span></div>
+  <div class="info-row"><span class="info-label">Vehículo:</span><span>${m.unit} — ${m.plate}</span></div>
+  <div class="info-row"><span class="info-label">Hora:</span><span>${m.time} hrs</span></div>
+  <div class="info-row"><span class="info-label">Conductor:</span><span>${m.driver}</span></div>
+  <div class="info-row"><span class="info-label">Ruta:</span><span>${m.route}</span></div>
+  <div class="info-row"><span class="info-label">Pasajeros:</span><span>${m.passengers}</span></div>
+</div>
+<table>
+  <thead><tr><th>#</th><th>DNI</th><th>Nombre</th><th>Origen</th><th>Destino</th><th>Asiento</th><th>Pago</th><th>Tarifa</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<div class="total">Total recaudado: S/ ${m.revenue.toFixed(2)}</div>
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 300);
+}
+
 function downloadModalPDF() {
-  window.print();
+  if (!currentModalManifest) return;
+  printManifestWindow(currentModalManifest);
 }
 
 function downloadPDF(id) {
-  openModal(id);
-  setTimeout(() => window.print(), 400);
+  const m = ALL_MANIFESTS.find(x => x.id === id);
+  if (m) printManifestWindow(m);
 }
 
 function shareWhatsApp() {

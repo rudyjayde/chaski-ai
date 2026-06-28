@@ -260,7 +260,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, var(--blue), #0090cc);
+  background: linear-gradient(135deg, var(--primary), #0090cc);
   color: #fff;
   border: none;
   border-radius: 8px;

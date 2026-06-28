@@ -206,7 +206,7 @@
         <button class="modal-close" onclick="closeRegisterModal()"><i class="fas fa-times"></i></button>
       </div>
 
-      <form id="vehicleRegForm" onsubmit="submitVehicle(event)">
+      <form id="vehicleRegForm" onsubmit="submitVehicle(event)" autocomplete="off">
         <input type="hidden" id="regVehicleId">
 
         <div class="form-grid">
@@ -221,7 +221,7 @@
           </div>
           <div class="form-group full">
             <label>Empresa <span class="req">*</span></label>
-            <select id="regCompany" required style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;width:100%">
+            <select id="regCompany" required style="background:#0d1933;border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;width:100%;color-scheme:dark">
               <option value="">Seleccionar empresa…</option>
             </select>
           </div>
@@ -243,7 +243,7 @@
           </div>
           <div class="form-group full">
             <label>Estado inicial</label>
-            <select id="regStatus" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;width:100%">
+            <select id="regStatus" style="background:#0d1933;border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;width:100%;color-scheme:dark">
               <option value="waiting">En espera</option>
               <option value="active">En operación</option>
               <option value="maintenance">Mantenimiento</option>
