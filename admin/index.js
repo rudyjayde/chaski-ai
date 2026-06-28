@@ -1,61 +1,71 @@
 /* ============================================================
-   admin/index.js — Lógica del Panel Administrador (Dashboard)
-   Chaski AI v2.0
-   ============================================================
-   Contenido:
-   1.  Auth guard                 (verifica sesión)
-   2.  Reloj en tiempo real
-   3.  KPI Cards                  (datos demo con animación)
-   4.  Gráfico de recaudación     (Chart.js — barras)
-   5.  Gráfico de flota           (Chart.js — donut)
-   6.  Mapa GPS                   (Leaflet.js)
-   7.  Panel de alertas           (generadas dinámicamente)
-   8.  Tabla de últimos viajes
-   9.  Búsqueda de vehículos
-   10. Sidebar toggle             (móvil)
+   admin/index.js — Dashboard del Panel Administrador
+   Chaski AI v2.0 — Datos reales desde API REST
    ============================================================ */
 
 'use strict';
 
 /* ============================================================
-   3. KPI CARDS — Datos demo con contadores animados
+   HELPER DE AUTENTICACIÓN
+   ============================================================ */
+function authFetch(path, opts = {}) {
+  const s = JSON.parse(localStorage.getItem('chaski_user') || '{}');
+  return fetch(path, {
+    ...opts,
+    headers: {
+      ...(opts.headers || {}),
+      ...(s.token ? { 'Authorization': 'Bearer ' + s.token } : {}),
+    },
+  });
+}
+
+
+/* ============================================================
+   3. KPI CARDS — Datos reales desde /api/reports/summary
    ============================================================ */
 (function initKPIs() {
 
-  const KPI_DATA = {
-    kpiActive:     { value: 58,       suffix: '' },
-    kpiOperating:  { value: 12,       suffix: '' },
-    kpiTrips:      { value: 94,       suffix: '' },
-    kpiPassengers: { value: 1128,     suffix: '' },
-    kpiDrivers:    { value: 47,       suffix: '' },
-    kpiRevenue:    { value: 7896,     suffix: '',   prefix: 'S/. ' },
-  };
-
-  /**
-   * Anima el contenido de un elemento de 0 a `target`.
-   * @param {HTMLElement} el
-   * @param {number}      target
-   * @param {string}      prefix
-   */
   function animateKPI(el, target, prefix = '') {
+    if (!el) return;
     const start = performance.now();
     const duration = 1600;
     function step(now) {
       const t = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
-      const val = Math.round(eased * target);
-      el.textContent = prefix + val.toLocaleString('es-PE');
+      el.textContent = prefix + Math.round(eased * target).toLocaleString('es-PE');
       if (t < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
   }
 
-  /* Lanzar cuando el DOM esté listo */
-  document.addEventListener('DOMContentLoaded', () => {
-    Object.entries(KPI_DATA).forEach(([id, cfg]) => {
-      const el = document.getElementById(id);
-      if (el) animateKPI(el, cfg.value, cfg.prefix || '');
-    });
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const [summaryRes, tripsSumRes, vehiclesRes, driversRes] = await Promise.all([
+        authFetch('/api/reports/summary'),
+        authFetch('/api/trips/today/summary'),
+        fetch('/api/vehicles'),
+        fetch('/api/drivers'),
+      ]);
+
+      const summary    = await summaryRes.json();
+      const tripsSum   = await tripsSumRes.json();
+      const vData      = await vehiclesRes.json();
+      const dData      = await driversRes.json();
+
+      const vehicles       = Array.isArray(vData.vehicles) ? vData.vehicles : [];
+      const drivers        = Array.isArray(dData.drivers)  ? dData.drivers  : [];
+      const activeVehicles = vehicles.filter(v => v.active).length;
+      const activeDrivers  = drivers.filter(d => d.active !== false).length;
+
+      animateKPI(document.getElementById('kpiActive'),     activeVehicles);
+      animateKPI(document.getElementById('kpiOperating'),  parseInt(tripsSum.active)        || 0);
+      animateKPI(document.getElementById('kpiTrips'),      parseInt(summary.trips)          || 0);
+      animateKPI(document.getElementById('kpiPassengers'), parseInt(summary.passengers)     || 0);
+      animateKPI(document.getElementById('kpiDrivers'),    activeDrivers);
+      animateKPI(document.getElementById('kpiRevenue'),    Math.round(parseFloat(summary.revenue) || 0), 'S/. ');
+    } catch (err) {
+      console.error('[KPI]', err.message);
+    }
   });
 
 })();
@@ -66,35 +76,42 @@
    ============================================================ */
 (function initRevenueChart() {
 
-  const COMPANIES   = ['V. de Fátima', 'Surandino', 'S.F. Borja', 'V. de Fátima II', 'San Miguel'];
-  const COLORS_BG   = [
-    'rgba(0,200,255,0.7)',
-    'rgba(0,200,255,0.55)',
-    'rgba(0,200,255,0.4)',
-    'rgba(255,184,0,0.6)',
-    'rgba(255,184,0,0.45)',
+  const COLORS_BG = [
+    'rgba(0,200,255,0.7)', 'rgba(0,200,255,0.55)', 'rgba(0,200,255,0.4)',
+    'rgba(255,184,0,0.6)', 'rgba(255,184,0,0.45)',
   ];
-  const COLORS_BD   = COLORS_BG.map(c => c.replace(/[\d.]+\)$/, '1)'));
 
-  const DATA_TODAY  = [1820, 1340, 1680, 1560, 1496];
-  const DATA_WEEK   = [10200, 8900, 11200, 9800, 8400];
-  const DATA_MONTH  = [42000, 37000, 46000, 40000, 35000];
+  async function fetchRevenue(period) {
+    const today = new Date().toISOString().split('T')[0];
+    let from = today;
+    if (period === 'week') {
+      const d = new Date(); d.setDate(d.getDate() - 6);
+      from = d.toISOString().split('T')[0];
+    } else if (period === 'month') {
+      const d = new Date(); d.setDate(d.getDate() - 29);
+      from = d.toISOString().split('T')[0];
+    }
+    const res = await authFetch(`/api/reports/revenue?from=${from}&to=${today}`);
+    return res.json();
+  }
 
-  const DATA_MAP    = { today: DATA_TODAY, week: DATA_WEEK, month: DATA_MONTH };
-
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('chartRevenue');
     if (!canvas || typeof Chart === 'undefined') return;
 
+    let data = [];
+    try { data = await fetchRevenue('today'); } catch (e) { console.error('[Revenue chart]', e); }
+
+    const bg = data.map((_, i) => COLORS_BG[i % COLORS_BG.length]);
     const chart = new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: COMPANIES,
+        labels: data.map(c => c.company),
         datasets: [{
           label: 'Recaudación (S/.)',
-          data: DATA_TODAY,
-          backgroundColor: COLORS_BG,
-          borderColor:     COLORS_BD,
+          data: data.map(c => parseFloat(c.revenue) || 0),
+          backgroundColor: bg,
+          borderColor: bg.map(c => c.replace(/[\d.]+\)$/, '1)')),
           borderWidth: 1,
           borderRadius: 5,
         }],
@@ -104,35 +121,27 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` S/. ${ctx.parsed.y.toLocaleString('es-PE')}`,
-            },
-          },
+          tooltip: { callbacks: { label: ctx => ` S/. ${ctx.parsed.y.toLocaleString('es-PE')}` } },
         },
         scales: {
-          x: {
-            grid:  { color: 'rgba(255,255,255,0.04)' },
-            ticks: { color: 'rgba(122,155,196,0.8)', font: { size: 11 } },
-          },
-          y: {
-            grid:  { color: 'rgba(255,255,255,0.06)' },
-            ticks: {
-              color: 'rgba(122,155,196,0.8)',
-              font: { size: 11 },
-              callback: v => 'S/. ' + v.toLocaleString('es-PE'),
-            },
-          },
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(122,155,196,0.8)', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(122,155,196,0.8)', font: { size: 11 }, callback: v => 'S/. ' + v.toLocaleString('es-PE') } },
         },
       },
     });
 
-    /* Cambiar datos según filtro de periodo */
     const filterEl = document.getElementById('revenueFilter');
     if (filterEl) {
-      filterEl.addEventListener('change', () => {
-        chart.data.datasets[0].data = DATA_MAP[filterEl.value] || DATA_TODAY;
-        chart.update();
+      filterEl.addEventListener('change', async () => {
+        try {
+          const newData = await fetchRevenue(filterEl.value);
+          const newBg   = newData.map((_, i) => COLORS_BG[i % COLORS_BG.length]);
+          chart.data.labels = newData.map(c => c.company);
+          chart.data.datasets[0].data            = newData.map(c => parseFloat(c.revenue) || 0);
+          chart.data.datasets[0].backgroundColor = newBg;
+          chart.data.datasets[0].borderColor     = newBg.map(c => c.replace(/[\d.]+\)$/, '1)'));
+          chart.update();
+        } catch (e) { console.error(e); }
       });
     }
   });
@@ -145,26 +154,39 @@
    ============================================================ */
 (function initFleetChart() {
 
-  const FLEET_DATA = {
-    labels: ['En ruta', 'En terminal', 'Disponible', 'Inactivo', 'Mantenimiento'],
-    values: [12, 8, 32, 4, 2],
-    colors: [
-      'rgba(0,200,255,0.85)',
-      'rgba(0,255,148,0.75)',
-      'rgba(170,136,255,0.75)',
-      'rgba(122,155,196,0.4)',
-      'rgba(255,68,68,0.6)',
-    ],
-  };
-
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('chartFleet');
     if (!canvas || typeof Chart === 'undefined') return;
+
+    let vehicles = [];
+    try {
+      const res = await fetch('/api/vehicles');
+      const d   = await res.json();
+      vehicles  = Array.isArray(d.vehicles) ? d.vehicles : [];
+    } catch (e) { console.error('[Fleet chart]', e); }
+
+    const now = Date.now();
+    const TWO_HOURS = 2 * 3600 * 1000;
+    const inRoute   = vehicles.filter(v => v.active && v.last_gps_ping && (now - new Date(v.last_gps_ping)) < TWO_HOURS).length;
+    const available = vehicles.filter(v => v.active && !(v.last_gps_ping && (now - new Date(v.last_gps_ping)) < TWO_HOURS)).length;
+    const inactive  = vehicles.filter(v => !v.active && v.status !== 'maintenance').length;
+    const maintenance = vehicles.filter(v => v.status === 'maintenance').length;
+
+    const FLEET_DATA = {
+      labels: ['En ruta', 'Disponible', 'Inactivo', 'Mantenimiento'],
+      values: [inRoute, available, inactive, maintenance],
+      colors: [
+        'rgba(0,200,255,0.85)',
+        'rgba(170,136,255,0.75)',
+        'rgba(122,155,196,0.4)',
+        'rgba(255,68,68,0.6)',
+      ],
+    };
 
     new Chart(canvas, {
       type: 'doughnut',
       data: {
-        labels:   FLEET_DATA.labels,
+        labels: FLEET_DATA.labels,
         datasets: [{
           data:            FLEET_DATA.values,
           backgroundColor: FLEET_DATA.colors,
@@ -179,16 +201,11 @@
         cutout: '68%',
         plugins: {
           legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${ctx.label}: ${ctx.parsed} unidades`,
-            },
-          },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} unidades` } },
         },
       },
     });
 
-    /* Leyenda manual */
     const legendEl = document.getElementById('fleetLegend');
     if (legendEl) {
       FLEET_DATA.labels.forEach((label, i) => {
@@ -214,18 +231,13 @@
   const API_BASE = '';
 
   const ROUTE_COORDS = [
-    [-16.2060, -69.4600],
-    [-16.1500, -69.5200],
-    [-16.0800, -69.5800],
-    [-16.0100, -69.6400],
-    [-15.9200, -69.8500],
-    [-15.8400, -70.0200],
+    [-16.2060, -69.4600], [-16.1500, -69.5200], [-16.0800, -69.5800],
+    [-16.0100, -69.6400], [-15.9200, -69.8500], [-15.8400, -70.0200],
     [-15.8028, -70.0219],
   ];
 
-  let map        = null;
-  let markers    = {};
-  let refreshInt = null;
+  let map     = null;
+  let markers = {};
 
   function makeVehicleIcon(code, speed) {
     const color = speed > 5 ? '#00C8FF' : speed > 0 ? '#FFB800' : '#7B8FAA';
@@ -233,13 +245,7 @@
       className: '',
       iconSize: [30, 30],
       iconAnchor: [15, 15],
-      html: `<div style="
-        width:30px;height:30px;border-radius:50%;
-        background:${color};border:2px solid rgba(255,255,255,0.5);
-        display:flex;align-items:center;justify-content:center;
-        font-size:9px;font-weight:700;color:#050818;
-        box-shadow:0 0 10px ${color};
-      ">${code}</div>`,
+      html: `<div style="width:30px;height:30px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#050818;box-shadow:0 0 10px ${color};">${code}</div>`,
     });
   }
 
@@ -247,11 +253,7 @@
     return L.divIcon({
       className: '',
       iconSize: [50, 22],
-      html: `<div style="
-        background:rgba(0,0,20,0.85);border:1px solid rgba(0,200,255,0.4);
-        color:#00C8FF;font-size:9px;font-weight:700;letter-spacing:0.1em;
-        padding:3px 6px;border-radius:4px;white-space:nowrap;
-      ">${label}</div>`,
+      html: `<div style="background:rgba(0,0,20,0.85);border:1px solid rgba(0,200,255,0.4);color:#00C8FF;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 6px;border-radius:4px;white-space:nowrap;">${label}</div>`,
     });
   }
 
@@ -267,32 +269,25 @@
       if (!data.ok) return;
 
       const withGPS = data.vehicles.filter(v => v.lat && v.lon);
-
       withGPS.forEach(v => {
         const latlng = [v.lat, v.lon];
         const icon   = makeVehicleIcon(v.code, v.speed || 0);
-        const popup  = `
-          <div style="font-family:Inter,sans-serif;font-size:12px;min-width:150px">
-            <strong style="color:#00C8FF">Unidad ${v.code}</strong><br>
-            <span>Placa: ${v.plate}</span><br>
-            <span>Conductor: ${v.driver}</span><br>
-            <span>Velocidad: ${v.speed || 0} km/h</span><br>
-            <span>Última señal: ${formatTime(v.timestamp)}</span>
-          </div>`;
-
+        const popup  = `<div style="font-family:Inter,sans-serif;font-size:12px;min-width:150px">
+          <strong style="color:#00C8FF">Unidad ${v.code}</strong><br>
+          <span>Placa: ${v.plate}</span><br>
+          <span>Conductor: ${v.driver}</span><br>
+          <span>Velocidad: ${v.speed || 0} km/h</span><br>
+          <span>Última señal: ${formatTime(v.timestamp)}</span>
+        </div>`;
         if (markers[v.vehicle_id]) {
           markers[v.vehicle_id].setLatLng(latlng).setIcon(icon).setPopupContent(popup);
         } else {
-          markers[v.vehicle_id] = L.marker(latlng, { icon })
-            .bindPopup(popup)
-            .addTo(map);
+          markers[v.vehicle_id] = L.marker(latlng, { icon }).bindPopup(popup).addTo(map);
         }
       });
 
-      // Actualizar badge GPS en sidebar
       const gpsCountEl = document.getElementById('gpsActiveCount');
       if (gpsCountEl) gpsCountEl.textContent = withGPS.length;
-
     } catch (err) {
       console.warn('[GPS Map] No se pudo cargar /api/gps/live:', err.message);
     }
@@ -302,24 +297,14 @@
     const mapEl = document.getElementById('gpsMap');
     if (!mapEl || typeof L === 'undefined') return;
 
-    map = L.map('gpsMap', { zoomControl: true, attributionControl: false })
-      .setView([-15.97, -69.75], 10);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 18,
-    }).addTo(map);
-
-    L.polyline(ROUTE_COORDS, {
-      color: 'rgba(0,200,255,0.6)',
-      weight: 3,
-      dashArray: '6,4',
-    }).addTo(map);
-
+    map = L.map('gpsMap', { zoomControl: true, attributionControl: false }).setView([-15.97, -69.75], 10);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
+    L.polyline(ROUTE_COORDS, { color: 'rgba(0,200,255,0.6)', weight: 3, dashArray: '6,4' }).addTo(map);
     L.marker(ROUTE_COORDS[0], { icon: makeEndIcon('JULI') }).addTo(map);
     L.marker(ROUTE_COORDS[ROUTE_COORDS.length - 1], { icon: makeEndIcon('PUNO') }).addTo(map);
 
     loadVehicles();
-    refreshInt = setInterval(loadVehicles, 10000); // actualizar cada 10s
+    setInterval(loadVehicles, 10000);
   });
 
   window.filterRoute = function(type, btn) {
@@ -331,110 +316,91 @@
 
 
 /* ============================================================
-   7. ALERTAS OPERATIVAS
+   7. ALERTAS OPERATIVAS — datos reales desde /api/reports/alerts
    ============================================================ */
 (function initAlerts() {
 
-  const ALERTS_DATA = [
-    {
-      type:    'speed',
-      icon:    'fa-tachometer-alt',
-      title:   'Velocidad excesiva — Unidad 014',
-      message: 'Superó 90 km/h durante 5 min en ruta Juli→Puno',
-      time:    'Hace 3 min',
-    },
-    {
-      type:    'route',
-      icon:    'fa-route',
-      title:   'Desvío de ruta — Unidad 022',
-      message: 'Detectado desvío de ~1.2 km en la ruta esperada',
-      time:    'Hace 7 min',
-    },
-    {
-      type:    'manifest',
-      icon:    'fa-file-alt',
-      title:   'Manifiesto sin cerrar — Unidad 007',
-      message: 'El viaje finalizó hace 25 min y el manifiesto sigue abierto',
-      time:    'Hace 25 min',
-    },
-    {
-      type:    'success',
-      icon:    'fa-check-circle',
-      title:   'Manifiesto exportado — Unidad 003',
-      message: 'MAN-2025-047 guardado y enviado por WhatsApp correctamente',
-      time:    'Hace 31 min',
-    },
-    {
-      type:    'route',
-      icon:    'fa-pause-circle',
-      title:   'Parada no programada — Unidad 031',
-      message: 'Detenido por más de 8 min fuera del terminal',
-      time:    'Hace 44 min',
-    },
-  ];
-
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     const list = document.getElementById('alertsList');
     if (!list) return;
 
-    ALERTS_DATA.forEach(alert => {
-      const item = document.createElement('div');
-      item.className = `alert-item ${alert.type}`;
-      item.innerHTML = `
-        <div class="alert-icon"><i class="fas ${alert.icon}"></i></div>
-        <div class="alert-body">
-          <strong>${alert.title}</strong>
-          <span>${alert.message}</span>
-        </div>
-        <span class="alert-time">${alert.time}</span>
-      `;
-      list.appendChild(item);
-    });
+    let alerts = [];
+    try {
+      const res = await authFetch('/api/reports/alerts?limit=10');
+      alerts = await res.json();
+      if (!Array.isArray(alerts)) alerts = [];
+    } catch (e) { console.error('[Alerts]', e); }
 
-    /* Actualizar badge */
-    const bellCount = document.getElementById('bellCount');
+    if (alerts.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px">Sin alertas de velocidad para hoy</p>';
+    } else {
+      alerts.forEach(a => {
+        const item = document.createElement('div');
+        item.className = 'alert-item speed';
+        const time = new Date(a.occurred_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        item.innerHTML = `
+          <div class="alert-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="alert-body">
+            <strong>Velocidad excesiva — ${a.association_code || a.driver_name || '—'}</strong>
+            <span>${a.max_speed} km/h · ${a.driver_name || '—'} · ${a.plate || '—'}</span>
+          </div>
+          <span class="alert-time">${time}</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    const bellCount  = document.getElementById('bellCount');
     const alertCount = document.getElementById('alertCount');
-    const critical = ALERTS_DATA.filter(a => a.type === 'speed' || a.type === 'route').length;
-    if (bellCount)  bellCount.textContent  = critical;
-    if (alertCount) alertCount.textContent = ALERTS_DATA.length;
+    if (bellCount)  bellCount.textContent  = alerts.length;
+    if (alertCount) alertCount.textContent = alerts.length;
   });
 
 })();
 
 
 /* ============================================================
-   8. TABLA DE ÚLTIMOS VIAJES
+   8. TABLA DE ÚLTIMOS VIAJES — datos reales desde /api/trips
    ============================================================ */
 (function initTripsTable() {
 
-  const TRIPS_DEMO = [
-    { code: '001', driver: 'E. Mamani',   route: 'Juli→Puno',  time: '03:15', passengers: 12, status: 'done' },
-    { code: '003', driver: 'A. Morales',  route: 'Juli→Puno',  time: '03:22', passengers: 10, status: 'active' },
-    { code: '007', driver: 'R. Quispe',   route: 'Juli→Puno',  time: '04:10', passengers: 15, status: 'active' },
-    { code: '012', driver: 'H. Condori',  route: 'Puno→Juli',  time: '05:30', passengers: 11, status: 'done' },
-    { code: '018', driver: 'L. Flores',   route: 'Puno→Juli',  time: '06:00', passengers: 14, status: 'active' },
-    { code: '022', driver: 'P. Turpo',    route: 'Juli→Puno',  time: '06:45', passengers: 9,  status: 'alert' },
-  ];
-
   const STATUS_LABELS = {
-    active: { cls: 'status-active', icon: 'fa-circle', label: 'En ruta' },
-    done:   { cls: 'status-done',   icon: 'fa-check',  label: 'Completado' },
-    alert:  { cls: 'status-alert',  icon: 'fa-exclamation', label: 'Alerta' },
+    active:    { cls: 'status-active', icon: 'fa-circle',      label: 'En ruta' },
+    completed: { cls: 'status-done',   icon: 'fa-check',       label: 'Completado' },
+    alert:     { cls: 'status-alert',  icon: 'fa-exclamation', label: 'Alerta' },
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     const tbody = document.getElementById('tripsBody');
     if (!tbody) return;
 
-    TRIPS_DEMO.forEach(trip => {
-      const s = STATUS_LABELS[trip.status];
+    let trips = [];
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const res   = await authFetch(`/api/trips?date=${today}&limit=6`);
+      trips       = await res.json();
+      if (!Array.isArray(trips)) trips = [];
+    } catch (e) { console.error('[Trips table]', e); }
+
+    if (trips.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Sin viajes registrados hoy</td></tr>';
+      return;
+    }
+
+    trips.forEach(trip => {
+      const maxSpeed = parseFloat(trip.max_speed) || 0;
+      const status   = trip.status === 'active' ? 'active' : maxSpeed > 90 ? 'alert' : 'completed';
+      const s        = STATUS_LABELS[status];
+      const dep      = trip.start_time
+        ? new Date(trip.start_time).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+        : '—';
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${trip.code}</strong></td>
-        <td>${trip.driver}</td>
-        <td>${trip.route}</td>
-        <td>${trip.time}</td>
-        <td>${trip.passengers}</td>
+        <td><strong>${trip.association_code || '—'}</strong></td>
+        <td>${trip.driver_name || '—'}</td>
+        <td>${trip.route_name || '—'}</td>
+        <td>${dep}</td>
+        <td>${trip.total_passengers || 0}</td>
         <td>
           <span class="status-badge ${s.cls}">
             <i class="fas ${s.icon}"></i> ${s.label}
@@ -449,39 +415,29 @@
 
 
 /* ============================================================
-   9. BÚSQUEDA DE VEHÍCULOS
+   9. BÚSQUEDA DE VEHÍCULOS — datos reales desde /api/vehicles
    ============================================================ */
 (function initVehicleSearch() {
 
-  const VEHICLES_DB = {
-    '001': { plate: 'PUN-001', company: 'Virgen de Fátima',     type: 'Toyota HiAce',     driver: 'Eloy Mamani',   status: 'En ruta',    trips: 3, revenue: 252 },
-    '002': { plate: 'PUN-002', company: 'Virgen de Fátima',     type: 'Toyota HiAce',     driver: 'José Quispe',   status: 'Terminal',   trips: 2, revenue: 168 },
-    '003': { plate: 'PUN-003', company: 'Surandino',            type: 'Mercedes Sprinter', driver: 'A. Morales',   status: 'En ruta',    trips: 4, revenue: 420 },
-    '004': { plate: 'PUN-004', company: 'Surandino',            type: 'Renault Master',    driver: 'Juan Pérez',   status: 'Disponible', trips: 1, revenue: 84  },
-    '005': { plate: 'PUN-005', company: 'San Francisco de Borja', type: 'Toyota HiAce',   driver: 'C. Ticona',    status: 'En ruta',    trips: 3, revenue: 252 },
-  };
+  let vehicles = [];
+
+  fetch('/api/vehicles')
+    .then(r => r.json())
+    .then(d => { vehicles = Array.isArray(d.vehicles) ? d.vehicles : []; })
+    .catch(() => {});
 
   window.searchVehicle = function() {
-    const query  = (document.getElementById('vehicleSearch')?.value || '').trim();
+    const query  = (document.getElementById('vehicleSearch')?.value || '').trim().toUpperCase();
     const result = document.getElementById('vehicleResult');
     if (!result) return;
 
     if (!query) { result.innerHTML = ''; return; }
 
-    /* Buscar por código o placa */
-    let found = null;
-    const qUpper = query.toUpperCase().replace(/^0+/, ''); /* quitar ceros iniciales */
-
-    for (const [code, data] of Object.entries(VEHICLES_DB)) {
-      if (
-        code === query.padStart(3, '0') ||
-        data.plate.toUpperCase() === qUpper ||
-        data.plate.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(qUpper)
-      ) {
-        found = { code, ...data };
-        break;
-      }
-    }
+    const normalize = s => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const q = normalize(query);
+    const found = vehicles.find(v =>
+      normalize(v.plate).includes(q) || normalize(v.code).includes(q)
+    );
 
     if (!found) {
       result.innerHTML = `
@@ -491,33 +447,23 @@
       return;
     }
 
+    const statusMap = { active: 'Activo', inactive: 'Inactivo', maintenance: 'Mantenimiento' };
     result.innerHTML = `
       <div class="vr-card">
-        <div class="vr-row"><span>Código TipCar</span><strong>${found.code}</strong></div>
-        <div class="vr-row"><span>Placa</span><strong>${found.plate}</strong></div>
-        <div class="vr-row"><span>Empresa</span><strong>${found.company}</strong></div>
-        <div class="vr-row"><span>Tipo</span><strong>${found.type}</strong></div>
-        <div class="vr-row"><span>Conductor asignado</span><strong>${found.driver}</strong></div>
-        <div class="vr-row"><span>Estado actual</span>
-          <strong style="color:var(--primary)">${found.status}</strong>
-        </div>
-        <div class="vr-row"><span>Viajes hoy</span><strong>${found.trips}</strong></div>
-        <div class="vr-row"><span>Recaudación hoy</span>
-          <strong style="color:var(--gold)">S/. ${found.revenue}</strong>
+        <div class="vr-row"><span>Código</span><strong>${found.code || '—'}</strong></div>
+        <div class="vr-row"><span>Placa</span><strong>${found.plate || '—'}</strong></div>
+        <div class="vr-row"><span>Empresa</span><strong>${found.company || '—'}</strong></div>
+        <div class="vr-row"><span>Tipo</span><strong>${[found.brand, found.model].filter(Boolean).join(' ') || '—'}</strong></div>
+        <div class="vr-row"><span>Conductor</span><strong>${found.driver_name || '—'}</strong></div>
+        <div class="vr-row"><span>Estado</span>
+          <strong style="color:var(--primary)">${statusMap[found.status] || found.status || '—'}</strong>
         </div>
       </div>`;
   };
 
-  /* Buscar al presionar Enter */
   document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('vehicleSearch');
-    if (input) {
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') window.searchVehicle();
-      });
-    }
+    if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') window.searchVehicle(); });
   });
 
 })();
-
-

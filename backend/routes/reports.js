@@ -106,4 +106,75 @@ router.get('/alerts', auth, async (req, res) => {
   }
 });
 
+// GET /api/reports/daily?from=&to= — viajes por día (gráfico de tendencia)
+router.get('/daily', auth, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const dateFrom = from || new Date(Date.now() - 29 * 86400000).toISOString().split('T')[0];
+    const dateTo   = to   || new Date().toISOString().split('T')[0];
+
+    const { rows } = await pool.query(`
+      SELECT DATE(start_time) as date, COUNT(*) as trips
+      FROM trips
+      WHERE DATE(start_time) BETWEEN $1 AND $2
+      GROUP BY DATE(start_time)
+      ORDER BY date ASC
+    `, [dateFrom, dateTo]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// GET /api/reports/payment?from=&to= — distribución de métodos de pago
+router.get('/payment', auth, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const dateFrom = from || new Date().toISOString().split('T')[0];
+    const dateTo   = to   || dateFrom;
+
+    const { rows } = await pool.query(`
+      SELECT
+        COALESCE(SUM(cash_passengers), 0)    as cash_passengers,
+        COALESCE(SUM(digital_passengers), 0) as digital_passengers,
+        COALESCE(SUM(total_cash), 0)         as total_cash,
+        COALESCE(SUM(total_digital), 0)      as total_digital
+      FROM manifests
+      WHERE DATE(created_at) BETWEEN $1 AND $2
+        AND status = 'closed'
+    `, [dateFrom, dateTo]);
+    res.json(rows[0] || { cash_passengers: 0, digital_passengers: 0, total_cash: 0, total_digital: 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// GET /api/reports/weekday?from=&to= — pasajeros por día de la semana
+router.get('/weekday', auth, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const dateFrom = from || new Date(Date.now() - 29 * 86400000).toISOString().split('T')[0];
+    const dateTo   = to   || new Date().toISOString().split('T')[0];
+
+    const { rows } = await pool.query(`
+      SELECT EXTRACT(DOW FROM created_at) as dow,
+             COALESCE(SUM(total_passengers), 0) as passengers
+      FROM manifests
+      WHERE DATE(created_at) BETWEEN $1 AND $2
+        AND status = 'closed'
+      GROUP BY EXTRACT(DOW FROM created_at)
+      ORDER BY dow
+    `, [dateFrom, dateTo]);
+
+    const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const result = Array(7).fill(null).map((_, i) => ({ label: DAY_LABELS[i], passengers: 0 }));
+    rows.forEach(r => { result[parseInt(r.dow)].passengers = parseInt(r.passengers); });
+    // Reordenar: Lun a Dom
+    res.json([...result.slice(1), result[0]]);
+  } catch (err) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 module.exports = router;

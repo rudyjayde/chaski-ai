@@ -1,127 +1,113 @@
 /* ============================================================
    reports.js — Lógica de la página de Reportes
-   Chaski AI v2.0
-   ============================================================
-   Contenido:
-   1.  Autenticación y sesión
-   2.  Datos demo del período
-   3.  Selector de período
-   4.  KPI ejecutivos
-   5.  Gráficos (recaudación/empresa, tendencia viajes, pasajeros/semana, pagos, alertas)
-   6.  Ranking de conductores
-   7.  Tabla resumen por empresa
-   8.  Exportar
-   9.  Reloj y sidebar toggle
+   Chaski AI v2.0 — Datos reales desde API REST
    ============================================================ */
 
 'use strict';
 
 /* ============================================================
-   2. DATOS DEMO POR PERÍODO
+   1. HELPER DE AUTENTICACIÓN
    ============================================================ */
-const COMPANIES = ['Virgen de Fátima', 'Surandino', 'San Francisco de Borja', 'Virgen de Fátima II', 'San Miguel'];
-const COMPANY_FLEET = [14, 12, 11, 13, 10]; // vehículos por empresa
-
-const DRIVERS_NAMES = [
-  'Eloy Mamani', 'José Quispe', 'Abraham Morales', 'Juan Pérez', 'Carlos Ticona',
-  'Roberto Flores', 'Marcos Huanca', 'David Condori',
-];
-
-/**
- * Genera métricas agregadas por empresa para un período dado
- * @param {number} days — número de días del período
- */
-function buildCompanyData(days) {
-  return COMPANIES.map((company, ci) => {
-    const fleet      = COMPANY_FLEET[ci];
-    const trips      = Math.floor(fleet * days * (2.5 + Math.random()));
-    const passengers = Math.floor(trips * (Math.random() * 8 + 10));
-    const revenue    = passengers * 7.0;
-    const km         = trips * 98.5;
-    const occ        = Math.round((passengers / (trips * 22)) * 100);
-    const speedAlerts = Math.floor(trips * 0.05 * Math.random() * 3);
-
-    return { company, ci, fleet, trips, passengers, revenue, km, occ, speedAlerts };
+function authFetch(path, opts = {}) {
+  const s = JSON.parse(localStorage.getItem('chaski_user') || '{}');
+  return fetch(path, {
+    ...opts,
+    headers: {
+      ...(opts.headers || {}),
+      ...(s.token ? { 'Authorization': 'Bearer ' + s.token } : {}),
+    },
   });
 }
 
-/** Genera serie de viajes diarios (para gráfico de tendencia) */
-function buildDailyTrips(days) {
-  const result = [];
-  for (let d = days - 1; d >= 0; d--) {
-    const date = new Date();
-    date.setDate(date.getDate() - d);
-    result.push({
-      label: date.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }),
-      value: Math.floor(Math.random() * 20) + 30, // 30-50 viajes/día
-    });
-  }
-  return result;
-}
 
-/** Genera distribución de pasajeros por día de la semana */
-function buildWeekdayData() {
-  const days  = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  const base  = [380, 420, 400, 450, 500, 320, 260];
-  return days.map((d, i) => ({ label: d, value: base[i] + Math.floor(Math.random() * 60 - 30) }));
-}
-
-/** Genera distribución de métodos de pago */
-function buildPaymentData() {
-  const total = 1000;
-  const cash  = Math.floor(total * 0.55);
-  const yape  = Math.floor(total * 0.3);
-  const plin  = total - cash - yape;
-  return [
-    { label: 'Efectivo', value: cash,  color: 'rgba(0,200,255,0.8)' },
-    { label: 'Yape',     value: yape,  color: 'rgba(0,255,148,0.8)' },
-    { label: 'Plin',     value: plin,  color: 'rgba(255,184,0,0.8)' },
-  ];
-}
-
-/* Multiplicadores por período */
+/* ============================================================
+   2. ESTADO
+   ============================================================ */
 const PERIOD_DAYS = { month: 30, quarter: 90, year: 365 };
+let currentPeriod = 'month';
+let companyData   = [];
 
-let currentPeriod   = 'month';
-let companyData     = buildCompanyData(30);
+function getPeriodDates(period) {
+  const today = new Date().toISOString().split('T')[0];
+  const days  = PERIOD_DAYS[period] || 30;
+  const from  = new Date(Date.now() - (days - 1) * 86400000).toISOString().split('T')[0];
+  return { from, to: today };
+}
 
 
 /* ============================================================
    3. SELECTOR DE PERÍODO
    ============================================================ */
-function setRpPeriod(period, btn) {
+async function setRpPeriod(period, btn) {
   currentPeriod = period;
   document.querySelectorAll('.rp-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-
-  const days   = PERIOD_DAYS[period];
-  companyData  = buildCompanyData(days);
-
-  updateKPIs();
-  renderCompanyTable();
-  renderTopDrivers();
-  refreshCharts(days);
+  await loadAllData();
 }
 
 window.setRpPeriod = setRpPeriod;
 
 
 /* ============================================================
-   4. KPI EJECUTIVOS
+   4. CARGA DE DATOS DESDE API
+   ============================================================ */
+async function loadAllData() {
+  const { from, to } = getPeriodDates(currentPeriod);
+
+  let rawCompany = [], rawDaily = [], rawDrivers = [], rawPayment = {}, rawWeekday = [];
+
+  try {
+    const [companyRes, dailyRes, driversRes, paymentRes, weekdayRes] = await Promise.all([
+      authFetch(`/api/reports/revenue?from=${from}&to=${to}`),
+      authFetch(`/api/reports/daily?from=${from}&to=${to}`),
+      authFetch(`/api/reports/drivers?date=${to}`),
+      authFetch(`/api/reports/payment?from=${from}&to=${to}`),
+      authFetch(`/api/reports/weekday?from=${from}&to=${to}`),
+    ]);
+
+    rawCompany = await companyRes.json();
+    rawDaily   = await dailyRes.json();
+    rawDrivers = await driversRes.json();
+    rawPayment = await paymentRes.json();
+    rawWeekday = await weekdayRes.json();
+  } catch (err) {
+    console.error('[Reports] Error al cargar datos:', err.message);
+  }
+
+  /* Normalizar datos de empresa */
+  companyData = Array.isArray(rawCompany) ? rawCompany.map(c => {
+    const trips      = parseInt(c.trips)      || 0;
+    const passengers = parseInt(c.passengers) || 0;
+    const revenue    = parseFloat(c.revenue)  || 0;
+    const km         = trips * 98.5;
+    const occ        = trips > 0 ? Math.round((passengers / (trips * 22)) * 100) : 0;
+    return { company: c.company || '—', trips, passengers, revenue, km, occ, speedAlerts: 0 };
+  }) : [];
+
+  updateKPIs();
+  renderCompanyTable();
+  renderTopDrivers(Array.isArray(rawDrivers) ? rawDrivers : []);
+  refreshCharts(Array.isArray(rawDaily) ? rawDaily : [], rawPayment, Array.isArray(rawWeekday) ? rawWeekday : []);
+}
+
+
+/* ============================================================
+   5. KPI EJECUTIVOS
    ============================================================ */
 function updateKPIs() {
-  const totTrips    = companyData.reduce((s, c) => s + c.trips,      0);
-  const totPax      = companyData.reduce((s, c) => s + c.passengers, 0);
-  const totRev      = companyData.reduce((s, c) => s + c.revenue,    0);
-  const totKm       = companyData.reduce((s, c) => s + c.km,         0);
-  const avgOcc      = Math.round(companyData.reduce((s, c) => s + c.occ, 0) / companyData.length);
-  const totAlerts   = companyData.reduce((s, c) => s + c.speedAlerts, 0);
+  const totTrips = companyData.reduce((s, c) => s + c.trips,      0);
+  const totPax   = companyData.reduce((s, c) => s + c.passengers, 0);
+  const totRev   = companyData.reduce((s, c) => s + c.revenue,    0);
+  const totKm    = companyData.reduce((s, c) => s + c.km,         0);
+  const avgOcc   = companyData.length
+    ? Math.round(companyData.reduce((s, c) => s + c.occ, 0) / companyData.length)
+    : 0;
 
-  animKPI('rpTrips',   totTrips);
-  animKPI('rpPax',     totPax);
-  animKPI('rpKm',      Math.round(totKm));
-  animKPI('rpOcc',     avgOcc, '%');
-  animKPI('rpAlerts',  totAlerts);
+  animKPI('rpTrips',  totTrips);
+  animKPI('rpPax',    totPax);
+  animKPI('rpKm',     Math.round(totKm));
+  animKPI('rpOcc',    avgOcc, '%');
+  animKPI('rpAlerts', 0);
 
   const revEl = document.getElementById('rpRevenue');
   if (revEl) revEl.textContent = `S/ ${totRev.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`;
@@ -142,22 +128,20 @@ function animKPI(id, target, suffix = '') {
 
 
 /* ============================================================
-   5. GRÁFICOS
+   6. GRÁFICOS
    ============================================================ */
-const COLORS = [
-  'rgba(0,200,255,0.8)', 'rgba(0,255,148,0.8)', 'rgba(255,184,0,0.8)',
-  'rgba(255,68,68,0.8)',  'rgba(138,80,255,0.8)',
-];
-const GRID_COLOR = 'rgba(255,255,255,0.05)';
-const TEXT_COLOR = '#8892a4';
+const COLORS      = ['rgba(0,200,255,0.8)', 'rgba(0,255,148,0.8)', 'rgba(255,184,0,0.8)', 'rgba(255,68,68,0.8)', 'rgba(138,80,255,0.8)'];
+const GRID_COLOR  = 'rgba(255,255,255,0.05)';
+const TEXT_COLOR  = '#8892a4';
 
 let chartRevCompany  = null;
 let chartTripsTrend  = null;
 let chartPassWeekday = null;
 let chartPayment     = null;
 let chartSpeedAlerts = null;
+let chartsInitialized = false;
 
-function initCharts() {
+function initCharts(rawDaily, rawPayment, rawWeekday) {
   Chart.defaults.color       = TEXT_COLOR;
   Chart.defaults.font.family = "'Inter', sans-serif";
   Chart.defaults.font.size   = 11;
@@ -168,7 +152,7 @@ function initCharts() {
     chartRevCompany = new Chart(ctxRev, {
       type: 'bar',
       data: {
-        labels: COMPANIES.map(c => c.length > 20 ? c.slice(0, 18) + '…' : c),
+        labels: companyData.map(c => c.company.length > 20 ? c.company.slice(0, 18) + '…' : c.company),
         datasets: [{
           label: 'Recaudación (S/)',
           data: companyData.map(c => c.revenue),
@@ -189,17 +173,16 @@ function initCharts() {
     });
   }
 
-  /* 2. Tendencia de viajes (línea) */
-  const dailyTrips = buildDailyTrips(30);
-  const ctxTrend   = document.getElementById('chartTripsTrend')?.getContext('2d');
+  /* 2. Tendencia de viajes por día */
+  const ctxTrend = document.getElementById('chartTripsTrend')?.getContext('2d');
   if (ctxTrend) {
     chartTripsTrend = new Chart(ctxTrend, {
       type: 'line',
       data: {
-        labels: dailyTrips.map(d => d.label),
+        labels: rawDaily.map(d => new Date(d.date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })),
         datasets: [{
           label: 'Viajes/día',
-          data:   dailyTrips.map(d => d.value),
+          data:   rawDaily.map(d => parseInt(d.trips) || 0),
           borderColor: 'rgba(0,200,255,0.9)',
           backgroundColor: 'rgba(0,200,255,0.08)',
           tension: 0.4,
@@ -220,16 +203,15 @@ function initCharts() {
   }
 
   /* 3. Pasajeros por día de semana */
-  const wdData = buildWeekdayData();
-  const ctxWd  = document.getElementById('chartPassWeekday')?.getContext('2d');
+  const ctxWd = document.getElementById('chartPassWeekday')?.getContext('2d');
   if (ctxWd) {
     chartPassWeekday = new Chart(ctxWd, {
       type: 'bar',
       data: {
-        labels: wdData.map(d => d.label),
+        labels: rawWeekday.map(d => d.label),
         datasets: [{
           label: 'Pasajeros',
-          data:   wdData.map(d => d.value),
+          data:   rawWeekday.map(d => d.passengers || 0),
           backgroundColor: 'rgba(0,255,148,0.6)',
           borderColor: 'rgba(0,255,148,0.9)',
           borderWidth: 1,
@@ -249,16 +231,17 @@ function initCharts() {
   }
 
   /* 4. Métodos de pago (donut) */
-  const pmData = buildPaymentData();
-  const ctxPm  = document.getElementById('chartPayment')?.getContext('2d');
+  const cashPax    = parseInt(rawPayment.cash_passengers)    || 0;
+  const digitalPax = parseInt(rawPayment.digital_passengers) || 0;
+  const ctxPm = document.getElementById('chartPayment')?.getContext('2d');
   if (ctxPm) {
     chartPayment = new Chart(ctxPm, {
       type: 'doughnut',
       data: {
-        labels: pmData.map(p => p.label),
+        labels: ['Efectivo', 'Digital (Yape/Plin)'],
         datasets: [{
-          data:            pmData.map(p => p.value),
-          backgroundColor: pmData.map(p => p.color),
+          data:            [cashPax, digitalPax],
+          backgroundColor: ['rgba(0,200,255,0.8)', 'rgba(0,255,148,0.8)'],
           borderColor: '#0d1224',
           borderWidth: 2,
         }],
@@ -274,13 +257,13 @@ function initCharts() {
     });
   }
 
-  /* 5. Alertas de velocidad por empresa (barras) */
+  /* 5. Alertas de velocidad por empresa (placeholder — sin datos granulares) */
   const ctxAlrt = document.getElementById('chartSpeedAlerts')?.getContext('2d');
   if (ctxAlrt) {
     chartSpeedAlerts = new Chart(ctxAlrt, {
       type: 'bar',
       data: {
-        labels: COMPANIES.map(c => c.split(' ').slice(-1)[0]),
+        labels: companyData.map(c => c.company.split(' ').slice(-1)[0]),
         datasets: [{
           label: 'Alertas',
           data: companyData.map(c => c.speedAlerts),
@@ -301,87 +284,106 @@ function initCharts() {
       },
     });
   }
+
+  chartsInitialized = true;
 }
 
-/** Actualiza los gráficos al cambiar período */
-function refreshCharts(days) {
-  /* Recaudación por empresa */
+function refreshCharts(rawDaily, rawPayment, rawWeekday) {
+  if (!chartsInitialized) {
+    initCharts(rawDaily, rawPayment, rawWeekday);
+    return;
+  }
+
   if (chartRevCompany) {
-    chartRevCompany.data.datasets[0].data = companyData.map(c => c.revenue);
+    chartRevCompany.data.labels                = companyData.map(c => c.company.length > 20 ? c.company.slice(0, 18) + '…' : c.company);
+    chartRevCompany.data.datasets[0].data      = companyData.map(c => c.revenue);
     chartRevCompany.update();
   }
 
-  /* Tendencia */
   if (chartTripsTrend) {
-    const daily = buildDailyTrips(Math.min(days, 30));
-    chartTripsTrend.data.labels              = daily.map(d => d.label);
-    chartTripsTrend.data.datasets[0].data    = daily.map(d => d.value);
+    chartTripsTrend.data.labels             = rawDaily.map(d => new Date(d.date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }));
+    chartTripsTrend.data.datasets[0].data   = rawDaily.map(d => parseInt(d.trips) || 0);
     chartTripsTrend.update();
   }
 
-  /* Alertas */
+  if (chartPassWeekday) {
+    chartPassWeekday.data.datasets[0].data = rawWeekday.map(d => d.passengers || 0);
+    chartPassWeekday.update();
+  }
+
+  if (chartPayment) {
+    const cashPax    = parseInt(rawPayment.cash_passengers)    || 0;
+    const digitalPax = parseInt(rawPayment.digital_passengers) || 0;
+    chartPayment.data.datasets[0].data = [cashPax, digitalPax];
+    chartPayment.update();
+  }
+
   if (chartSpeedAlerts) {
-    chartSpeedAlerts.data.datasets[0].data = companyData.map(c => c.speedAlerts);
+    chartSpeedAlerts.data.labels             = companyData.map(c => c.company.split(' ').slice(-1)[0]);
+    chartSpeedAlerts.data.datasets[0].data   = companyData.map(c => c.speedAlerts);
     chartSpeedAlerts.update();
   }
 }
 
 
 /* ============================================================
-   6. RANKING DE CONDUCTORES
+   7. RANKING DE CONDUCTORES
    ============================================================ */
-function renderTopDrivers() {
+function renderTopDrivers(drivers) {
   const list = document.getElementById('topDriversList');
   if (!list) return;
 
-  /* Generar ranking ficticio para el período */
-  const drivers = DRIVERS_NAMES.map((name, i) => ({
-    name,
-    company:  COMPANIES[i % COMPANIES.length],
-    trips:    Math.floor(Math.random() * 80) + 40,
-    revenue:  0,
-    initials: name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
-  }));
+  if (drivers.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;font-size:13px">Sin datos para el período</p>';
+    return;
+  }
 
-  drivers.forEach(d => { d.revenue = d.trips * (Math.floor(Math.random() * 10) + 8) * 7; });
-  drivers.sort((a, b) => b.revenue - a.revenue);
+  const sorted = [...drivers].sort((a, b) => parseFloat(b.revenue) - parseFloat(a.revenue)).slice(0, 5);
+  const posClasses = ['pos1', 'pos2', 'pos3', '', ''];
 
-  const posClasses = ['pos1', 'pos2', 'pos3', '', '', '', '', ''];
-
-  list.innerHTML = drivers.slice(0, 5).map((d, i) => `
-    <div class="rp-rank-item">
-      <span class="rp-rank-pos ${posClasses[i]}">${i + 1}</span>
-      <div class="rp-rank-avatar">${d.initials}</div>
-      <div class="rp-rank-info">
-        <div class="rp-rank-name">${d.name}</div>
-        <div class="rp-rank-sub">${d.company}</div>
-      </div>
-      <div class="rp-rank-stats">
-        <div class="rp-rank-stat">
-          <span class="rp-rank-stat-val">${d.trips}</span>
-          <span class="rp-rank-stat-lbl">Viajes</span>
+  list.innerHTML = sorted.map((d, i) => {
+    const initials = (d.driver_name || '??').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const revenue  = parseFloat(d.revenue) || 0;
+    const trips    = parseInt(d.trips) || 0;
+    return `
+      <div class="rp-rank-item">
+        <span class="rp-rank-pos ${posClasses[i]}">${i + 1}</span>
+        <div class="rp-rank-avatar">${initials}</div>
+        <div class="rp-rank-info">
+          <div class="rp-rank-name">${d.driver_name || '—'}</div>
+          <div class="rp-rank-sub">${d.association_code || '—'}</div>
         </div>
-        <div class="rp-rank-stat">
-          <span class="rp-rank-stat-val gold">S/ ${d.revenue.toLocaleString()}</span>
-          <span class="rp-rank-stat-lbl">Recaud.</span>
+        <div class="rp-rank-stats">
+          <div class="rp-rank-stat">
+            <span class="rp-rank-stat-val">${trips}</span>
+            <span class="rp-rank-stat-lbl">Viajes</span>
+          </div>
+          <div class="rp-rank-stat">
+            <span class="rp-rank-stat-val gold">S/ ${revenue.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
+            <span class="rp-rank-stat-lbl">Recaud.</span>
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 
 /* ============================================================
-   7. TABLA RESUMEN POR EMPRESA
+   8. TABLA RESUMEN POR EMPRESA
    ============================================================ */
 function renderCompanyTable() {
   const tbody = document.getElementById('companyBody');
   if (!tbody) return;
 
+  if (companyData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">Sin datos para el período seleccionado</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = companyData.map(c => `
     <tr>
       <td><strong>${c.company}</strong></td>
-      <td style="text-align:center">${c.fleet}</td>
       <td style="text-align:center;font-weight:600">${c.trips.toLocaleString()}</td>
       <td style="text-align:center">${c.passengers.toLocaleString()}</td>
       <td style="color:var(--gold);font-weight:600">S/ ${c.revenue.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
@@ -404,22 +406,22 @@ function renderCompanyTable() {
 
 
 /* ============================================================
-   8. EXPORTAR
+   9. EXPORTAR
    ============================================================ */
 function exportReport(type) {
   if (type === 'csv') {
-    const headers = ['Empresa', 'Flota', 'Viajes', 'Pasajeros', 'Recaudación', 'Km recorridos', 'Ocupación', 'Alertas vel.'];
+    const headers = ['Empresa', 'Viajes', 'Pasajeros', 'Recaudación', 'Km recorridos', 'Ocupación', 'Alertas vel.'];
     const rows    = companyData.map(c => [
-      c.company, c.fleet, c.trips, c.passengers,
+      c.company, c.trips, c.passengers,
       `S/ ${c.revenue.toFixed(2)}`, `${Math.round(c.km)} km`,
       `${c.occ}%`, c.speedAlerts,
     ]);
-    const csv   = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob  = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url   = URL.createObjectURL(blob);
-    const a     = document.createElement('a');
-    a.href      = url;
-    a.download  = `reporte_${currentPeriod}_${new Date().toISOString().slice(0,10)}.csv`;
+    const csv  = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `reporte_${currentPeriod}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   } else {
@@ -433,9 +435,6 @@ window.exportReport = exportReport;
 /* ============================================================
    INICIALIZACIÓN
    ============================================================ */
-(function init() {
-  updateKPIs();
-  renderCompanyTable();
-  renderTopDrivers();
-  initCharts();
+(async function init() {
+  await loadAllData();
 })();

@@ -28,10 +28,12 @@ router.get('/', auth, async (req, res) => {
              m.total_passengers, m.total_revenue, m.cash_passengers, m.digital_passengers,
              m.total_cash, m.total_digital, m.created_at, m.closed_at,
              d.first_name || ' ' || d.last_name as driver_name,
-             v.plate, v.association_code, r.name as route_name
+             v.plate, v.association_code, r.name as route_name,
+             c.name as company_name
       FROM manifests m
       JOIN drivers d ON m.driver_id = d.id
       JOIN vehicles v ON m.vehicle_id = v.id
+      LEFT JOIN companies c ON v.company_id = c.id
       JOIN routes r ON m.route_id = r.id
       ${where}
       ORDER BY m.created_at DESC

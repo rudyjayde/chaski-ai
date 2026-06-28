@@ -6,14 +6,16 @@ const { auth, adminOnly } = require('../middleware/auth');
 // GET /api/trips
 router.get('/', auth, async (req, res) => {
   try {
-    const { date, driver_id, vehicle_id, limit = 50, offset = 0 } = req.query;
+    const { date, driver_id, vehicle_id, from, to, limit = 50, offset = 0 } = req.query;
     const filters = [];
     const params = [];
     let i = 1;
 
-    if (date)      { filters.push(`DATE(t.start_time) = $${i++}`); params.push(date); }
-    if (driver_id) { filters.push(`t.driver_id = $${i++}`);        params.push(driver_id); }
-    if (vehicle_id){ filters.push(`t.vehicle_id = $${i++}`);       params.push(vehicle_id); }
+    if (date)      { filters.push(`DATE(t.start_time) = $${i++}`);  params.push(date); }
+    if (from)      { filters.push(`DATE(t.start_time) >= $${i++}`); params.push(from); }
+    if (to)        { filters.push(`DATE(t.start_time) <= $${i++}`); params.push(to); }
+    if (driver_id) { filters.push(`t.driver_id = $${i++}`);         params.push(driver_id); }
+    if (vehicle_id){ filters.push(`t.vehicle_id = $${i++}`);        params.push(vehicle_id); }
 
     const where = filters.length ? 'WHERE ' + filters.join(' AND ') : '';
 
@@ -23,12 +25,14 @@ router.get('/', auth, async (req, res) => {
              d.first_name || ' ' || d.last_name as driver_name,
              v.plate, v.association_code,
              r.name as route_name,
-             m.manifest_number, m.total_passengers
+             m.manifest_number, m.total_passengers,
+             c.name as company_name
       FROM trips t
       JOIN drivers d ON t.driver_id = d.id
       JOIN vehicles v ON t.vehicle_id = v.id
       JOIN routes r ON t.route_id = r.id
       LEFT JOIN manifests m ON t.manifest_id = m.id
+      LEFT JOIN companies c ON v.company_id = c.id
       ${where}
       ORDER BY t.start_time DESC
       LIMIT $${i++} OFFSET $${i++}
