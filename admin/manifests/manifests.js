@@ -17,26 +17,6 @@
 'use strict';
 
 /* ============================================================
-   1. AUTENTICACIÓN Y SESIÓN
-   ============================================================ */
-(function checkAuth() {
-  const session = JSON.parse(localStorage.getItem('chaski_user') || 'null');
-  if (!session || session.role !== 'admin') {
-    window.location.href = '/login';
-    return;
-  }
-  const nameEl = document.getElementById('adminUserName');
-  if (nameEl) nameEl.textContent = session.name || 'Admin';
-})();
-
-function logout() {
-  localStorage.removeItem('chaski_user');
-  window.location.href = '/login';
-}
-window.logout = logout;
-
-
-/* ============================================================
    2. DATOS DEMO
    ============================================================ */
 const COMPANIES = ['Virgen de Fátima', 'Surandino', 'San Francisco de Borja', 'Virgen de Fátima II', 'San Miguel'];
@@ -615,31 +595,6 @@ window.downloadModalPDF   = downloadModalPDF;
 window.downloadPDF        = downloadPDF;
 window.shareWhatsApp      = shareWhatsApp;
 window.whatsapp           = whatsapp;
-
-
-/* ============================================================
-   9. RELOJ Y FECHA EN HEADER
-   ============================================================ */
-function updateClock() {
-  const now  = new Date();
-  const time = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-  const date = now.toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  const clockEl = document.getElementById('adminClock');
-  const dateEl  = document.getElementById('adminDate');
-  if (clockEl) clockEl.textContent = time;
-  if (dateEl)  dateEl.textContent  = date.charAt(0).toUpperCase() + date.slice(1);
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-
-/* ============================================================
-   SIDEBAR TOGGLE
-   ============================================================ */
-document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-  document.getElementById('sidebar')?.classList.toggle('collapsed');
-  document.getElementById('adminMain')?.classList.toggle('expanded');
-});
 
 
 /* ============================================================

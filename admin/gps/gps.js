@@ -7,14 +7,6 @@
 
 const API = '';
 
-// Auth guard
-(function () {
-  const user = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  if (!user.username || user.role !== 'admin') window.location.href = '/login';
-  const el = document.getElementById('adminUserName');
-  if (el) el.textContent = user.name || 'Administrador';
-})();
-
 // ── Estado local ─────────────────────────────────────────────
 let allDevices = [];
 
@@ -307,8 +299,3 @@ window.deleteDevice = async function (id, imei) {
   }
 };
 
-// ── Logout ───────────────────────────────────────────────────
-window.logout = function () {
-  localStorage.removeItem('chaski_user');
-  window.location.href = '/login';
-};

@@ -18,40 +18,6 @@
 'use strict';
 
 /* ============================================================
-   1. AUTH GUARD
-   ============================================================ */
-(function checkAuth() {
-  const user = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  if (!user.username || user.role !== 'admin') {
-    window.location.href = '/login';
-  }
-  const nameEl = document.getElementById('adminUserName');
-  if (nameEl) nameEl.textContent = user.name || 'Administrador';
-})();
-
-
-/* ============================================================
-   2. RELOJ EN TIEMPO REAL
-   ============================================================ */
-(function initClock() {
-  function tick() {
-    const now  = new Date();
-    const time = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    const date = now.toLocaleDateString('es-PE', {
-      weekday: 'long', day: 'numeric', month: 'long'
-    });
-
-    const clockEl = document.getElementById('adminClock');
-    const dateEl  = document.getElementById('adminDate');
-    if (clockEl) clockEl.textContent = time;
-    if (dateEl)  dateEl.textContent  = date.charAt(0).toUpperCase() + date.slice(1);
-  }
-  tick();
-  setInterval(tick, 1000);
-})();
-
-
-/* ============================================================
    3. KPI CARDS — Datos demo con contadores animados
    ============================================================ */
 (function initKPIs() {
@@ -555,28 +521,3 @@
 })();
 
 
-/* ============================================================
-   10. SIDEBAR TOGGLE (móvil)
-   ============================================================ */
-(function initSidebarToggle() {
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn     = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    if (!btn || !sidebar) return;
-
-    btn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-    });
-  });
-})();
-
-
-/* ============================================================
-   LOGOUT
-   ============================================================ */
-window.logout = function() {
-  if (confirm('¿Cerrar sesión?')) {
-    localStorage.removeItem('chaski_user');
-    window.location.href = '/login';
-  }
-};

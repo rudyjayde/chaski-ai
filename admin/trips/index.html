@@ -15,38 +15,7 @@
 </head>
 <body class="admin-body">
 
-  <!-- SIDEBAR -->
-  <aside class="admin-sidebar" id="sidebar">
-    <div class="asb-logo">
-      <div class="asb-logo-img-wrap"><img src="../../img/logo-oscuro.png" alt="Chaski AI"></div>
-      <div class="asb-logo-text">
-        <span class="asb-name">CHASKI <em>AI</em></span>
-        <span class="asb-sub">Centro de Control</span>
-      </div>
-    </div>
-    <div class="asb-assoc">
-      <i class="fas fa-building"></i>
-      <div><strong>ATIPCAR</strong><span>Panel Administrador</span></div>
-    </div>
-    <nav class="asb-nav">
-      <span class="asb-nav-label">Principal</span>
-      <a href="/admin/dashboard"     class="asb-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-      <a href="/admin/manifests" class="asb-link"><i class="fas fa-file-invoice"></i><span>Manifiestos</span><span class="asb-badge" id="pendingManifests">4</span></a>
-      <a href="/admin/trips"     class="asb-link active"><i class="fas fa-route"></i><span>Viajes</span></a>
-      <span class="asb-nav-label">Flota</span>
-      <a href="/admin/vehicles"  class="asb-link"><i class="fas fa-bus"></i><span>Vehículos</span></a>
-      <a href="/admin/drivers"   class="asb-link"><i class="fas fa-id-card"></i><span>Conductores</span></a>
-      <a href="/admin/queue"     class="asb-link"><i class="fas fa-list-ol"></i><span>Lista Diaria</span></a>
-      <span class="asb-nav-label">Análisis</span>
-            <a href="/admin/gps"       class="asb-link"><i class="fas fa-satellite-dish"></i><span>Dispositivos GPS</span></a>
-      <a href="/admin/reports"   class="asb-link"><i class="fas fa-chart-bar"></i><span>Reportes</span></a>
-      <a href="?openAssistant=true" class="asb-link" id="nav-assistant" onclick="event.preventDefault();document.getElementById('aiFloatBtn').click()"><i class="fas fa-robot"></i><span>Asistente Chaski AI</span></a>
-    </nav>
-    <div class="asb-footer">
-      <a href="/" class="asb-link asb-link-out"><i class="fas fa-globe"></i><span>Sitio Web</span></a>
-      <button onclick="logout()" class="asb-link asb-link-out"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></button>
-    </div>
-  </aside>
+  <aside class="admin-sidebar" id="sidebar"></aside>
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="admin-main" id="adminMain">
@@ -229,6 +198,8 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../js/core.js"></script>
+  <script src="../js/sidebar.js"></script>
   <script src="trips.js"></script>
 
   <script src="../assistant-widget.js" defer></script>

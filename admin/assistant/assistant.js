@@ -9,41 +9,6 @@ const BACKEND_URL = '';
 let history    = [];   // { role: 'user'|'assistant', content: string }
 let isLoading  = false;
 
-// ── Verificar sesión admin ───────────────────────────────────
-(function checkAuth() {
-  const user = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  if (!user.username || user.role !== 'admin') {
-    window.location.href = '/login';
-    return;
-  }
-  const nameEl = document.getElementById('adminUserName');
-  if (nameEl) nameEl.textContent = user.name || user.username;
-})();
-
-// ── Logout ───────────────────────────────────────────────────
-function logout() {
-  localStorage.removeItem('chaski_user');
-  window.location.href = '/login';
-}
-
-// ── Reloj en tiempo real ─────────────────────────────────────
-(function initClock() {
-  const clockEl = document.getElementById('adminClock');
-  const dateEl  = document.getElementById('adminDate');
-  function tick() {
-    const now = new Date();
-    if (clockEl) clockEl.textContent = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    if (dateEl)  dateEl.textContent  = now.toLocaleDateString('es-PE', { weekday: 'short', day: '2-digit', month: 'short' });
-  }
-  tick();
-  setInterval(tick, 1000);
-})();
-
-// ── Sidebar toggle (móvil) ───────────────────────────────────
-const sidebarToggle = document.getElementById('sidebarToggle');
-const sidebar       = document.getElementById('sidebar');
-if (sidebarToggle) sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-
 // ── Auto-resize del textarea ─────────────────────────────────
 const chatInput = document.getElementById('chatInput');
 chatInput.addEventListener('input', function () {

@@ -2,19 +2,6 @@
 
 const API = '';
 
-// ── Auth ─────────────────────────────────────────────────────
-(function checkAuth() {
-  const session = JSON.parse(localStorage.getItem('chaski_user') || 'null');
-  if (!session || session.role !== 'admin') { window.location.href = '/login'; return; }
-  const el = document.getElementById('adminUserName');
-  if (el) el.textContent = session.name || 'Admin';
-})();
-
-window.logout = function () {
-  localStorage.removeItem('chaski_user');
-  window.location.href = '/login';
-};
-
 // ── Estado ───────────────────────────────────────────────────
 let DRIVERS   = [];
 let COMPANIES = [];
@@ -388,49 +375,6 @@ window.deleteDriver = async function (dId, name) {
 
 // ── Mensaje (placeholder) ─────────────────────────────────────
 window.sendDriverMessage = function () { alert('Función de mensajería próximamente'); };
-
-// ── Reloj y sidebar ───────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  const cl  = document.getElementById('adminClock');
-  const dt  = document.getElementById('adminDate');
-  if (cl) cl.textContent = now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
-  if (dt) { const s = now.toLocaleDateString('es-PE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); dt.textContent = s[0].toUpperCase()+s.slice(1); }
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-  document.getElementById('sidebar')?.classList.toggle('collapsed');
-  document.getElementById('adminMain')?.classList.toggle('expanded');
-});
-
-// ── Estilos del modal (no están en drivers.css) ───────────────
-const style = document.createElement('style');
-style.textContent = `
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center}
-  .modal-overlay.open{display:flex}
-  .modal-box{background:var(--dark2,#0d1f35);border:1px solid var(--border2,#1e3a5f);border-radius:14px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.5)}
-  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
-  .modal-header h2{font-size:1.05rem;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--text,#e2e8f0)}
-  .modal-header h2 i{color:#00C8FF}
-  .modal-close{background:none;border:none;color:var(--muted,#7b8fa8);font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:6px}
-  .modal-close:hover{background:rgba(255,255,255,.06)}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .form-group{display:flex;flex-direction:column;gap:5px}
-  .form-group label{font-size:.78rem;font-weight:600;color:var(--muted,#7b8fa8);text-transform:uppercase;letter-spacing:.05em}
-  .form-group .req{color:#FF6B6B}
-  .form-group input,.form-group select{background:rgba(255,255,255,.04);border:1px solid var(--border,#1e3a5f);border-radius:8px;padding:9px 12px;color:var(--text,#e2e8f0);font-size:.88rem}
-  .form-group input:focus,.form-group select:focus{outline:none;border-color:rgba(0,200,255,.5)}
-  .form-group small{font-size:.72rem;color:var(--muted,#7b8fa8)}
-  .form-error{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:8px;padding:9px 12px;color:#FF6B6B;font-size:.83rem;margin-top:12px}
-  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
-  .btn-primary{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#0066cc,#0090cc);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .15s}
-  .btn-primary:hover{opacity:.88}
-  .btn-secondary{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);color:var(--text,#e2e8f0);border:1px solid var(--border,#1e3a5f);border-radius:8px;padding:9px 18px;font-size:.85rem;font-weight:600;cursor:pointer}
-  .btn-secondary:hover{background:rgba(255,255,255,.09)}
-`;
-document.head.appendChild(style);
 
 // ── Init ──────────────────────────────────────────────────────
 loadAll();

@@ -35,6 +35,13 @@
   /* Tipografía premium */
   --font-title: 'Space Grotesk', sans-serif;
   --font-body:  'DM Sans', sans-serif;
+
+  /* Aliases para compatibilidad interna */
+  --surface:    var(--dark2);
+  --text-main:  var(--text);
+  --text-sub:   #8BA3C1;
+  --muted:      var(--text-muted);
+  --dark-2:     var(--dark3);
 }
 
 @keyframes shake {
