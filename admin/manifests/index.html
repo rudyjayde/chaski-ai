@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Manifiestos</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="manifests.css">
@@ -27,7 +29,7 @@
     <header class="admin-header">
       <div class="ah-left">
         <button class="sb-toggle-btn" id="sidebarToggle">
-          <i class="fas fa-bars"></i>
+          <i data-lucide="menu"></i>
         </button>
         <div class="ah-title-wrap">
           <h1>Manifiestos Digitales</h1>
@@ -38,7 +40,7 @@
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
         <div class="ah-user">
-          <i class="fas fa-user-shield"></i>
+          <i data-lucide="shield-check"></i>
           <span id="adminUserName">Admin</span>
         </div>
       </div>
@@ -55,7 +57,7 @@
         <div class="mf-search-row">
           <!-- Búsqueda por texto -->
           <div class="mf-input-wrap">
-            <i class="fas fa-search"></i>
+            <i data-lucide="search"></i>
             <input type="text" id="searchInput"
                    placeholder="Código (001), placa (PUN-001) o conductor...">
           </div>
@@ -92,12 +94,12 @@
 
           <!-- Botón buscar -->
           <button class="mf-btn-search" onclick="applyFilters()">
-            <i class="fas fa-filter"></i> Filtrar
+            <i data-lucide="filter"></i> Filtrar
           </button>
 
           <!-- Botón limpiar -->
           <button class="mf-btn-clear" onclick="clearFilters()">
-            <i class="fas fa-times"></i>
+            <i data-lucide="x"></i>
           </button>
         </div>
 
@@ -109,7 +111,7 @@
               <i class="fas fa-file-csv"></i> CSV
             </button>
             <button class="mf-btn-exp" onclick="exportPDF()">
-              <i class="fas fa-file-pdf"></i> PDF
+              <i data-lucide="file-text"></i> PDF
             </button>
           </div>
         </div>
@@ -129,28 +131,28 @@
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-check-circle" style="color:var(--success)"></i>
+          <i data-lucide="check"></i>
           <div>
             <span class="mf-kpi-val" id="kpiCompleted">—</span>
             <span class="mf-kpi-lbl">Completados</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-clock" style="color:var(--warning)"></i>
+          <i data-lucide="clock"></i>
           <div>
             <span class="mf-kpi-val" id="kpiPending">—</span>
             <span class="mf-kpi-lbl">Pendientes</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-users" style="color:var(--primary)"></i>
+          <i data-lucide="users"></i>
           <div>
             <span class="mf-kpi-val" id="kpiPassTotal">—</span>
             <span class="mf-kpi-lbl">Pasajeros totales</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-money-bill-wave" style="color:var(--gold)"></i>
+          <i data-lucide="banknote"></i>
           <div>
             <span class="mf-kpi-val gold" id="kpiRevTotal">—</span>
             <span class="mf-kpi-lbl">Recaudación total</span>
@@ -164,7 +166,7 @@
       ============================================================ -->
       <div class="dash-card">
         <div class="dc-header">
-          <h3><i class="fas fa-file-invoice"></i> Registro de Manifiestos</h3>
+          <h3><i data-lucide="file-text"></i> Registro de Manifiestos</h3>
           <div class="dc-controls">
             <select class="dc-select" id="rowsPerPage" onchange="renderTable()">
               <option value="10">10 por página</option>
@@ -179,22 +181,22 @@
             <thead>
               <tr>
                 <th onclick="sortBy('num')" class="sortable">
-                  N° Manifiesto <i class="fas fa-sort"></i>
+                  N° Manifiesto <i data-lucide="arrow-up-down"></i>
                 </th>
                 <th onclick="sortBy('date')" class="sortable">
-                  Fecha / Hora <i class="fas fa-sort"></i>
+                  Fecha / Hora <i data-lucide="arrow-up-down"></i>
                 </th>
                 <th>Empresa</th>
                 <th>Vehículo</th>
                 <th onclick="sortBy('driver')" class="sortable">
-                  Conductor <i class="fas fa-sort"></i>
+                  Conductor <i data-lucide="arrow-up-down"></i>
                 </th>
                 <th>Ruta</th>
                 <th onclick="sortBy('passengers')" class="sortable">
-                  Pasajeros <i class="fas fa-sort"></i>
+                  Pasajeros <i data-lucide="arrow-up-down"></i>
                 </th>
                 <th onclick="sortBy('revenue')" class="sortable">
-                  Recaudación <i class="fas fa-sort"></i>
+                  Recaudación <i data-lucide="arrow-up-down"></i>
                 </th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -220,11 +222,11 @@
 
           <div class="mf-modal-header">
             <div>
-              <h2><i class="fas fa-file-invoice"></i> Manifiesto <span id="modalManifestNum"></span></h2>
+              <h2><i data-lucide="file-text"></i> Manifiesto <span id="modalManifestNum"></span></h2>
               <p id="modalManifestMeta"></p>
             </div>
             <button class="mf-modal-close" onclick="closeModal()">
-              <i class="fas fa-times"></i>
+              <i data-lucide="x"></i>
             </button>
           </div>
 
@@ -233,7 +235,7 @@
 
           <!-- Tabla de pasajeros -->
           <h4 class="mf-modal-section-title">
-            <i class="fas fa-users"></i> Pasajeros en el manifiesto
+            <i data-lucide="users"></i> Pasajeros en el manifiesto
           </h4>
           <div class="table-wrap">
             <table class="admin-table" id="modalPassTable">
@@ -259,13 +261,13 @@
           <!-- Acciones del modal -->
           <div class="mf-modal-actions">
             <button class="mf-btn-act primary" onclick="downloadModalPDF()">
-              <i class="fas fa-file-pdf"></i> Descargar PDF
+              <i data-lucide="file-text"></i> Descargar PDF
             </button>
             <button class="mf-btn-act success" onclick="shareWhatsApp()">
               <i class="fab fa-whatsapp"></i> Enviar WhatsApp
             </button>
             <button class="mf-btn-act ghost" onclick="closeModal()">
-              <i class="fas fa-times"></i> Cerrar
+              <i data-lucide="x"></i> Cerrar
             </button>
           </div>
 
@@ -275,10 +277,12 @@
     </div><!-- /admin-content -->
   </main>
 
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="manifests.js"></script>
 
   <script src="../assistant-widget.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

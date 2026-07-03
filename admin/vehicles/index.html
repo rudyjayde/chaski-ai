@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Vehículos</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="vehicles.css">
@@ -22,7 +24,7 @@
 
     <header class="admin-header">
       <div class="ah-left">
-        <button class="sb-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sb-toggle-btn" id="sidebarToggle"><i data-lucide="menu"></i></button>
         <div class="ah-title-wrap">
           <h1>Gestión de Vehículos</h1>
           <span>Estado operativo y ficha técnica de la flota</span>
@@ -31,7 +33,7 @@
       <div class="ah-right">
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
-        <div class="ah-user"><i class="fas fa-user-shield"></i><span id="adminUserName">Admin</span></div>
+        <div class="ah-user"><i data-lucide="shield-check"></i><span id="adminUserName">Admin</span></div>
       </div>
     </header>
 
@@ -42,7 +44,7 @@
       ============================================================ -->
       <div style="display:flex;justify-content:flex-end;padding:16px 24px 0">
         <button class="btn-primary" onclick="openRegisterModal()">
-          <i class="fas fa-plus"></i> Registrar Vehículo
+          <i data-lucide="plus"></i> Registrar Vehículo
         </button>
       </div>
 
@@ -51,7 +53,7 @@
       ============================================================ -->
       <div class="vh-filter-bar">
         <div class="mf-input-wrap" style="flex:1;min-width:200px">
-          <i class="fas fa-search"></i>
+          <i data-lucide="search"></i>
           <input type="text" id="vhSearch" placeholder="Buscar código, placa, empresa...">
         </div>
         <select class="mf-select" id="vhFilterCompany">
@@ -71,10 +73,10 @@
         </select>
         <div class="vh-view-toggle">
           <button class="vh-view-btn active" id="btnGrid" onclick="setView('grid', this)" title="Vista cuadrícula">
-            <i class="fas fa-th"></i>
+            <i data-lucide="grid"></i>
           </button>
           <button class="vh-view-btn" id="btnList" onclick="setView('list', this)" title="Vista lista">
-            <i class="fas fa-list"></i>
+            <i data-lucide="list"></i>
           </button>
         </div>
       </div>
@@ -138,15 +140,15 @@
         <div class="mf-modal">
           <div class="mf-modal-header">
             <div>
-              <h2><i class="fas fa-bus"></i> Vehículo <span id="modalVhCode"></span></h2>
+              <h2><i data-lucide="bus"></i> Vehículo <span id="modalVhCode"></span></h2>
               <p id="modalVhMeta"></p>
             </div>
             <button class="mf-modal-close" onclick="closeVhModal()">
-              <i class="fas fa-times"></i>
+              <i data-lucide="x"></i>
             </button>
           </div>
           <div class="mf-modal-info" id="modalVhInfo"></div>
-          <h4 class="mf-modal-section-title"><i class="fas fa-history"></i> Últimos viajes</h4>
+          <h4 class="mf-modal-section-title"><i data-lucide="clock"></i> Últimos viajes</h4>
           <div class="table-wrap">
             <table class="admin-table">
               <thead><tr><th>Fecha</th><th>Conductor</th><th>Pasajeros</th><th>Recaudación</th><th>Estado</th></tr></thead>
@@ -155,7 +157,7 @@
           </div>
           <div class="mf-modal-actions" id="vhModalActions">
             <button class="mf-btn-act ghost" onclick="closeVhModal()">
-              <i class="fas fa-times"></i> Cerrar
+              <i data-lucide="x"></i> Cerrar
             </button>
           </div>
         </div>
@@ -171,8 +173,8 @@
     <div class="modal-box" style="max-width:600px">
 
       <div class="modal-header">
-        <h2 id="regModalTitle"><i class="fas fa-bus"></i> Registrar Vehículo</h2>
-        <button class="modal-close" onclick="closeRegisterModal()"><i class="fas fa-times"></i></button>
+        <h2 id="regModalTitle"><i data-lucide="bus"></i> Registrar Vehículo</h2>
+        <button class="modal-close" onclick="closeRegisterModal()"><i data-lucide="x"></i></button>
       </div>
 
       <form id="vehicleRegForm" onsubmit="submitVehicle(event)" autocomplete="off">
@@ -226,17 +228,19 @@
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeRegisterModal()">Cancelar</button>
           <button type="submit" class="btn-primary" id="regSubmitBtn">
-            <i class="fas fa-save"></i> Guardar
+            <i data-lucide="save"></i> Guardar
           </button>
         </div>
       </form>
     </div>
   </div>
 
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="vehicles.js"></script>
 
   <script src="../assistant-widget.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

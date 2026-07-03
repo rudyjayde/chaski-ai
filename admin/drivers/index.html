@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Conductores</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="drivers.css">
@@ -22,7 +24,7 @@
 
     <header class="admin-header">
       <div class="ah-left">
-        <button class="sb-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sb-toggle-btn" id="sidebarToggle"><i data-lucide="menu"></i></button>
         <div class="ah-title-wrap">
           <h1>Perfiles de Conductores</h1>
           <span>Información, estado y rendimiento de cada conductor</span>
@@ -31,7 +33,7 @@
       <div class="ah-right">
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
-        <div class="ah-user"><i class="fas fa-user-shield"></i><span id="adminUserName">Admin</span></div>
+        <div class="ah-user"><i data-lucide="shield-check"></i><span id="adminUserName">Admin</span></div>
       </div>
     </header>
 
@@ -40,7 +42,7 @@
       <!-- Botón registrar -->
       <div style="display:flex;justify-content:flex-end;padding:16px 24px 0">
         <button class="btn-primary" onclick="openRegDriverModal()">
-          <i class="fas fa-user-plus"></i> Registrar Conductor
+          <i data-lucide="user-plus"></i> Registrar Conductor
         </button>
       </div>
 
@@ -49,7 +51,7 @@
       ============================================================ -->
       <div class="vh-filter-bar">
         <div class="mf-input-wrap" style="flex:1;min-width:200px">
-          <i class="fas fa-search"></i>
+          <i data-lucide="search"></i>
           <input type="text" id="drSearch" placeholder="Buscar nombre, DNI, empresa...">
         </div>
         <select class="mf-select" id="drFilterCompany">
@@ -87,13 +89,13 @@
               </div>
             </div>
             <button class="mf-modal-close" onclick="closeDrModal()">
-              <i class="fas fa-times"></i>
+              <i data-lucide="x"></i>
             </button>
           </div>
           <div class="mf-modal-info" id="modalDrInfo"></div>
           <h4 class="mf-modal-section-title"><i class="fas fa-chart-line"></i> Rendimiento (últimos 30 días)</h4>
           <div class="dr-stats-row" id="modalDrStats"></div>
-          <h4 class="mf-modal-section-title" style="margin-top:18px"><i class="fas fa-history"></i> Últimos viajes</h4>
+          <h4 class="mf-modal-section-title" style="margin-top:18px"><i data-lucide="clock"></i> Últimos viajes</h4>
           <div class="table-wrap">
             <table class="admin-table">
               <thead><tr><th>Fecha</th><th>Vehículo</th><th>Pasajeros</th><th>Recaudación</th><th>Estado</th></tr></thead>
@@ -102,7 +104,7 @@
           </div>
           <!-- Enviar mensaje al conductor -->
           <h4 class="mf-modal-section-title" style="margin-top:20px">
-            <i class="fas fa-paper-plane"></i> Enviar mensaje al conductor
+            <i data-lucide="send"></i> Enviar mensaje al conductor
           </h4>
           <div style="padding:0 0 14px">
             <select id="msgType" style="width:100%;padding:9px 12px;background:var(--dark-2,#0d1b2e);border:1px solid var(--border);color:var(--text-main);border-radius:8px;margin-bottom:10px;font-size:13px">
@@ -115,12 +117,12 @@
               placeholder="Escribe el mensaje para el conductor..."
               style="width:100%;padding:9px 12px;background:var(--dark-2,#0d1b2e);border:1px solid var(--border);color:var(--text-main);border-radius:8px;resize:vertical;font-size:13px;font-family:inherit"></textarea>
             <p style="font-size:11px;color:var(--text-muted);margin-top:6px">
-              <i class="fas fa-info-circle"></i> El mensaje aparece en la campana de notificaciones del conductor.
+              <i data-lucide="info"></i> El mensaje aparece en la campana de notificaciones del conductor.
             </p>
           </div>
           <div class="mf-modal-actions" id="drModalActions">
             <button class="mf-btn-act ghost" onclick="closeDrModal()">
-              <i class="fas fa-times"></i> Cerrar
+              <i data-lucide="x"></i> Cerrar
             </button>
           </div>
         </div>
@@ -135,8 +137,8 @@
   <div class="modal-overlay" id="driverRegModal" onclick="closeRegDriverOutside(event)">
     <div class="modal-box" style="max-width:600px">
       <div class="modal-header">
-        <h2 id="drRegTitle"><i class="fas fa-user-plus"></i> Registrar Conductor</h2>
-        <button class="modal-close" onclick="closeRegDriverModal()"><i class="fas fa-times"></i></button>
+        <h2 id="drRegTitle"><i data-lucide="user-plus"></i> Registrar Conductor</h2>
+        <button class="modal-close" onclick="closeRegDriverModal()"><i data-lucide="x"></i></button>
       </div>
       <form id="driverRegForm" onsubmit="submitDriver(event)">
         <input type="hidden" id="drRegId">
@@ -175,7 +177,7 @@
 
           <!-- Cuenta de acceso -->
           <div class="form-group" style="grid-column:1/-1;margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
-            <label style="color:#00C8FF;font-size:0.8rem"><i class="fas fa-key"></i>&nbsp; CUENTA DE ACCESO AL SISTEMA</label>
+            <label style="color:#00C8FF;font-size:0.8rem"><i data-lucide="key"></i>&nbsp; CUENTA DE ACCESO AL SISTEMA</label>
           </div>
           <div class="form-group">
             <label>Usuario <span class="req">*</span></label>
@@ -194,7 +196,7 @@
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeRegDriverModal()">Cancelar</button>
           <button type="submit" class="btn-primary" id="drRegSubmit">
-            <i class="fas fa-save"></i> Guardar
+            <i data-lucide="save"></i> Guardar
           </button>
         </div>
       </form>
@@ -205,8 +207,8 @@
   <div class="modal-overlay" id="passModal" onclick="if(event.target===this)closePassModal()">
     <div class="modal-box" style="max-width:380px">
       <div class="modal-header">
-        <h2><i class="fas fa-key"></i> Cambiar Contraseña</h2>
-        <button class="modal-close" onclick="closePassModal()"><i class="fas fa-times"></i></button>
+        <h2><i data-lucide="key"></i> Cambiar Contraseña</h2>
+        <button class="modal-close" onclick="closePassModal()"><i data-lucide="x"></i></button>
       </div>
       <input type="hidden" id="passDriverId">
       <div class="form-group" style="margin-bottom:16px">
@@ -216,15 +218,17 @@
       <div id="passError" class="form-error" style="display:none"></div>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closePassModal()">Cancelar</button>
-        <button class="btn-primary" onclick="submitPassword()"><i class="fas fa-save"></i> Guardar</button>
+        <button class="btn-primary" onclick="submitPassword()"><i data-lucide="save"></i> Guardar</button>
       </div>
     </div>
   </div>
 
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="drivers.js"></script>
 
   <script src="../assistant-widget.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

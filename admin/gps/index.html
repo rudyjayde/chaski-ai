@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Dispositivos GPS</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="gps.css">
@@ -22,7 +24,7 @@
 
     <header class="admin-header">
       <div class="ah-left">
-        <button class="sb-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sb-toggle-btn" id="sidebarToggle"><i data-lucide="menu"></i></button>
         <div class="ah-title-wrap">
           <h1>Dispositivos GPS</h1>
           <span>Registro y asignación de rastreadores Teltonika FMC130</span>
@@ -39,15 +41,15 @@
     <!-- KPI STRIP -->
     <div class="gps-kpi-strip">
       <div class="gps-kpi-card">
-        <i class="fas fa-satellite-dish"></i>
+        <i data-lucide="radio"></i>
         <div><span id="kpiTotal">—</span><small>Total registrados</small></div>
       </div>
       <div class="gps-kpi-card online">
-        <i class="fas fa-signal"></i>
+        <i data-lucide="signal"></i>
         <div><span id="kpiOnline">—</span><small>Online (últimos 5 min)</small></div>
       </div>
       <div class="gps-kpi-card assigned">
-        <i class="fas fa-link"></i>
+        <i data-lucide="link"></i>
         <div><span id="kpiAssigned">—</span><small>Asignados a vehículo</small></div>
       </div>
       <div class="gps-kpi-card unassigned">
@@ -60,12 +62,12 @@
     <div class="gps-toolbar">
       <div class="search-bar-wrap">
         <div class="search-bar">
-          <i class="fas fa-search"></i>
+          <i data-lucide="search"></i>
           <input type="text" id="searchInput" placeholder="Buscar por IMEI, alias, código o vehículo…" oninput="filterTable()">
         </div>
       </div>
       <button class="btn-primary" onclick="openModal()">
-        <i class="fas fa-plus"></i> Registrar GPS
+        <i data-lucide="plus"></i> Registrar GPS
       </button>
     </div>
 
@@ -100,8 +102,8 @@
     <div class="modal-box" id="modalBox">
 
       <div class="modal-header">
-        <h2 id="modalTitle"><i class="fas fa-satellite-dish"></i> Registrar Dispositivo GPS</h2>
-        <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        <h2 id="modalTitle"><i data-lucide="radio"></i> Registrar Dispositivo GPS</h2>
+        <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
       </div>
 
       <form id="deviceForm" onsubmit="submitDevice(event)">
@@ -136,7 +138,7 @@
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
           <button type="submit" class="btn-primary" id="submitBtn">
-            <i class="fas fa-save"></i> Guardar
+            <i data-lucide="save"></i> Guardar
           </button>
         </div>
       </form>
@@ -151,8 +153,8 @@
     <div class="modal-box small" id="assignBox">
 
       <div class="modal-header">
-        <h2><i class="fas fa-link"></i> Asignar a Vehículo</h2>
-        <button class="modal-close" onclick="closeAssign()"><i class="fas fa-times"></i></button>
+        <h2><i data-lucide="link"></i> Asignar a Vehículo</h2>
+        <button class="modal-close" onclick="closeAssign()"><i data-lucide="x"></i></button>
       </div>
 
       <input type="hidden" id="assignDeviceId">
@@ -177,17 +179,19 @@
         </button>
         <button type="button" class="btn-secondary" onclick="closeAssign()">Cancelar</button>
         <button type="button" class="btn-primary" onclick="confirmAssign()">
-          <i class="fas fa-check"></i> Confirmar
+          <i data-lucide="check"></i> Confirmar
         </button>
       </div>
     </div>
   </div>
 
 
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../main.js"></script>
   <script src="../assistant-widget.js"></script>
   <script src="gps.js"></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

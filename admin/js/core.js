@@ -120,33 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ── Toast notifications ─────────────────────────────────────── */
-window.showToast = function (message, type = 'info') {
-  const STYLES = {
-    success: { bg: 'rgba(0,255,148,0.12)', border: 'rgba(0,255,148,0.3)',  color: '#00FF94' },
-    error:   { bg: 'rgba(255,68,68,0.12)', border: 'rgba(255,68,68,0.3)',  color: '#FF6B6B' },
-    warning: { bg: 'rgba(255,184,0,0.12)', border: 'rgba(255,184,0,0.3)', color: '#FFB800' },
-    info:    { bg: 'rgba(0,200,255,0.12)', border: 'rgba(0,200,255,0.3)', color: '#00C8FF' },
-  };
-  const s = STYLES[type] || STYLES.info;
+/* ── Toast / UI — delegado a ui.js ──────────────────────────── */
+// window.showToast y window.toast los provee admin/js/ui.js
 
-  if (!document.getElementById('toast-keyframes')) {
-    const style = document.createElement('style');
-    style.id = 'toast-keyframes';
-    style.textContent = '@keyframes toast-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}';
-    document.head.appendChild(style);
-  }
-
-  const toast = document.createElement('div');
-  Object.assign(toast.style, {
-    position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
-    background: s.bg, border: `1px solid ${s.border}`, color: s.color,
-    padding: '12px 20px', borderRadius: '10px', fontSize: '0.86rem', fontWeight: '500',
-    backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-    animation: 'toast-in 0.25s ease', maxWidth: '340px',
-    fontFamily: 'var(--font-body, DM Sans, sans-serif)',
-  });
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
-};
+/* ── Lucide icons — inicializar tras inyección de sidebar ────── */
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});

@@ -1,8 +1,8 @@
 /* ============================================================
    admin/js/sidebar.js — Sidebar dinámico del panel admin
    Chaski AI v2.0
-   Inyecta el HTML del sidebar y marca el enlace activo
-   automáticamente según window.location.pathname.
+   Inyecta el HTML del sidebar con iconos Lucide y marca el
+   enlace activo automáticamente según window.location.pathname.
    ============================================================ */
 'use strict';
 
@@ -20,7 +20,7 @@
 
   function navLink(href, icon, label, attrs = '') {
     return `<a href="${href}" class="asb-link${isActive(href) ? ' active' : ''}"${attrs}>
-      <i class="fas ${icon}"></i><span>${label}</span>
+      <i data-lucide="${icon}"></i><span>${label}</span>
     </a>`;
   }
 
@@ -36,42 +36,45 @@
     </div>
 
     <div class="asb-assoc">
-      <i class="fas fa-building"></i>
+      <i data-lucide="building-2"></i>
       <div><strong>ATIPCAR</strong><span>Panel Administrador</span></div>
     </div>
 
     <nav class="asb-nav">
       <span class="asb-nav-label">Principal</span>
-      ${navLink('/admin/dashboard', 'fa-tachometer-alt', 'Dashboard')}
+      ${navLink('/admin/dashboard', 'layout-dashboard', 'Dashboard')}
       <a href="/admin/manifests" class="asb-link${isActive('/admin/manifests') ? ' active' : ''}">
-        <i class="fas fa-file-invoice"></i><span>Manifiestos</span>
+        <i data-lucide="file-text"></i><span>Manifiestos</span>
         <span class="asb-badge" id="pendingManifests" style="display:none">0</span>
       </a>
-      ${navLink('/admin/trips',    'fa-route',          'Viajes')}
+      ${navLink('/admin/trips',    'navigation',      'Viajes')}
 
       <span class="asb-nav-label">Flota</span>
-      ${navLink('/admin/vehicles', 'fa-bus',            'Vehículos')}
-      ${navLink('/admin/drivers',  'fa-id-card',        'Conductores')}
-      ${navLink('/admin/queue',    'fa-list-ol',        'Lista Diaria')}
+      ${navLink('/admin/vehicles', 'bus',             'Vehículos')}
+      ${navLink('/admin/drivers',  'id-card',         'Conductores')}
+      ${navLink('/admin/queue',    'list-ordered',    'Lista Diaria')}
 
       <span class="asb-nav-label">Análisis</span>
-      ${navLink('/admin/gps',     'fa-satellite-dish', 'Dispositivos GPS')}
-      ${navLink('/admin/reports', 'fa-chart-bar',      'Reportes')}
+      ${navLink('/admin/gps',     'radio',            'Dispositivos GPS')}
+      ${navLink('/admin/reports', 'bar-chart-2',      'Reportes')}
       <a href="/admin/assistant"
          class="asb-link${isActive('/admin/assistant') ? ' active' : ''}"
          id="nav-assistant"
          onclick="event.preventDefault();const b=document.getElementById('aiFloatBtn');b?b.click():window.location.href='/admin/assistant'">
-        <i class="fas fa-robot"></i><span>Asistente Chaski AI</span>
+        <i data-lucide="bot"></i><span>Asistente Chaski AI</span>
       </a>
     </nav>
 
     <div class="asb-footer">
       <a href="/" class="asb-link asb-link-out">
-        <i class="fas fa-globe"></i><span>Sitio Web</span>
+        <i data-lucide="globe"></i><span>Sitio Web</span>
       </a>
       <button onclick="logout()" class="asb-link asb-link-out">
-        <i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span>
+        <i data-lucide="log-out"></i><span>Cerrar Sesión</span>
       </button>
     </div>
   `;
+
+  // Activar iconos Lucide tras inyectar el HTML
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 })();

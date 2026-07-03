@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Viajes</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="trips.css">
@@ -22,7 +24,7 @@
 
     <header class="admin-header">
       <div class="ah-left">
-        <button class="sb-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sb-toggle-btn" id="sidebarToggle"><i data-lucide="menu"></i></button>
         <div class="ah-title-wrap">
           <h1>Análisis de Viajes</h1>
           <span>Estadísticas operativas y registros detallados de viajes</span>
@@ -31,7 +33,7 @@
       <div class="ah-right">
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
-        <div class="ah-user"><i class="fas fa-user-shield"></i><span id="adminUserName">Admin</span></div>
+        <div class="ah-user"><i data-lucide="shield-check"></i><span id="adminUserName">Admin</span></div>
       </div>
     </header>
 
@@ -50,7 +52,7 @@
           <span style="color:var(--text-muted)">—</span>
           <input type="date" id="trTo"   class="mf-date">
           <button class="mf-btn-search" onclick="applyCustomPeriod()">
-            <i class="fas fa-check"></i>
+            <i data-lucide="check"></i>
           </button>
         </div>
         <div class="tr-period-info">
@@ -64,42 +66,42 @@
       ============================================================ -->
       <div class="tr-kpi-row">
         <div class="tr-kpi-card">
-          <div class="tr-kpi-icon"><i class="fas fa-route"></i></div>
+          <div class="tr-kpi-icon"><i data-lucide="route"></i></div>
           <div>
             <span class="tr-kpi-val" id="kpiTrips">—</span>
             <span class="tr-kpi-lbl">Viajes realizados</span>
           </div>
         </div>
         <div class="tr-kpi-card">
-          <div class="tr-kpi-icon pax"><i class="fas fa-users"></i></div>
+          <div class="tr-kpi-icon pax"><i data-lucide="users"></i></div>
           <div>
             <span class="tr-kpi-val" id="kpiPax">—</span>
             <span class="tr-kpi-lbl">Pasajeros transportados</span>
           </div>
         </div>
         <div class="tr-kpi-card">
-          <div class="tr-kpi-icon km"><i class="fas fa-road"></i></div>
+          <div class="tr-kpi-icon km"><i data-lucide="navigation-2"></i></div>
           <div>
             <span class="tr-kpi-val" id="kpiKm">—</span>
             <span class="tr-kpi-lbl">Kilómetros recorridos</span>
           </div>
         </div>
         <div class="tr-kpi-card">
-          <div class="tr-kpi-icon spd"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="tr-kpi-icon spd"><i data-lucide="layout-dashboard"></i></div>
           <div>
             <span class="tr-kpi-val" id="kpiAvgSpeed">—</span>
             <span class="tr-kpi-lbl">Vel. promedio (km/h)</span>
           </div>
         </div>
         <div class="tr-kpi-card">
-          <div class="tr-kpi-icon rev"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="tr-kpi-icon rev"><i data-lucide="banknote"></i></div>
           <div>
             <span class="tr-kpi-val gold" id="kpiRev">—</span>
             <span class="tr-kpi-lbl">Recaudación</span>
           </div>
         </div>
         <div class="tr-kpi-card">
-          <div class="tr-kpi-icon alrt"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="tr-kpi-icon alrt"><i data-lucide="alert-triangle"></i></div>
           <div>
             <span class="tr-kpi-val danger" id="kpiAlerts">—</span>
             <span class="tr-kpi-lbl">Alertas de velocidad</span>
@@ -125,7 +127,7 @@
         <!-- Viajes por empresa -->
         <div class="dash-card chart-card chart-sm">
           <div class="dc-header">
-            <h3><i class="fas fa-building"></i> Viajes por Empresa</h3>
+            <h3><i data-lucide="building-2"></i> Viajes por Empresa</h3>
           </div>
           <div class="chart-wrap">
             <canvas id="chartTripsCompany"></canvas>
@@ -142,7 +144,7 @@
         <!-- Promedio de pasajeros por viaje / día -->
         <div class="dash-card chart-card">
           <div class="dc-header">
-            <h3><i class="fas fa-users"></i> Pasajeros por Día (últimos 7 días)</h3>
+            <h3><i data-lucide="users"></i> Pasajeros por Día (últimos 7 días)</h3>
           </div>
           <div class="chart-wrap">
             <canvas id="chartPassDay"></canvas>
@@ -152,7 +154,7 @@
         <!-- Alertas de velocidad por vehículo -->
         <div class="dash-card chart-card chart-sm">
           <div class="dc-header">
-            <h3><i class="fas fa-exclamation-triangle"></i> Alertas de Velocidad</h3>
+            <h3><i data-lucide="alert-triangle"></i> Alertas de Velocidad</h3>
             <span class="dc-badge-red" id="alertCount">0</span>
           </div>
           <div class="tr-alerts-list" id="speedAlertsList"></div>
@@ -165,7 +167,7 @@
       ============================================================ -->
       <div class="dash-card">
         <div class="dc-header">
-          <h3><i class="fas fa-list"></i> Registro Detallado de Viajes</h3>
+          <h3><i data-lucide="list"></i> Registro Detallado de Viajes</h3>
           <div class="dc-controls">
             <input type="text" class="dc-search-input" id="tripsSearch"
                    placeholder="Buscar unidad, conductor...">
@@ -198,10 +200,12 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="trips.js"></script>
 
   <script src="../assistant-widget.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

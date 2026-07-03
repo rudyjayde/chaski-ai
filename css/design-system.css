@@ -1,0 +1,160 @@
+/* ============================================================
+   CHASKI AI 2.0 — Design System
+   Tokens, tipografía, espaciado, sombras, keyframes.
+   Importar ANTES de cualquier otro CSS de módulo.
+   ============================================================ */
+
+:root {
+  /* ── Colores base (dark) ───────────────────────────────────── */
+  --ds-bg:        #060B18;
+  --ds-bg-1:      #0A1020;   /* paneles */
+  --ds-bg-2:      #0E1628;   /* cards */
+  --ds-bg-3:      #14203A;   /* elevated */
+  --ds-bg-card:   rgba(8, 14, 32, 0.78);
+
+  /* ── Bordes ────────────────────────────────────────────────── */
+  --ds-border:    rgba(29, 155, 209, 0.10);
+  --ds-border-2:  rgba(29, 155, 209, 0.20);
+  --ds-border-3:  rgba(29, 155, 209, 0.34);
+  --ds-border-w:  rgba(255, 255, 255, 0.06);
+
+  /* ── Brand ─────────────────────────────────────────────────── */
+  --ds-blue:       #1D9BD1;
+  --ds-blue-dk:    #1578A8;
+  --ds-blue-dim:   rgba(29, 155, 209, 0.10);
+  --ds-blue-glow:  rgba(29, 155, 209, 0.22);
+
+  --ds-gold:      #FBBF24;
+  --ds-gold-dk:   #F59E0B;
+  --ds-gold-dim:  rgba(251, 191, 36, 0.10);
+
+  --ds-indigo:    #6366F1;
+  --ds-indigo-dim: rgba(99, 102, 241, 0.10);
+
+  /* ── Semántico ─────────────────────────────────────────────── */
+  --ds-success:        #10B981;
+  --ds-success-dim:    rgba(16, 185, 129, 0.10);
+  --ds-success-border: rgba(16, 185, 129, 0.22);
+
+  --ds-danger:         #EF4444;
+  --ds-danger-dim:     rgba(239, 68, 68, 0.10);
+  --ds-danger-border:  rgba(239, 68, 68, 0.22);
+
+  --ds-warning:        #F59E0B;
+  --ds-warning-dim:    rgba(245, 158, 11, 0.10);
+  --ds-warning-border: rgba(245, 158, 11, 0.22);
+
+  --ds-info:           #0EA5E9;
+  --ds-info-dim:       rgba(14, 165, 233, 0.10);
+  --ds-info-border:    rgba(14, 165, 233, 0.22);
+
+  /* ── Texto ─────────────────────────────────────────────────── */
+  --ds-text-1: #EDF2F8;
+  --ds-text-2: #8BA3C1;
+  --ds-text-3: #4F6A87;
+  --ds-text-4: #2E4158;
+
+  /* ── Tipografía ────────────────────────────────────────────── */
+  --ds-font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ds-font-title: 'Space Grotesk', var(--ds-font-sans);
+  --ds-font-mono:  'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --ds-text-2xs: 0.65rem;
+  --ds-text-xs:  0.72rem;
+  --ds-text-sm:  0.80rem;
+  --ds-text-md:  0.875rem;
+  --ds-text-base: 0.92rem;
+  --ds-text-lg:  1rem;
+  --ds-text-xl:  1.125rem;
+  --ds-text-2xl: 1.375rem;
+
+  /* ── Espaciado ─────────────────────────────────────────────── */
+  --ds-sp-1:  4px;
+  --ds-sp-2:  8px;
+  --ds-sp-3:  12px;
+  --ds-sp-4:  16px;
+  --ds-sp-5:  20px;
+  --ds-sp-6:  24px;
+  --ds-sp-8:  32px;
+  --ds-sp-10: 40px;
+  --ds-sp-12: 48px;
+  --ds-sp-16: 64px;
+
+  /* ── Radios ────────────────────────────────────────────────── */
+  --ds-r-sm: 5px;
+  --ds-r:    8px;
+  --ds-r-md: 10px;
+  --ds-r-lg: 14px;
+  --ds-r-xl: 18px;
+  --ds-r-2xl: 24px;
+  --ds-r-full: 9999px;
+
+  /* ── Sombras ───────────────────────────────────────────────── */
+  --ds-shadow-sm: 0 1px 3px rgba(0,0,0,0.28);
+  --ds-shadow:    0 4px 14px rgba(0,0,0,0.32);
+  --ds-shadow-md: 0 8px 28px rgba(0,0,0,0.42);
+  --ds-shadow-lg: 0 16px 48px rgba(0,0,0,0.52);
+  --ds-shadow-blue: 0 4px 20px rgba(29,155,209,0.16);
+  --ds-shadow-gold: 0 4px 20px rgba(251,191,36,0.14);
+  --ds-shadow-up: 0 -4px 14px rgba(0,0,0,0.2);
+
+  /* ── Transiciones ──────────────────────────────────────────── */
+  --ds-ease:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ds-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ds-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --ds-t-fast:  120ms var(--ds-ease);
+  --ds-t-base:  180ms var(--ds-ease);
+  --ds-t-slow:  280ms var(--ds-ease);
+  --ds-t-modal: 360ms var(--ds-ease-spring);
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  --ds-sidebar: 244px;
+  --ds-header:  56px;
+  --ds-content-max: 1440px;
+}
+
+/* ── Actualizar tokens existentes ───────────────────────────── */
+:root {
+  --dark:      var(--ds-bg);
+  --dark2:     var(--ds-bg-1);
+  --dark3:     var(--ds-bg-2);
+  --card-bg:   var(--ds-bg-card);
+  --border:    var(--ds-border);
+  --border2:   var(--ds-border-2);
+  --text:      var(--ds-text-1);
+  --text-muted: var(--ds-text-3);
+  --primary:   var(--ds-blue);
+  --primary-d: var(--ds-blue-dk);
+  --gold:      var(--ds-gold);
+  --success:   var(--ds-success);
+  --danger:    var(--ds-danger);
+  --warning:   var(--ds-warning);
+  --radius:    var(--ds-r-md);
+  --radius-lg: var(--ds-r-xl);
+  --shadow:    var(--ds-shadow-blue);
+}
+
+/* ── Keyframes globales ──────────────────────────────────────── */
+@keyframes ds-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes ds-fade-in   { from { opacity: 0 } to { opacity: 1 } }
+@keyframes ds-slide-up  { from { opacity:0; transform:translateY(10px)  } to { opacity:1; transform:translateY(0) } }
+@keyframes ds-slide-dn  { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:translateY(0) } }
+@keyframes ds-scale-in  { from { opacity:0; transform:scale(.94)  } to { opacity:1; transform:scale(1)  } }
+@keyframes ds-scale-out { from { opacity:1; transform:scale(1)    } to { opacity:0; transform:scale(.94)} }
+@keyframes ds-pulse     { 0%,100%{opacity:1} 50%{opacity:0.38} }
+@keyframes ds-spin      { to { transform: rotate(360deg) } }
+@keyframes ds-bounce-in { from{transform:translateY(14px) scale(.96);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+@keyframes ds-toast-in  { from{transform:translateX(20px) scale(.96);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
+@keyframes ds-toast-out { from{transform:translateX(0) scale(1);opacity:1} to{transform:translateX(20px) scale(.96);opacity:0} }
+@keyframes ds-progress-shrink { from{width:100%} to{width:0} }
+
+/* ── Utilidades de animación ─────────────────────────────────── */
+.anim-fade-in  { animation: ds-fade-in  var(--ds-t-base) both }
+.anim-slide-up { animation: ds-slide-up var(--ds-t-slow)  both }
+.anim-scale-in { animation: ds-scale-in var(--ds-t-slow)  both }

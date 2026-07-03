@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Lista Diaria</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="queue.css">
@@ -22,7 +24,7 @@
 
     <header class="admin-header">
       <div class="ah-left">
-        <button class="sb-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sb-toggle-btn" id="sidebarToggle"><i data-lucide="menu"></i></button>
         <div class="ah-title-wrap">
           <h1>Cola de Salida — Lista Diaria</h1>
           <span>Control de turnos y posiciones de salida del día</span>
@@ -31,7 +33,7 @@
       <div class="ah-right">
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
-        <div class="ah-user"><i class="fas fa-user-shield"></i><span id="adminUserName">Admin</span></div>
+        <div class="ah-user"><i data-lucide="shield-check"></i><span id="adminUserName">Admin</span></div>
       </div>
     </header>
 
@@ -41,7 +43,7 @@
         BANNER INFORMATIVO DE REGLAS
       ============================================================ -->
       <div class="qw-rule-banner">
-        <i class="fas fa-info-circle"></i>
+        <i data-lucide="info"></i>
         <div>
           <strong>Reglas de la cola:</strong>
           La inscripción se abre a las <strong>18:30</strong> del día anterior.
@@ -55,35 +57,35 @@
       ============================================================ -->
       <div class="mf-kpi-row">
         <div class="mf-kpi">
-          <i class="fas fa-list-ol"></i>
+          <i data-lucide="list"></i>
           <div>
             <span class="mf-kpi-val" id="qTotal">—</span>
             <span class="mf-kpi-lbl">Inscritos hoy</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-check-double" style="color:var(--success)"></i>
+          <i data-lucide="check"></i>
           <div>
             <span class="mf-kpi-val" id="qDeparted">—</span>
             <span class="mf-kpi-lbl">Ya salieron</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-clock" style="color:var(--gold)"></i>
+          <i data-lucide="clock"></i>
           <div>
             <span class="mf-kpi-val" id="qWaiting">—</span>
             <span class="mf-kpi-lbl">En espera</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-bus" style="color:var(--primary)"></i>
+          <i data-lucide="bus"></i>
           <div>
             <span class="mf-kpi-val" id="qInTerminal">—</span>
             <span class="mf-kpi-lbl">En terminal</span>
           </div>
         </div>
         <div class="mf-kpi">
-          <i class="fas fa-building" style="color:#a370f7"></i>
+          <i data-lucide="building-2"></i>
           <div>
             <span class="mf-kpi-val" id="qCompanies">—</span>
             <span class="mf-kpi-lbl">Empresas activas</span>
@@ -97,15 +99,15 @@
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
         <button class="aq-route-tab active" id="tabJuliPuno"
           onclick="switchRoute('juli-puno', this)">
-          <i class="fas fa-arrow-right"></i> Juli → Puno
+          <i data-lucide="arrow-right"></i> Juli → Puno
         </button>
         <button class="aq-route-tab" id="tabPunoJuli"
           onclick="switchRoute('puno-juli', this)">
-          <i class="fas fa-arrow-left"></i> Puno → Juli
+          <i data-lucide="arrow-left"></i> Puno → Juli
         </button>
         <button class="aq-route-tab" style="margin-left:auto;background:rgba(0,200,255,.1);border-color:var(--primary)"
           onclick="loadQueue()">
-          <i class="fas fa-sync-alt"></i> Actualizar
+          <i data-lucide="refresh-cw"></i> Actualizar
         </button>
       </div>
 
@@ -117,7 +119,7 @@
         <!-- Lista de la cola -->
         <div class="dash-card">
           <div class="dc-header">
-            <h3><i class="fas fa-list-ol"></i> Cola de Salida del Día</h3>
+            <h3><i data-lucide="list"></i> Cola de Salida del Día</h3>
             <div class="dc-controls">
               <input type="text" class="dc-search-input" id="qSearch"
                      placeholder="Buscar unidad, conductor...">
@@ -155,7 +157,7 @@
         <!-- Panel de posiciones en terminal -->
         <div class="dash-card qw-terminal-card">
           <div class="dc-header">
-            <h3><i class="fas fa-map-pin"></i> Posiciones en Terminal</h3>
+            <h3><i data-lucide="map"></i> Posiciones en Terminal</h3>
             <span class="dc-live-badge">EN VIVO</span>
           </div>
 
@@ -163,7 +165,7 @@
           <div class="qw-terminal-diagram">
 
             <div class="qw-terminal-label">
-              <i class="fas fa-road"></i> RUTA SALIDA
+              <i data-lucide="navigation-2"></i> RUTA SALIDA
             </div>
 
             <div class="qw-position" id="pos-calling">
@@ -214,7 +216,7 @@
           <i class="fas fa-gavel" style="color:var(--gold);margin-right:8px"></i>Aplicar Sanción
         </h3>
         <button class="mf-modal-close" onclick="closeSanctionModal()">
-          <i class="fas fa-times"></i>
+          <i data-lucide="x"></i>
         </button>
       </div>
       <div style="padding:16px 0">
@@ -233,12 +235,12 @@
         <textarea id="sanctionDesc" rows="3" placeholder="Describe la situación (opcional)..."
           style="width:100%;padding:9px 12px;background:var(--dark-2,#0d1b2e);border:1px solid var(--border);color:var(--text-main);border-radius:8px;resize:vertical;font-size:13px;font-family:inherit"></textarea>
         <p style="font-size:11px;color:var(--text-muted);margin-top:8px">
-          <i class="fas fa-info-circle"></i> La sanción será notificada al panel del conductor.
+          <i data-lucide="info"></i> La sanción será notificada al panel del conductor.
         </p>
       </div>
       <div class="mf-modal-actions">
         <button class="mf-btn-act ghost" onclick="closeSanctionModal()">
-          <i class="fas fa-times"></i> Cancelar
+          <i data-lucide="x"></i> Cancelar
         </button>
         <button class="mf-btn-act" onclick="applySanction()"
           style="background:var(--gold,#f59e0b);color:#000">
@@ -248,10 +250,12 @@
     </div>
   </div>
 
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="queue.js"></script>
 
   <script src="../assistant-widget.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

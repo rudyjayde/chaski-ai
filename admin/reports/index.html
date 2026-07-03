@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,8 +6,10 @@
   <title>Chaski AI — Reportes</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <link rel="stylesheet" href="../../css/design-system.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../index.css">
   <link rel="stylesheet" href="reports.css">
@@ -22,7 +24,7 @@
 
     <header class="admin-header">
       <div class="ah-left">
-        <button class="sb-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sb-toggle-btn" id="sidebarToggle"><i data-lucide="menu"></i></button>
         <div class="ah-title-wrap">
           <h1>Reportes y Análisis</h1>
           <span>Métricas ejecutivas, rendimiento por empresa y seguridad vial</span>
@@ -31,7 +33,7 @@
       <div class="ah-right">
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
-        <div class="ah-user"><i class="fas fa-user-shield"></i><span id="adminUserName">Admin</span></div>
+        <div class="ah-user"><i data-lucide="shield-check"></i><span id="adminUserName">Admin</span></div>
       </div>
     </header>
 
@@ -57,7 +59,7 @@
             <i class="fas fa-file-csv"></i> CSV
           </button>
           <button class="mf-btn-exp" onclick="exportReport('pdf')">
-            <i class="fas fa-file-pdf"></i> PDF
+            <i data-lucide="file-text"></i> PDF
           </button>
         </div>
       </div>
@@ -67,36 +69,36 @@
       ============================================================ -->
       <div class="rp-kpi-grid">
         <div class="rp-kpi-card">
-          <div class="rp-kpi-icon"><i class="fas fa-route"></i></div>
+          <div class="rp-kpi-icon"><i data-lucide="route"></i></div>
           <div>
             <span class="rp-kpi-val" id="rpTrips">—</span>
             <span class="rp-kpi-lbl">Viajes totales</span>
           </div>
-          <div class="rp-kpi-trend up" id="rpTripsTrend"><i class="fas fa-arrow-up"></i> +8%</div>
+          <div class="rp-kpi-trend up" id="rpTripsTrend"><i data-lucide="trending-up"></i> +8%</div>
         </div>
         <div class="rp-kpi-card">
-          <div class="rp-kpi-icon pax"><i class="fas fa-users"></i></div>
+          <div class="rp-kpi-icon pax"><i data-lucide="users"></i></div>
           <div>
             <span class="rp-kpi-val" id="rpPax">—</span>
             <span class="rp-kpi-lbl">Pasajeros</span>
           </div>
-          <div class="rp-kpi-trend up"><i class="fas fa-arrow-up"></i> +12%</div>
+          <div class="rp-kpi-trend up"><i data-lucide="trending-up"></i> +12%</div>
         </div>
         <div class="rp-kpi-card highlight-gold">
-          <div class="rp-kpi-icon rev"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="rp-kpi-icon rev"><i data-lucide="banknote"></i></div>
           <div>
             <span class="rp-kpi-val gold" id="rpRevenue">—</span>
             <span class="rp-kpi-lbl">Recaudación total</span>
           </div>
-          <div class="rp-kpi-trend up"><i class="fas fa-arrow-up"></i> +5%</div>
+          <div class="rp-kpi-trend up"><i data-lucide="trending-up"></i> +5%</div>
         </div>
         <div class="rp-kpi-card">
-          <div class="rp-kpi-icon km"><i class="fas fa-road"></i></div>
+          <div class="rp-kpi-icon km"><i data-lucide="navigation-2"></i></div>
           <div>
             <span class="rp-kpi-val" id="rpKm">—</span>
             <span class="rp-kpi-lbl">Km recorridos</span>
           </div>
-          <div class="rp-kpi-trend up"><i class="fas fa-arrow-up"></i> +3%</div>
+          <div class="rp-kpi-trend up"><i data-lucide="trending-up"></i> +3%</div>
         </div>
         <div class="rp-kpi-card">
           <div class="rp-kpi-icon occ"><i class="fas fa-percent"></i></div>
@@ -104,10 +106,10 @@
             <span class="rp-kpi-val" id="rpOcc">—</span>
             <span class="rp-kpi-lbl">Ocupación promedio</span>
           </div>
-          <div class="rp-kpi-trend up"><i class="fas fa-arrow-up"></i> +2%</div>
+          <div class="rp-kpi-trend up"><i data-lucide="trending-up"></i> +2%</div>
         </div>
         <div class="rp-kpi-card">
-          <div class="rp-kpi-icon alrt"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="rp-kpi-icon alrt"><i data-lucide="alert-triangle"></i></div>
           <div>
             <span class="rp-kpi-val danger" id="rpAlerts">—</span>
             <span class="rp-kpi-lbl">Alertas velocidad</span>
@@ -124,7 +126,7 @@
         <!-- Recaudación por empresa (barras horizontales) -->
         <div class="dash-card chart-card">
           <div class="dc-header">
-            <h3><i class="fas fa-building"></i> Recaudación por Empresa</h3>
+            <h3><i data-lucide="building-2"></i> Recaudación por Empresa</h3>
           </div>
           <div class="chart-wrap">
             <canvas id="chartRevCompany"></canvas>
@@ -186,7 +188,7 @@
         <!-- Alertas de velocidad por empresa -->
         <div class="dash-card chart-card chart-sm">
           <div class="dc-header">
-            <h3><i class="fas fa-tachometer-alt"></i> Alertas de Velocidad por Empresa</h3>
+            <h3><i data-lucide="layout-dashboard"></i> Alertas de Velocidad por Empresa</h3>
           </div>
           <div class="chart-wrap">
             <canvas id="chartSpeedAlerts"></canvas>
@@ -225,10 +227,12 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../js/ui.js"></script>
   <script src="../js/core.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="reports.js"></script>
 
   <script src="../assistant-widget.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 </html>

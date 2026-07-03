@@ -6,10 +6,13 @@
   <title>Chaski AI — Panel Administrador</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Lucide Icons (UMD — reemplaza Font Awesome) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <!-- Leaflet (mapa GPS) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
+  <link rel="stylesheet" href="../css/design-system.css">
+  <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="index.css">
   <link rel="stylesheet" href="vehicles/vehicles.css">
@@ -29,7 +32,7 @@
     <header class="admin-header">
       <div class="ah-left">
         <button class="sb-toggle-btn" id="sidebarToggle">
-          <i class="fas fa-bars"></i>
+          <i data-lucide="menu"></i>
         </button>
         <div class="ah-title-wrap">
           <h1>ATIPCAR — Centro de Control</h1>
@@ -42,11 +45,11 @@
         <div class="ah-clock" id="adminClock">00:00</div>
         <div class="ah-date"  id="adminDate">—</div>
         <div class="ah-alerts-bell" id="alertsBell" title="Alertas">
-          <i class="fas fa-bell"></i>
+          <i data-lucide="bell"></i>
           <span class="bell-badge" id="bellCount">5</span>
         </div>
         <div class="ah-user">
-          <i class="fas fa-user-shield"></i>
+          <i data-lucide="shield-check"></i>
           <span id="adminUserName">Admin</span>
         </div>
       </div>
@@ -61,16 +64,16 @@
       <div class="kpi-grid">
 
         <div class="kpi-card">
-          <div class="kpi-icon"><i class="fas fa-bus"></i></div>
+          <div class="kpi-icon"><i data-lucide="bus"></i></div>
           <div class="kpi-data">
             <span class="kpi-val" id="kpiActive">—</span>
             <span class="kpi-label">Unidades activas hoy</span>
           </div>
-          <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 94%</div>
+          <div class="kpi-trend up"><i data-lucide="trending-up"></i> 94%</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon op"><i class="fas fa-road"></i></div>
+          <div class="kpi-icon op"><i data-lucide="navigation-2"></i></div>
           <div class="kpi-data">
             <span class="kpi-val" id="kpiOperating">—</span>
             <span class="kpi-label">En operación ahora</span>
@@ -79,39 +82,39 @@
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon tr"><i class="fas fa-route"></i></div>
+          <div class="kpi-icon tr"><i data-lucide="route"></i></div>
           <div class="kpi-data">
             <span class="kpi-val" id="kpiTrips">—</span>
             <span class="kpi-label">Viajes realizados hoy</span>
           </div>
-          <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +8%</div>
+          <div class="kpi-trend up"><i data-lucide="trending-up"></i> +8%</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon pa"><i class="fas fa-users"></i></div>
+          <div class="kpi-icon pa"><i data-lucide="users"></i></div>
           <div class="kpi-data">
             <span class="kpi-val" id="kpiPassengers">—</span>
             <span class="kpi-label">Pasajeros transportados</span>
           </div>
-          <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+          <div class="kpi-trend up"><i data-lucide="trending-up"></i> 12%</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon dr"><i class="fas fa-id-badge"></i></div>
+          <div class="kpi-icon dr"><i data-lucide="id-card"></i></div>
           <div class="kpi-data">
             <span class="kpi-val" id="kpiDrivers">—</span>
             <span class="kpi-label">Conductores activos</span>
           </div>
-          <div class="kpi-trend"><i class="fas fa-check-circle" style="color:var(--success)"></i> En línea</div>
+          <div class="kpi-trend"><i data-lucide="check-circle" style="color:var(--success)"></i> En línea</div>
         </div>
 
         <div class="kpi-card highlight-gold">
-          <div class="kpi-icon rv"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="kpi-icon rv"><i data-lucide="banknote"></i></div>
           <div class="kpi-data">
             <span class="kpi-val gold" id="kpiRevenue">—</span>
             <span class="kpi-label">Recaudación total hoy</span>
           </div>
-          <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +5%</div>
+          <div class="kpi-trend up"><i data-lucide="trending-up"></i> +5%</div>
         </div>
 
       </div><!-- /kpi-grid -->
@@ -125,7 +128,7 @@
         <!-- Gráfico recaudación por empresa -->
         <div class="dash-card chart-card">
           <div class="dc-header">
-            <h3><i class="fas fa-chart-bar"></i> Recaudación por Empresa</h3>
+            <h3><i data-lucide="bar-chart-2"></i> Recaudación por Empresa</h3>
             <div class="dc-controls">
               <select id="revenueFilter" class="dc-select">
                 <option value="today">Hoy</option>
@@ -142,7 +145,7 @@
         <!-- Distribución de flota -->
         <div class="dash-card chart-card chart-sm">
           <div class="dc-header">
-            <h3><i class="fas fa-chart-donut"></i> Estado de Flota</h3>
+            <h3><i data-lucide="pie-chart"></i> Estado de Flota</h3>
             <span class="dc-live-badge">EN VIVO</span>
           </div>
           <div class="chart-wrap chart-donut-wrap">
@@ -162,7 +165,7 @@
         <!-- Mapa GPS en tiempo real -->
         <div class="dash-card map-card">
           <div class="dc-header">
-            <h3><i class="fas fa-map-marked-alt"></i> Mapa Operativo — Rutas Activas</h3>
+            <h3><i data-lucide="map-pin"></i> Mapa Operativo — Rutas Activas</h3>
             <div class="dc-controls">
               <button class="dc-btn active" data-route="all" onclick="filterRoute('all',this)">Todas</button>
               <button class="dc-btn" data-route="forward" onclick="filterRoute('forward',this)">Ida</button>
@@ -175,7 +178,7 @@
         <!-- Panel de alertas -->
         <div class="dash-card alerts-card">
           <div class="dc-header">
-            <h3><i class="fas fa-exclamation-triangle"></i> Alertas Operativas</h3>
+            <h3><i data-lucide="alert-triangle"></i> Alertas Operativas</h3>
             <span class="dc-badge-red" id="alertCount">5</span>
           </div>
           <div class="alerts-list" id="alertsList">
@@ -194,11 +197,11 @@
         <!-- Búsqueda / Control por código o placa -->
         <div class="dash-card search-card">
           <div class="dc-header">
-            <h3><i class="fas fa-search"></i> Búsqueda y Control de Vehículos</h3>
+            <h3><i data-lucide="search"></i> Búsqueda y Control de Vehículos</h3>
           </div>
           <div class="search-bar-wrap">
             <div class="search-bar">
-              <i class="fas fa-search"></i>
+              <i data-lucide="search"></i>
               <input type="text" id="vehicleSearch"
                      placeholder="Código (Ej: 001) o placa (Ej: PUN-001)">
               <button onclick="searchVehicle()">Buscar</button>
@@ -210,7 +213,7 @@
         <!-- Últimos viajes registrados -->
         <div class="dash-card table-card">
           <div class="dc-header">
-            <h3><i class="fas fa-history"></i> Últimos Viajes Registrados</h3>
+            <h3><i data-lucide="clock"></i> Últimos Viajes Registrados</h3>
             <a href="/admin/trips" class="dc-link">Ver todos</a>
           </div>
           <div class="table-wrap">
@@ -235,9 +238,9 @@
         ============================================================ -->
         <div class="dash-card" id="commsCard" style="grid-column:1/-1">
           <div class="dc-header">
-            <h3><i class="fas fa-bullhorn"></i> Comunicados a Conductores</h3>
-            <button class="btn-primary" style="font-size:12px;padding:7px 14px;border-radius:8px" onclick="openCommsModal()">
-              <i class="fas fa-plus"></i> Nuevo comunicado
+            <h3><i data-lucide="megaphone"></i> Comunicados a Conductores</h3>
+            <button class="btn-primary btn btn-sm" onclick="openCommsModal()">
+              <i data-lucide="plus"></i> Nuevo comunicado
             </button>
           </div>
           <div id="commsList" style="display:flex;flex-direction:column;gap:0"></div>
@@ -254,8 +257,8 @@
   <div class="modal-overlay" id="commsModal" onclick="if(event.target===this)closeCommsModal()">
     <div class="modal-box" style="max-width:520px">
       <div class="modal-header">
-        <h2><i class="fas fa-bullhorn"></i> Nuevo Comunicado</h2>
-        <button class="modal-close" onclick="closeCommsModal()"><i class="fas fa-times"></i></button>
+        <h2><i data-lucide="megaphone"></i> Nuevo Comunicado</h2>
+        <button class="modal-close" onclick="closeCommsModal()"><i data-lucide="x"></i></button>
       </div>
       <form onsubmit="submitCommunication(event)" style="padding:0 24px 24px">
         <div class="form-group" style="margin-bottom:14px">
@@ -279,12 +282,12 @@
         </div>
         <div id="commFormError" class="form-error" style="display:none;margin-bottom:12px"></div>
         <p style="font-size:11px;color:var(--text-muted);margin-bottom:16px">
-          <i class="fas fa-info-circle"></i> El comunicado llegará a la campana de notificaciones de <strong>todos los conductores activos</strong>.
+          <i data-lucide="info" style="width:12px;height:12px;vertical-align:middle"></i> El comunicado llegará a la campana de notificaciones de <strong>todos los conductores activos</strong>.
         </p>
         <div class="modal-actions" style="padding:0">
           <button type="button" class="btn-secondary" onclick="closeCommsModal()">Cancelar</button>
           <button type="submit" class="btn-primary" id="commSubmitBtn">
-            <i class="fas fa-paper-plane"></i> Enviar a todos
+            <i data-lucide="send"></i> Enviar a todos
           </button>
         </div>
       </form>
@@ -294,6 +297,7 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/ui.js"></script>
   <script src="js/core.js"></script>
   <script src="js/sidebar.js"></script>
   <script src="index.js"></script>
