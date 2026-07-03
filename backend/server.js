@@ -7,6 +7,7 @@ const path    = require('path');
 const fs      = require('fs');
 const pool    = require('./config/db');
 const { startGPSServer }            = require('./gps-server');
+const { startScheduler }            = require('./services/aiEngine');
 const { auth }                      = require('./middleware/auth');
 const { sanitizeBody, sanitizeQuery } = require('./middleware/sanitize');
 const { apiLimiter }                = require('./middleware/rateLimiter');
@@ -25,18 +26,25 @@ app.use(helmet({
 }));
 
 // ── CORS ─────────────────────────────────────────────────────
-const allowedOrigins = (process.env.ALLOWED_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean);
+const _defaultOrigins = ['http://localhost:3005', 'http://localhost:5500'];
+const allowedOrigins  = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : _defaultOrigins;
+
+if (!process.env.ALLOWED_ORIGINS) {
+  console.warn('[cors] WARNING: ALLOWED_ORIGINS no configurado — usando solo localhost. Configura en producción.');
+}
 
 app.use(cors({
   origin: (origin, cb) => {
-    // Sin origin = mismo servidor (estáticos, curl)
+    // Sin origin = petición desde el mismo servidor (archivos estáticos, curl, Postman)
     if (!origin) return cb(null, true);
-    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`Origin no permitido por CORS: ${origin}`));
   },
-  methods:      ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods:        ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-  credentials:  true,
+  credentials:    true,
 }));
 app.options('*', cors());
 
@@ -52,8 +60,6 @@ app.use('/api', apiLimiter);
 const PUBLIC_API_PATHS = [
   '/api/auth/login',
   '/api/auth/refresh',
-  '/api/auth/forgot-password',
-  '/api/auth/reset-password',
   '/api/health',
 ];
 app.use('/api', (req, res, next) => {
@@ -78,8 +84,9 @@ app.use((req, res, next) => {
 });
 
 // ── Rutas de navegación canónicas ────────────────────────────
-app.get(['/admin', '/admin/'], (req, res) => res.redirect('/admin/dashboard'));
-app.get('/admin/dashboard',    (req, res) => res.sendFile(path.join(ROOT, 'admin/index.html')));
+app.get(['/admin', '/admin/'],  (req, res) => res.redirect('/admin/dashboard'));
+app.get('/admin/dashboard',     (req, res) => res.sendFile(path.join(ROOT, 'admin/index.html')));
+app.get('/admin/ai-dashboard',  (req, res) => res.sendFile(path.join(ROOT, 'admin/ai-dashboard.html')));
 
 // ── API: rutas específicas ────────────────────────────────────
 app.use('/api/gps',            require('./routes/gps'));
@@ -108,7 +115,8 @@ app.listen(PORT, () => {
   console.log(`   Entorno : ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Base BD : ${process.env.DB_NAME} en ${process.env.DB_HOST}:${process.env.DB_PORT}`);
   console.log(`   Anthropic: ${process.env.ANTHROPIC_API_KEY ? 'Configurada' : 'Falta ANTHROPIC_API_KEY'}`);
-  console.log(`   CORS     : ${allowedOrigins.length ? allowedOrigins.join(', ') : 'Abierto (configurar ALLOWED_ORIGIN)'}`);
+  console.log(`   CORS     : ${allowedOrigins.join(', ')}`);
   startGPSServer();
+  startScheduler();
   console.log('');
 });

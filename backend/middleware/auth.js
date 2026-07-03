@@ -1,4 +1,5 @@
-const jwt = require('jsonwebtoken');
+const jwt  = require('jsonwebtoken');
+const pool = require('../config/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chaski_secret';
 
@@ -6,13 +7,24 @@ if (!process.env.JWT_SECRET) {
   console.warn('[auth] WARNING: JWT_SECRET no está definido en .env — usando clave insegura de fallback. Configura JWT_SECRET en producción.');
 }
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Token requerido' });
 
   const token = header.startsWith('Bearer ') ? header.slice(7) : header;
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET);
+
+    // Verificar que el usuario existe y sigue activo en BD
+    const result = await pool.query(
+      'SELECT id FROM users WHERE id = $1 AND active = true',
+      [payload.id]
+    );
+    if (!result.rows.length) {
+      return res.status(401).json({ error: 'Usuario desactivado' });
+    }
+
+    req.user = payload;
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {

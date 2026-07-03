@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const schemas = {
   login: Joi.object({
-    username: Joi.string().alphanum().min(3).max(50).required(),
+    username: Joi.string().pattern(/^[a-zA-Z0-9._-]+$/).min(3).max(50).required(),
     password: Joi.string().min(1).max(128).required(),
   }),
 
@@ -17,7 +17,7 @@ const schemas = {
   }),
 
   forgotPassword: Joi.object({
-    username: Joi.string().alphanum().min(3).max(50).required(),
+    username: Joi.string().pattern(/^[a-zA-Z0-9._-]+$/).min(3).max(50).required(),
   }),
 
   resetPassword: Joi.object({

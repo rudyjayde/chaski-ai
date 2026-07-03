@@ -8,20 +8,30 @@ router.get('/summary', auth, async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
 
-    const [tripsRes, passengersRes, revenueRes, alertsRes, queueRes] = await Promise.all([
+    // Ejecutar cada query de forma independiente para que una tabla faltante no rompa todo
+    const [tripsRes, passengersRes, revenueRes, queueRes] = await Promise.all([
       pool.query(`SELECT COUNT(*) as total FROM trips WHERE DATE(start_time) = $1`, [date]),
       pool.query(`SELECT COALESCE(SUM(total_passengers), 0) as total FROM manifests WHERE DATE(created_at) = $1 AND status = 'closed'`, [date]),
       pool.query(`SELECT COALESCE(SUM(total_revenue), 0) as total FROM manifests WHERE DATE(created_at) = $1 AND status = 'closed'`, [date]),
-      pool.query(`SELECT COUNT(*) as total FROM speed_alerts WHERE DATE(occurred_at) = $1`, [date]),
-      pool.query(`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status = 'departed') as departed FROM exit_queue WHERE queue_date = $1`, [date]),
+      pool.query(`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE position = 'departed') as departed
+                  FROM queue_entries WHERE queue_date = $1 AND active = TRUE`, [date]),
     ]);
+
+    // speed_alerts es opcional — puede no existir si aún no hay GPS activo
+    let alerts = 0;
+    try {
+      const alertsRes = await pool.query(
+        `SELECT COUNT(*) as total FROM speed_alerts WHERE DATE(occurred_at) = $1`, [date]
+      );
+      alerts = parseInt(alertsRes.rows[0].total);
+    } catch (_) {}
 
     res.json({
       date,
-      trips:       parseInt(tripsRes.rows[0].total),
-      passengers:  parseInt(passengersRes.rows[0].total),
-      revenue:     parseFloat(revenueRes.rows[0].total),
-      alerts:      parseInt(alertsRes.rows[0].total),
+      trips:          parseInt(tripsRes.rows[0].total),
+      passengers:     parseInt(passengersRes.rows[0].total),
+      revenue:        parseFloat(revenueRes.rows[0].total),
+      alerts,
       queue_total:    parseInt(queueRes.rows[0].total),
       queue_departed: parseInt(queueRes.rows[0].departed),
     });
@@ -60,23 +70,40 @@ router.get('/revenue', auth, adminOnly, async (req, res) => {
 router.get('/drivers', auth, async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
+
+    // Query base sin speed_alerts (puede no existir)
     const { rows } = await pool.query(`
       SELECT d.id, d.first_name || ' ' || d.last_name as driver_name,
              d.phone, v.plate, v.association_code,
              COUNT(DISTINCT t.id) as trips,
              COALESCE(SUM(m.total_passengers), 0) as passengers,
-             COALESCE(SUM(m.total_revenue), 0) as revenue,
-             COALESCE(MAX(sa.max_speed), 0) as max_speed_today,
-             COUNT(DISTINCT sa.id) as speed_alerts
+             COALESCE(SUM(m.total_revenue), 0) as revenue
       FROM drivers d
-      LEFT JOIN vehicles v ON d.vehicle_id = v.id
-      LEFT JOIN trips t ON t.driver_id = d.id AND DATE(t.start_time) = $1
+      LEFT JOIN vehicles  v ON v.id = d.vehicle_id
+      LEFT JOIN trips     t ON t.driver_id = d.id AND DATE(t.start_time) = $1
       LEFT JOIN manifests m ON m.id = t.manifest_id
-      LEFT JOIN speed_alerts sa ON sa.driver_id = d.id AND DATE(sa.occurred_at) = $1
-      WHERE d.active = true
+      WHERE d.active = TRUE
       GROUP BY d.id, d.first_name, d.last_name, d.phone, v.plate, v.association_code
       ORDER BY revenue DESC
     `, [date]);
+
+    // Enriquecer con speed_alerts si la tabla existe
+    try {
+      const alertRows = await pool.query(`
+        SELECT driver_id, MAX(max_speed) as max_speed_today, COUNT(*) as speed_alerts
+        FROM speed_alerts WHERE DATE(occurred_at) = $1 GROUP BY driver_id
+      `, [date]);
+      const alertMap = {};
+      alertRows.rows.forEach(r => { alertMap[r.driver_id] = r; });
+      rows.forEach(r => {
+        const a = alertMap[r.id] || {};
+        r.max_speed_today = parseFloat(a.max_speed_today) || 0;
+        r.speed_alerts    = parseInt(a.speed_alerts)      || 0;
+      });
+    } catch (_) {
+      rows.forEach(r => { r.max_speed_today = 0; r.speed_alerts = 0; });
+    }
+
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Error del servidor' });
@@ -102,6 +129,10 @@ router.get('/alerts', auth, async (req, res) => {
     `, [filterDate, limit]);
     res.json(rows);
   } catch (err) {
+    // speed_alerts puede no existir aún si no hay GPS activo
+    if (err.message.includes('speed_alerts') || err.message.includes('does not exist')) {
+      return res.json([]);
+    }
     res.status(500).json({ error: 'Error del servidor' });
   }
 });

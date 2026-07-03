@@ -1,12 +1,12 @@
 -- ============================================================
 -- CHASKI AI 2.0 — Tablas de Seguridad (Phase 5)
--- Ejecutar una sola vez contra la base de datos de producción.
+-- Ejecutar una sola vez contra la base de datos.
 -- ============================================================
 
 -- ── 1. Refresh Tokens ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id           SERIAL PRIMARY KEY,
-  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash   VARCHAR(64)  NOT NULL UNIQUE,
   expires_at   TIMESTAMP    NOT NULL,
   revoked      BOOLEAN      NOT NULL DEFAULT false,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 -- ── 3. Tokens de Restablecimiento de Contraseña ──────────────
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
   id          SERIAL PRIMARY KEY,
-  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash  VARCHAR(64) NOT NULL UNIQUE,
   expires_at  TIMESTAMP   NOT NULL,
   used        BOOLEAN     NOT NULL DEFAULT false,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 -- ── 4. Historial de Sesiones ─────────────────────────────────
 CREATE TABLE IF NOT EXISTS session_history (
   id                SERIAL PRIMARY KEY,
-  user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id           UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   refresh_token_id  INTEGER REFERENCES refresh_tokens(id) ON DELETE SET NULL,
   action            VARCHAR(50) NOT NULL,
   ip_address        VARCHAR(45),
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS session_history (
 -- ── 5. Logs de Auditoría ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS audit_logs (
   id          SERIAL PRIMARY KEY,
-  user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  user_id     UUID REFERENCES users(id) ON DELETE SET NULL,
   username    VARCHAR(100),
   role        VARCHAR(50),
   action      VARCHAR(100) NOT NULL,

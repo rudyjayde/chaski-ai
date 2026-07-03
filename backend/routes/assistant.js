@@ -1,5 +1,5 @@
 // ============================================================
-// CHASKI AI 2.0 — Ruta del Asistente IA
+// CHASKI AI 2.0 — Asistente IA Operativo
 // POST /api/assistant/chat
 // ============================================================
 const express = require('express');
@@ -7,101 +7,192 @@ const router  = express.Router();
 const pool    = require('../config/db');
 const { aiLimiter } = require('../middleware/rateLimiter');
 
-// ── Detección de intención y consulta SQL ────────────────────
+// ── Normalizar texto para detección de intenciones ───────────
+// Quita acentos y convierte a minúsculas para matching robusto
+function norm(text) {
+  return text.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .trim();
+}
 
+// ── Consultar base de datos según la intención ───────────────
 async function queryDatabase(message) {
-  const msg = message.toLowerCase().trim();
-  const db  = pool; // alias para claridad
+  const msg = norm(message);
+  const db  = pool;
 
-  // ─── DETECCIÓN DE VEHÍCULO ───────────────────────────────
-
-  // 1. Por placa (PUN-001, pun001, PUN 001)
-  const placaMatch = msg.match(/pun[-\s]?(\d{3})/i);
-
-  // 2. Por código numérico (001, 01, 1, vehículo 5, unidad 14)
-  const codigoMatch = msg.match(
-    /(?:veh[íi]culo|unidad|auto|bus|carro)?\s*#?(\d{1,3})\b/i
-  );
-
-  // 3. Por nombre de conductor — extraer palabras que no sean stopwords
-  const stopwords = ['el','la','los','las','del','de','hoy','esta',
-    'este','semana','mes','viajes','vuelta','vueltas','cuantos',
-    'cuántos','dame','muestra','info','información','reporte',
-    'vehículo','vehiculo','unidad','conductor','placa','estado',
-    'pun','alertas','alerta'];
-  const palabras = msg.split(/\s+/).filter(p =>
-    p.length > 2 && !stopwords.includes(p) && !/^\d+$/.test(p)
-  );
-
-  // ─── PERÍODO ─────────────────────────────────────────────
+  // ── PERÍODO ───────────────────────────────────────────────
   let periodo = 'today';
-  if (msg.includes('semana'))      periodo = 'week';
-  else if (msg.includes('mes'))    periodo = 'month';
-  else if (msg.includes('ayer'))   periodo = 'yesterday';
+  if (/semana|semanal/.test(msg))   periodo = 'week';
+  else if (/mes|mensual/.test(msg)) periodo = 'month';
+  else if (/ayer/.test(msg))        periodo = 'yesterday';
 
-  const filtroFecha = {
+  const dateFilterTrips = {
     today:     "DATE(t.start_time) = CURRENT_DATE",
     yesterday: "DATE(t.start_time) = CURRENT_DATE - INTERVAL '1 day'",
     week:      "t.start_time >= CURRENT_DATE - INTERVAL '7 days'",
     month:     "DATE_TRUNC('month', t.start_time) = DATE_TRUNC('month', CURRENT_DATE)",
   }[periodo];
 
+  const dateFilterManifests = dateFilterTrips.replace(/t\.start_time/g, 'm.created_at');
+
   try {
 
-    // ─── BUSCAR VEHÍCULO ─────────────────────────────────────
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: RESUMEN DEL DÍA
+    // ──────────────────────────────────────────────────────────
+    if (/resumen|informe|como va|que paso|balance|hoy en total|del dia/.test(msg)) {
+      const [cola, viajes, manifAbiertos] = await Promise.all([
+        db.query(`
+          SELECT COUNT(*) FILTER (WHERE position = 'calling')  AS llamando,
+                 COUNT(*) FILTER (WHERE position = 'departed') AS salidos,
+                 COUNT(*) FILTER (WHERE position NOT IN ('departed','cancelled')) AS en_cola
+          FROM queue_entries
+          WHERE queue_date = CURRENT_DATE AND active = TRUE
+        `),
+        db.query(`
+          SELECT COUNT(*)                         AS total_viajes,
+                 COALESCE(SUM(revenue), 0)        AS total_revenue,
+                 COALESCE(SUM(m.total_passengers),0) AS total_pasajeros
+          FROM trips t
+          LEFT JOIN manifests m ON m.id = t.manifest_id
+          WHERE DATE(t.start_time) = CURRENT_DATE
+        `),
+        db.query(`
+          SELECT COUNT(*) AS pendientes
+          FROM manifests WHERE status = 'open'
+        `),
+      ]);
+
+      return {
+        tipo: 'resumen',
+        periodo,
+        cola:           cola.rows[0],
+        viajes:         viajes.rows[0],
+        manifAbiertos:  manifAbiertos.rows[0].pendientes,
+      };
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: INGRESOS POR EMPRESA
+    // ──────────────────────────────────────────────────────────
+    if (/empresa|compan|sociedad/.test(msg) &&
+        /ingreso|recaud|gano|revenue|mas|mejor|genero|top/.test(msg)) {
+      const r = await db.query(`
+        SELECT
+          COALESCE(c.name, 'Sin empresa') AS company,
+          COUNT(DISTINCT d.id)            AS total_drivers,
+          COUNT(DISTINCT t.id)            AS total_viajes,
+          COALESCE(SUM(m.total_revenue),    0) AS total_revenue,
+          COALESCE(SUM(m.total_passengers), 0) AS total_pasajeros
+        FROM companies c
+        LEFT JOIN vehicles v  ON v.company_id  = c.id  AND v.active = TRUE
+        LEFT JOIN drivers d   ON d.vehicle_id  = v.id  AND d.active = TRUE
+        LEFT JOIN trips t     ON t.driver_id   = d.id  AND ${dateFilterTrips}
+        LEFT JOIN manifests m ON m.driver_id   = d.id  AND ${dateFilterManifests}
+        WHERE c.active = TRUE
+        GROUP BY c.id, c.name
+        ORDER BY total_revenue DESC
+      `);
+      return { tipo: 'empresas', periodo, empresas: r.rows };
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: MANIFIESTOS SIN CERRAR
+    // ──────────────────────────────────────────────────────────
+    if (/manif/.test(msg) &&
+        /abierto|sin cerrar|pendiente|falta|no cerr|cerrar/.test(msg)) {
+      const r = await db.query(`
+        SELECT m.manifest_number, m.departure_time, m.created_at,
+               m.total_passengers, m.total_revenue,
+               d.first_name || ' ' || d.last_name AS driver_name,
+               v.association_code, v.plate
+        FROM manifests m
+        JOIN drivers d  ON d.id = m.driver_id
+        LEFT JOIN vehicles v ON v.id = m.vehicle_id
+        WHERE m.status = 'open'
+        ORDER BY m.departure_time ASC NULLS LAST
+      `);
+      return { tipo: 'manifiestos_abiertos', manifiestos: r.rows };
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: RETRASOS / DEMORAS
+    // ──────────────────────────────────────────────────────────
+    if (/retraso|tarde|demor|lento|tardanza|mas tiempo/.test(msg)) {
+      const r = await db.query(`
+        SELECT
+          d.first_name || ' ' || d.last_name AS driver_name,
+          v.association_code, v.plate,
+          qe.registered_at,
+          qe.departure_at,
+          ROUND(EXTRACT(EPOCH FROM (qe.departure_at - qe.registered_at)) / 60) AS minutos_espera
+        FROM queue_entries qe
+        JOIN drivers d  ON d.id = qe.driver_id
+        LEFT JOIN vehicles v ON v.id = qe.vehicle_id
+        WHERE qe.queue_date = CURRENT_DATE
+          AND qe.departure_at IS NOT NULL
+          AND qe.active = TRUE
+        ORDER BY minutos_espera DESC
+        LIMIT 10
+      `);
+      return { tipo: 'retrasos', conductores: r.rows };
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // DETECCIÓN DE VEHÍCULO ESPECÍFICO
+    // ──────────────────────────────────────────────────────────
+    const placaMatch  = msg.match(/pun[-\s]?(\d{3})/i);
+    const codigoMatch = msg.match(/(?:vehiculo|unidad|auto|bus|carro)?\s*#?(\d{1,3})\b/i);
+    const stopwords   = ['el','la','los','las','del','de','hoy','esta','este',
+      'semana','mes','viajes','vuelta','vueltas','cuantos','cuantas','dame',
+      'muestra','info','informacion','reporte','vehiculo','unidad','conductor',
+      'placa','estado','pun','alertas','alerta'];
+    const palabras    = norm(message).split(/\s+/).filter(p =>
+      p.length > 2 && !stopwords.includes(p) && !/^\d+$/.test(p)
+    );
+
     let vehicle = null;
 
-    // Intento 1: por placa
     if (placaMatch) {
       const placa = `PUN-${placaMatch[1].padStart(3, '0')}`;
       const r = await db.query(
-        `SELECT v.id, v.association_code, v.plate, v.status,
-                v.gps_device_id,
+        `SELECT v.id, v.association_code, v.plate, v.status, v.gps_device_id,
                 COALESCE(d.first_name || ' ' || d.last_name, 'Sin asignar') AS driver_name,
-                d.phone AS driver_phone,
-                COALESCE(c.name, 'Sin empresa') AS company
+                d.phone AS driver_phone, COALESCE(c.name, 'Sin empresa') AS company
          FROM vehicles v
-         LEFT JOIN drivers   d ON d.vehicle_id = v.id
+         LEFT JOIN drivers   d ON d.vehicle_id = v.id AND d.active = TRUE
          LEFT JOIN companies c ON c.id = v.company_id
-         WHERE UPPER(v.plate) = UPPER($1) AND v.active = true`,
+         WHERE UPPER(v.plate) = UPPER($1) AND v.active = TRUE`,
         [placa]
       );
       if (r.rows.length) vehicle = r.rows[0];
     }
 
-    // Intento 2: por código numérico
     if (!vehicle && codigoMatch) {
       const codigo = codigoMatch[1].padStart(3, '0');
       const r = await db.query(
-        `SELECT v.id, v.association_code, v.plate, v.status,
-                v.gps_device_id,
+        `SELECT v.id, v.association_code, v.plate, v.status, v.gps_device_id,
                 COALESCE(d.first_name || ' ' || d.last_name, 'Sin asignar') AS driver_name,
-                d.phone AS driver_phone,
-                COALESCE(c.name, 'Sin empresa') AS company
+                d.phone AS driver_phone, COALESCE(c.name, 'Sin empresa') AS company
          FROM vehicles v
-         LEFT JOIN drivers   d ON d.vehicle_id = v.id
+         LEFT JOIN drivers   d ON d.vehicle_id = v.id AND d.active = TRUE
          LEFT JOIN companies c ON c.id = v.company_id
-         WHERE v.association_code = $1 AND v.active = true`,
+         WHERE v.association_code = $1 AND v.active = TRUE`,
         [codigo]
       );
       if (r.rows.length) vehicle = r.rows[0];
     }
 
-    // Intento 3: por nombre del conductor
     if (!vehicle && palabras.length > 0) {
       for (const palabra of palabras) {
         const r = await db.query(
-          `SELECT v.id, v.association_code, v.plate, v.status,
-                  v.gps_device_id,
+          `SELECT v.id, v.association_code, v.plate, v.status, v.gps_device_id,
                   COALESCE(d.first_name || ' ' || d.last_name, 'Sin asignar') AS driver_name,
-                  d.phone AS driver_phone,
-                  COALESCE(c.name, 'Sin empresa') AS company
+                  d.phone AS driver_phone, COALESCE(c.name, 'Sin empresa') AS company
            FROM vehicles v
-           JOIN drivers   d ON d.vehicle_id = v.id
+           JOIN drivers   d ON d.vehicle_id = v.id AND d.active = TRUE
            LEFT JOIN companies c ON c.id = v.company_id
-           WHERE (LOWER(d.first_name) ILIKE $1
-              OR  LOWER(d.last_name)  ILIKE $1)
-             AND v.active = true
+           WHERE (LOWER(d.first_name) ILIKE $1 OR LOWER(d.last_name) ILIKE $1) AND v.active = TRUE
            LIMIT 1`,
           [`%${palabra}%`]
         );
@@ -109,199 +200,201 @@ async function queryDatabase(message) {
       }
     }
 
-    // ─── SI ENCONTRÓ VEHÍCULO → TRAER SUS DATOS ──────────────
     if (vehicle) {
       const trips = await db.query(
-        `SELECT t.id, t.start_time, t.end_time, t.status,
-                t.revenue, t.max_speed, t.avg_speed,
-                m.manifest_number, m.total_passengers,
-                m.total_revenue, m.total_cash, m.total_digital
+        `SELECT t.id, t.start_time, t.end_time, t.status, t.revenue, t.max_speed, t.avg_speed,
+                m.manifest_number, m.total_passengers, m.total_revenue, m.total_cash, m.total_digital
          FROM trips t
          LEFT JOIN manifests m ON m.id = t.manifest_id
-         WHERE t.vehicle_id = $1 AND ${filtroFecha}
+         WHERE t.vehicle_id = $1 AND ${dateFilterTrips}
          ORDER BY t.start_time ASC`,
         [vehicle.id]
       );
 
-      const alertas = await db.query(
-        `SELECT sa.max_speed, sa.severity, sa.occurred_at
-         FROM speed_alerts sa
-         WHERE sa.vehicle_id = $1
-           AND DATE(sa.occurred_at) = CURRENT_DATE
-         ORDER BY sa.occurred_at DESC LIMIT 5`,
-        [vehicle.id]
-      );
+      let alertas = { rows: [] };
+      try {
+        alertas = await db.query(
+          `SELECT sa.max_speed, sa.severity, sa.occurred_at
+           FROM speed_alerts sa
+           WHERE sa.vehicle_id = $1 AND DATE(sa.occurred_at) = CURRENT_DATE
+           ORDER BY sa.occurred_at DESC LIMIT 5`,
+          [vehicle.id]
+        );
+      } catch (_) { /* speed_alerts table may not exist yet */ }
 
       const totalViajes      = trips.rows.length;
       const totalPasajeros   = trips.rows.reduce((s, t) => s + (parseInt(t.total_passengers) || 0), 0);
       const totalRecaudacion = trips.rows.reduce((s, t) => s + (parseFloat(t.total_revenue)   || 0), 0);
 
       return {
-        tipo: 'vehiculo',
-        periodo,
-        vehicle,
-        trips:   trips.rows,
-        alertas: alertas.rows,
+        tipo: 'vehiculo', periodo, vehicle,
+        trips: trips.rows, alertas: alertas.rows,
         resumen: { totalViajes, totalPasajeros, totalRecaudacion },
       };
     }
 
-    // ─── OTRAS INTENCIONES ────────────────────────────────────
-
-    // Flota general
-    if (msg.includes('flota') || msg.includes('estado general') ||
-        msg.includes('cuantos vehiculos') || msg.includes('cuántos vehículos')) {
-      const r = await db.query(
-        `SELECT status, COUNT(*) AS total
-         FROM vehicles WHERE active = true GROUP BY status`
-      );
-      const gps = await db.query(
-        `SELECT COUNT(*) FILTER (WHERE gps_device_id IS NOT NULL) AS con_gps,
-                COUNT(*) FILTER (WHERE gps_device_id IS NULL)     AS sin_gps
-         FROM vehicles WHERE active = true`
-      );
-      return { tipo: 'flota', estados: r.rows, gps: gps.rows[0] };
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: FLOTA GENERAL
+    // ──────────────────────────────────────────────────────────
+    if (/flota|estado general|cuantos vehiculos|cuantas unidades|total de vehiculos/.test(msg)) {
+      const [estados, gps] = await Promise.all([
+        db.query(`SELECT status, COUNT(*) AS total FROM vehicles WHERE active = TRUE GROUP BY status`),
+        db.query(`SELECT COUNT(*) FILTER (WHERE gps_device_id IS NOT NULL) AS con_gps,
+                         COUNT(*) FILTER (WHERE gps_device_id IS NULL)     AS sin_gps
+                  FROM vehicles WHERE active = TRUE`),
+      ]);
+      return { tipo: 'flota', estados: estados.rows, gps: gps.rows[0] };
     }
 
-    // Top conductores / recaudación
-    if (msg.includes('top') || msg.includes('mejor') ||
-        msg.includes('más viajes') || msg.includes('recaudación') ||
-        msg.includes('recaudo') || msg.includes('ranking')) {
-      const r = await db.query(
-        `SELECT d.first_name || ' ' || d.last_name AS driver_name,
-                COALESCE(c.name, 'Sin empresa') AS company,
-                COUNT(DISTINCT t.id)            AS total_trips,
-                COALESCE(SUM(m.total_revenue),    0) AS total_revenue,
-                COALESCE(SUM(m.total_passengers), 0) AS total_passengers
-         FROM drivers d
-         JOIN companies c ON c.id = d.company_id
-         LEFT JOIN trips t ON t.driver_id = d.id
-           AND DATE_TRUNC('month', t.start_time) = DATE_TRUNC('month', CURRENT_DATE)
-         LEFT JOIN manifests m ON m.driver_id = d.id
-           AND DATE_TRUNC('month', m.created_at) = DATE_TRUNC('month', CURRENT_DATE)
-         GROUP BY d.id, c.name
-         ORDER BY total_revenue DESC LIMIT 5`
-      );
-      return { tipo: 'ranking', conductores: r.rows };
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: RANKING / TOP CONDUCTORES
+    // ──────────────────────────────────────────────────────────
+    if (/top|mejor|mas viajes|recaud|recaudo|ranking|quien.*mas|cuanto.*gano|lider/.test(msg)) {
+      const r = await db.query(`
+        SELECT
+          d.first_name || ' ' || d.last_name   AS driver_name,
+          COALESCE(c.name, 'Sin empresa')       AS company,
+          COUNT(DISTINCT t.id)                  AS total_viajes,
+          COALESCE(SUM(m.total_revenue),    0)  AS total_revenue,
+          COALESCE(SUM(m.total_passengers), 0)  AS total_pasajeros
+        FROM drivers d
+        LEFT JOIN vehicles  v ON v.id  = d.vehicle_id
+        LEFT JOIN companies c ON c.id  = v.company_id
+        LEFT JOIN trips     t ON t.driver_id = d.id AND ${dateFilterTrips}
+        LEFT JOIN manifests m ON m.driver_id = d.id AND ${dateFilterManifests}
+        WHERE d.active = TRUE
+        GROUP BY d.id, d.first_name, d.last_name, c.name
+        ORDER BY total_revenue DESC
+        LIMIT 5
+      `);
+      return { tipo: 'ranking', periodo, conductores: r.rows };
     }
 
-    // Alertas generales
-    if (msg.includes('alerta') || msg.includes('velocidad') ||
-        msg.includes('exceso') || msg.includes('peligro')) {
-      const r = await db.query(
-        `SELECT sa.max_speed, sa.severity, sa.occurred_at,
-                v.association_code, v.plate,
-                d.first_name || ' ' || d.last_name AS driver_name
-         FROM speed_alerts sa
-         JOIN vehicles v ON v.id = sa.vehicle_id
-         JOIN drivers  d ON d.id = sa.driver_id
-         WHERE DATE(sa.occurred_at) = CURRENT_DATE
-         ORDER BY sa.occurred_at DESC LIMIT 10`
-      );
-      return { tipo: 'alertas', alertas: r.rows };
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: ALERTAS DE VELOCIDAD
+    // ──────────────────────────────────────────────────────────
+    if (/alerta|velocidad|exceso|excedieron|peligro|infraccion|rapido/.test(msg)) {
+      let alertas = [];
+      try {
+        const r = await db.query(`
+          SELECT sa.max_speed, sa.severity, sa.occurred_at,
+                 v.association_code, v.plate,
+                 d.first_name || ' ' || d.last_name AS driver_name
+          FROM speed_alerts sa
+          JOIN vehicles v ON v.id = sa.vehicle_id
+          JOIN drivers  d ON d.id = sa.driver_id
+          WHERE DATE(sa.occurred_at) = CURRENT_DATE
+          ORDER BY sa.occurred_at DESC LIMIT 10
+        `);
+        alertas = r.rows;
+      } catch (_) { /* speed_alerts table may not exist yet */ }
+      return { tipo: 'alertas', alertas };
     }
 
-    // Cola de salida
-    if (msg.includes('cola') || msg.includes('turno') ||
-        msg.includes('lista diaria') || msg.includes('salida')) {
-      const r = await db.query(
-        `SELECT eq.position, eq.status, eq.registered_at,
-                eq.departure_time,
-                v.association_code, v.plate,
-                d.first_name || ' ' || d.last_name AS driver_name,
-                c.name AS company
-         FROM exit_queue eq
-         JOIN vehicles  v ON v.id = eq.vehicle_id
-         JOIN drivers   d ON d.id = eq.driver_id
-         JOIN companies c ON c.id = d.company_id
-         WHERE eq.queue_date = CURRENT_DATE
-         ORDER BY eq.position ASC`
-      );
+    // ──────────────────────────────────────────────────────────
+    // INTENCIÓN: COLA DE SALIDA (tabla corregida)
+    // ──────────────────────────────────────────────────────────
+    if (/cola|turno|lista diaria|quien sale|quienes salen/.test(msg)) {
+      const r = await db.query(`
+        SELECT qe.turn_number AS posicion,
+               qe.position    AS estado,
+               qe.registered_at,
+               qe.departure_at,
+               v.association_code, v.plate,
+               d.first_name || ' ' || d.last_name AS driver_name,
+               COALESCE(c.name, 'Sin empresa') AS company
+        FROM queue_entries qe
+        JOIN drivers   d ON d.id = qe.driver_id
+        LEFT JOIN vehicles  v ON v.id = qe.vehicle_id
+        LEFT JOIN companies c ON c.id = v.company_id
+        WHERE qe.queue_date = CURRENT_DATE AND qe.active = TRUE
+        ORDER BY qe.turn_number ASC
+      `);
       return { tipo: 'cola', turnos: r.rows };
     }
 
-    // Sin intención clara
     return { tipo: 'general', mensaje: message };
 
   } catch (err) {
-    console.error('Error consultando BD:', err.message);
+    console.error('[assistant] Error BD:', err.message);
     return { tipo: 'error', error: err.message };
   }
 }
 
-// ── Mapear resultado de BD al formato que espera el frontend ─
-
+// ── Mapear resultado de BD al formato del frontend ───────────
 function mapToFrontend(dbResult) {
   const { tipo } = dbResult;
 
   if (tipo === 'vehiculo') {
-    const v = dbResult.vehicle;
-    // Enriquecer el objeto vehicle con los totales del resumen
-    const vehicleData = {
-      ...v,
+    const v = {
+      ...dbResult.vehicle,
       trips_today:      dbResult.resumen.totalViajes,
       passengers_today: dbResult.resumen.totalPasajeros,
       revenue_today:    dbResult.resumen.totalRecaudacion,
     };
-    // Mapear trips a formato manifiesto para la tabla del widget
     const manifests = dbResult.trips.map(t => ({
-      manifest_number:  t.manifest_number || `T-${t.id?.slice(0,8) || '?'}`,
+      manifest_number:  t.manifest_number || `T-${t.id?.slice(0,8)}`,
       departure_time:   t.start_time,
       arrival_time:     t.end_time,
       total_passengers: t.total_passengers || 0,
-      total_revenue:    t.total_revenue    || t.revenue || 0,
+      total_revenue:    t.total_revenue || t.revenue || 0,
       status:           t.status,
     }));
-    return {
-      intent: 'vehicle',
-      data:   { vehicle: vehicleData, manifests, alertas: dbResult.alertas, periodo: dbResult.periodo },
-    };
+    return { intent: 'vehicle', data: { vehicle: v, manifests, alertas: dbResult.alertas, periodo: dbResult.periodo } };
   }
 
   if (tipo === 'flota') {
-    return {
-      intent: 'fleet',
-      data:   { por_estado: dbResult.estados, gps: dbResult.gps },
-    };
+    return { intent: 'fleet', data: { por_estado: dbResult.estados, gps: dbResult.gps } };
   }
 
   if (tipo === 'ranking') {
-    return {
-      intent: 'revenue',
-      data:   { top_drivers: dbResult.conductores, periodo: 'este mes' },
-    };
+    return { intent: 'revenue', data: { top_drivers: dbResult.conductores, periodo: dbResult.periodo } };
+  }
+
+  if (tipo === 'empresas') {
+    return { intent: 'companies', data: { empresas: dbResult.empresas, periodo: dbResult.periodo } };
+  }
+
+  if (tipo === 'manifiestos_abiertos') {
+    return { intent: 'open_manifests', data: { manifiestos: dbResult.manifiestos } };
+  }
+
+  if (tipo === 'retrasos') {
+    return { intent: 'delays', data: { conductores: dbResult.conductores } };
+  }
+
+  if (tipo === 'resumen') {
+    return { intent: 'summary', data: { cola: dbResult.cola, viajes: dbResult.viajes, manifAbiertos: dbResult.manifAbiertos, periodo: dbResult.periodo } };
   }
 
   if (tipo === 'alertas') {
-    return {
-      intent: 'alerts',
-      data:   { speed_alerts: dbResult.alertas, route_alerts: [] },
-    };
+    return { intent: 'alerts', data: { speed_alerts: dbResult.alertas, route_alerts: [] } };
   }
 
   if (tipo === 'cola') {
-    return {
-      intent: 'queue',
-      data:   { queue: dbResult.turnos },
-    };
+    return { intent: 'queue', data: { queue: dbResult.turnos } };
   }
 
   return { intent: 'general', data: null };
 }
 
-// ── Sistema prompt del asistente ────────────────────────────
+// ── System prompt ────────────────────────────────────────────
+const SYSTEM_PROMPT = `Eres el asistente operativo de CHASKI AI para la Asociación ATIPCAR, ruta Juli–Puno, Perú.
+Ayudas al administrador a consultar y analizar información operativa en tiempo real.
 
-const SYSTEM_PROMPT = `Eres el asistente operativo de CHASKI AI, sistema de gestión de la Asociación de Transportistas Virgen de Fátima en la ruta Juli–Puno, Puno, Perú.
-Tu rol es ayudar al administrador a consultar información del sistema de forma rápida y clara.
-Tienes acceso a datos en tiempo real de vehículos, conductores, manifiestos, viajes, alertas y cola de salida.
-Responde siempre en español. Sé directo y conciso.
-Cuando tengas datos de la base de datos, preséntarlos de forma clara con los números exactos.
-Usa moneda soles peruanos (S/.) para valores monetarios.
-Si el usuario pide exportar o descargar un PDF o reporte, incluye al final de tu respuesta la frase exacta: ACTION:EXPORT_PDF
-Nunca inventes datos. Si no hay datos disponibles o la base de datos no está conectada, dilo claramente y sugiere verificar la conexión.`;
+Tienes acceso a datos reales de: vehículos, conductores, manifiestos, viajes, cola de salida, empresas y alertas.
+
+REGLAS:
+- Responde siempre en español, directo y conciso.
+- Cuando recibes datos del sistema entre [DATOS DEL SISTEMA], úsalos para dar números exactos.
+- Usa S/. para valores monetarios en soles peruanos.
+- Si hay datos de ranking, indica claramente quién va primero.
+- Si detectas algo preocupante (manifiestos sin cerrar, velocidades altas, conductores con mucho retraso), mencionarlo y sugerir acción.
+- Si el usuario pide un reporte o PDF, incluye al final: ACTION:EXPORT_PDF
+- NUNCA inventes datos. Si no hay datos disponibles, dilo claramente.
+- Sé analítico: no solo repites datos, también los interpretas.`;
 
 // ── Endpoint principal ───────────────────────────────────────
-
 router.post('/chat', aiLimiter, async (req, res) => {
   const { message, history = [] } = req.body;
 
@@ -309,33 +402,31 @@ router.post('/chat', aiLimiter, async (req, res) => {
     return res.status(400).json({ error: 'El campo message es requerido.' });
   }
 
-  // 1. Consultar BD con la nueva lógica de detección
+  // 1. Consultar BD
   const dbResult = await queryDatabase(message);
-  console.log(`[assistant] mensaje="${message}" → tipo=${dbResult.tipo}`);
+  console.log(`[assistant] "${message}" → tipo=${dbResult.tipo}`);
 
-  // 2. Mapear al formato que espera el frontend
+  // 2. Mapear al formato del frontend
   const { intent, data } = mapToFrontend(dbResult);
 
-  // 3. Construir contexto para la IA
+  // 3. Construir contexto para Claude
   let contextMessage = message;
   if (dbResult.tipo !== 'general' && dbResult.tipo !== 'error') {
-    contextMessage = `${message}\n\n[DATOS DEL SISTEMA - ${new Date().toLocaleString('es-PE')}]:\n${JSON.stringify(dbResult, null, 2)}`;
+    contextMessage = `${message}\n\n[DATOS DEL SISTEMA — ${new Date().toLocaleString('es-PE')}]:\n${JSON.stringify(dbResult, null, 2)}`;
   } else if (dbResult.tipo === 'error') {
-    contextMessage = `${message}\n\n[NOTA: Error al consultar la base de datos: ${dbResult.error}]`;
+    contextMessage = `${message}\n\n[ERROR BD: ${dbResult.error}]`;
   }
 
-  // 4. Preparar mensajes para Anthropic
+  // 4. Mensajes para Anthropic
   const messages = [
     ...history.map(h => ({ role: h.role, content: h.content })),
     { role: 'user', content: contextMessage },
   ];
 
-  // 5. Llamar a la API de Anthropic
+  // 5. Llamar a Anthropic
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(503).json({
-        error: 'ANTHROPIC_API_KEY no configurada en el archivo .env del backend.',
-      });
+      return res.status(503).json({ error: 'ANTHROPIC_API_KEY no configurada en .env' });
     }
 
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -355,14 +446,14 @@ router.post('/chat', aiLimiter, async (req, res) => {
 
     if (!anthropicRes.ok) {
       const errBody = await anthropicRes.text();
-      console.error('Error Anthropic API:', anthropicRes.status, errBody);
-      return res.status(502).json({ error: `Error en la API de Anthropic: ${anthropicRes.status}` });
+      console.error('[assistant] Anthropic error:', anthropicRes.status, errBody);
+      return res.status(502).json({ error: `Error API Anthropic: ${anthropicRes.status}` });
     }
 
-    const anthropicData  = await anthropicRes.json();
-    const responseText   = anthropicData.content?.[0]?.text || 'Sin respuesta.';
-    const wantsPDF       = responseText.includes('ACTION:EXPORT_PDF');
-    const cleanResponse  = responseText.replace('ACTION:EXPORT_PDF', '').trim();
+    const anthropicData = await anthropicRes.json();
+    const responseText  = anthropicData.content?.[0]?.text || 'Sin respuesta.';
+    const wantsPDF      = responseText.includes('ACTION:EXPORT_PDF');
+    const cleanResponse = responseText.replace('ACTION:EXPORT_PDF', '').trim();
 
     return res.json({
       response: cleanResponse,
@@ -372,7 +463,7 @@ router.post('/chat', aiLimiter, async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Error llamando a Anthropic:', err.message);
+    console.error('[assistant] Error:', err.message);
     return res.status(500).json({ error: `Error interno: ${err.message}` });
   }
 });

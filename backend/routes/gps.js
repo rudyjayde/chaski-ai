@@ -8,6 +8,71 @@ const express = require('express');
 const router  = express.Router();
 const pool    = require('../config/db');
 
+const MAX_SPEED = parseInt(process.env.MAX_SPEED_LIMIT || '90');
+const ALERT_COOLDOWN_MIN = parseInt(process.env.SPEED_ALERT_DURATION_MINUTES || '4');
+
+// ── Auto-crear tablas de GPS ─────────────────────────────────
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS gps_positions (
+        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        vehicle_id  UUID REFERENCES vehicles(id) ON DELETE CASCADE,
+        latitude    NUMERIC(10, 7),
+        longitude   NUMERIC(10, 7),
+        speed       NUMERIC,
+        heading     NUMERIC,
+        satellites  INTEGER,
+        device_id   VARCHAR(50),
+        recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_gps_vehicle ON gps_positions(vehicle_id, recorded_at DESC)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS speed_alerts (
+        id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        vehicle_id       UUID REFERENCES vehicles(id) ON DELETE CASCADE,
+        driver_id        UUID REFERENCES drivers(id) ON DELETE SET NULL,
+        max_speed        NUMERIC,
+        speed_limit      NUMERIC DEFAULT 90,
+        duration_minutes INTEGER DEFAULT 0,
+        severity         VARCHAR(20) DEFAULT 'warning',
+        occurred_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        acknowledged     BOOLEAN DEFAULT FALSE,
+        created_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_sa_vehicle ON speed_alerts(vehicle_id, occurred_at DESC)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_sa_driver  ON speed_alerts(driver_id, occurred_at DESC)`);
+  } catch (err) {
+    console.error('[gps] Error al crear tablas:', err.message);
+  }
+})();
+
+// ── Registrar alerta de velocidad (con cooldown) ─────────────
+async function checkSpeedAlert(vehicleId, speedKmh) {
+  if (speedKmh <= MAX_SPEED) return;
+  try {
+    const severity = speedKmh > 100 ? 'danger' : 'warning';
+    // Insertar solo si no hay alerta reciente del mismo vehículo
+    await pool.query(`
+      INSERT INTO speed_alerts (vehicle_id, driver_id, max_speed, speed_limit, severity)
+      SELECT v.id, d.id, $2, $3, $4
+      FROM vehicles v
+      LEFT JOIN drivers d ON d.vehicle_id = v.id AND d.active = TRUE
+      WHERE v.id = $1
+        AND NOT EXISTS (
+          SELECT 1 FROM speed_alerts sa2
+          WHERE sa2.vehicle_id = $1
+            AND sa2.occurred_at > NOW() - INTERVAL '${ALERT_COOLDOWN_MIN} minutes'
+        )
+      LIMIT 1
+    `, [vehicleId, speedKmh, MAX_SPEED, severity]);
+  } catch (err) {
+    console.error('[gps] Error al registrar alerta:', err.message);
+  }
+}
+
 // ── Helper: llamar a la API de Traccar ───────────────────────
 async function traccarFetch(path) {
   const base = process.env.TRACCAR_URL || 'http://147.182.187.28:8082';
@@ -101,6 +166,9 @@ router.get('/live', async (req, res) => {
           [dbVehicle.vehicle_id, pos.latitude, pos.longitude,
            speedKmh, pos.course || 0, device.uniqueId]
         ).catch(() => {});
+
+        // 7. Verificar límite de velocidad y registrar alerta si aplica
+        checkSpeedAlert(dbVehicle.vehicle_id, speedKmh);
       }
     }
 

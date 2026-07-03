@@ -8,7 +8,7 @@ const crypto   = require('crypto');
 const router   = express.Router();
 const pool     = require('../config/db');
 const { auth }                  = require('../middleware/auth');
-const { loginLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
+const { loginLimiter } = require('../middleware/rateLimiter');
 const { validate }              = require('../middleware/validate');
 const { log: auditLog }         = require('../middleware/audit');
 const { csrfMiddleware }        = require('../middleware/csrf');
@@ -245,90 +245,7 @@ router.post('/change-password', auth, csrfMiddleware, validate('changePassword')
   }
 });
 
-// ── POST /api/auth/forgot-password ───────────────────────────
-router.post('/forgot-password', passwordResetLimiter, validate('forgotPassword'), async (req, res, next) => {
-  const { username } = req.body;
-  try {
-    const r = await pool.query(
-      `SELECT id FROM users WHERE username = $1 AND active = true`,
-      [username]
-    );
-
-    if (!r.rows.length) {
-      return res.json({ ok: true, message: 'Si el usuario existe recibirás instrucciones.' });
-    }
-
-    const userId   = r.rows[0].id;
-    const rawToken = generateToken();
-    const tokenHash = hashToken(rawToken);
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-
-    await pool.query(
-      `UPDATE password_reset_tokens SET used = true, used_at = NOW()
-       WHERE user_id = $1 AND used = false`,
-      [userId]
-    );
-
-    await pool.query(
-      `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-       VALUES ($1, $2, $3)`,
-      [userId, tokenHash, expiresAt]
-    );
-
-    auditLog({ req, action: 'auth.forgot_password', entityType: 'user', entityId: userId }).catch(() => {});
-
-    // TODO en producción: enviar resetToken por correo electrónico
-    res.json({
-      ok: true,
-      message: 'Token de restablecimiento generado.',
-      resetToken: rawToken,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ── POST /api/auth/reset-password ────────────────────────────
-router.post('/reset-password', passwordResetLimiter, validate('resetPassword'), async (req, res, next) => {
-  const { token, newPassword } = req.body;
-  try {
-    const tokenHash = hashToken(token);
-    const r = await pool.query(
-      `SELECT id, user_id, expires_at, used
-       FROM password_reset_tokens WHERE token_hash = $1`,
-      [tokenHash]
-    );
-
-    if (!r.rows.length) return res.status(400).json({ error: 'Token inválido.' });
-
-    const rt = r.rows[0];
-    if (rt.used)                        return res.status(400).json({ error: 'Token ya utilizado.' });
-    if (new Date(rt.expires_at) < new Date()) return res.status(400).json({ error: 'Token expirado.' });
-
-    const hashed = await bcrypt.hash(newPassword, 12);
-    await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [hashed, rt.user_id]);
-    await pool.query(
-      `UPDATE password_reset_tokens SET used = true, used_at = NOW() WHERE id = $1`,
-      [rt.id]
-    );
-    await pool.query(
-      `UPDATE refresh_tokens SET revoked = true, revoked_at = NOW()
-       WHERE user_id = $1 AND revoked = false`,
-      [rt.user_id]
-    );
-
-    await pool.query(
-      `INSERT INTO session_history (user_id, action, ip_address, user_agent)
-       VALUES ($1, 'password_reset', $2, $3)`,
-      [rt.user_id, req.ip, req.headers['user-agent'] || null]
-    );
-
-    auditLog({ req, action: 'auth.reset_password', entityType: 'user', entityId: rt.user_id }).catch(() => {});
-    res.json({ ok: true, message: 'Contraseña restablecida correctamente.' });
-  } catch (err) {
-    next(err);
-  }
-});
+// Reset de contraseña eliminado: sistema cerrado — el admin usa PUT /api/drivers/:id/password
 
 // ── GET /api/auth/me ──────────────────────────────────────────
 router.get('/me', auth, (req, res) => {

@@ -8,9 +8,13 @@
 // PUT    /api/vehicles/:id/gps   → asignar GPS
 // GET    /api/companies          → lista de empresas
 // ============================================================
-const express = require('express');
-const router  = express.Router();
-const pool    = require('../config/db');
+const express             = require('express');
+const router              = express.Router();
+const pool                = require('../config/db');
+const { auth, adminOnly } = require('../middleware/auth');
+
+// Todas las rutas de vehículos requieren sesión de administrador
+router.use(auth, adminOnly);
 
 // ── GET /api/companies ───────────────────────────────────────
 router.get('/companies', async (req, res) => {

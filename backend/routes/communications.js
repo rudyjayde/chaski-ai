@@ -2,36 +2,45 @@
 // CHASKI AI 2.0 — Comunicados y notificaciones
 //
 // Admin:
-//   GET  /api/communications          → lista de comunicados
-//   POST /api/communications          → crea comunicado + fan-out a conductores activos
-//   DELETE /api/communications/:id    → elimina comunicado
+//   GET  /api/communications               → lista de comunicados
+//   POST /api/communications               → crea comunicado + fan-out a conductores activos
+//   DELETE /api/communications/:id         → elimina comunicado
+//   GET  /api/communications/driver-alerts → alertas SOS/incidentes de conductores
+//   PUT  /api/communications/driver-alerts/resolve-all → resolver todas
+//   PUT  /api/communications/driver-alerts/:id/resolve → resolver una
 //
 // Conductor (requiere JWT):
-//   GET /api/notifications            → mis notificaciones
-//   PUT /api/notifications/:id/read   → marcar una como leída
-//   PUT /api/notifications/read-all   → marcar todas como leídas
+//   POST /api/communications/notifications → envía SOS o incidente al admin
+//   GET  /api/communications/notifications → mis notificaciones del admin
+//   PUT  /api/communications/notifications/:id/read   → marcar una como leída
+//   PUT  /api/communications/notifications/read-all   → marcar todas como leídas
 // ============================================================
-const express = require('express');
-const jwt     = require('jsonwebtoken');
-const router  = express.Router();
-const pool    = require('../config/db');
+const express             = require('express');
+const router              = express.Router();
+const pool                = require('../config/db');
+const { auth, adminOnly } = require('../middleware/auth');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chaski_secret';
-
-function verifyToken(req, res, next) {
-  const header = req.headers.authorization || '';
-  const token  = header.replace('Bearer ', '').trim();
-  if (!token) return res.status(401).json({ error: 'Sin token' });
+// ── Auto-crear tabla driver_alerts ───────────────────────────
+(async () => {
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: 'Token inválido o expirado' });
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS driver_alerts (
+        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        driver_id   UUID REFERENCES users(id) ON DELETE SET NULL,
+        type        VARCHAR(20)  NOT NULL DEFAULT 'alert',
+        title       VARCHAR(300) NOT NULL,
+        body        TEXT,
+        status      VARCHAR(20)  NOT NULL DEFAULT 'pending',
+        created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+  } catch (err) {
+    console.error('[driver_alerts init]', err.message);
   }
-}
+})();
 
 // ── GET /api/communications ──────────────────────────────────
-router.get('/', async (req, res) => {
+router.get('/', auth, adminOnly, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT c.id, c.title, c.body, c.type, c.created_at, c.active,
@@ -51,7 +60,7 @@ router.get('/', async (req, res) => {
 });
 
 // ── POST /api/communications ─────────────────────────────────
-router.post('/', async (req, res) => {
+router.post('/', auth, adminOnly, async (req, res) => {
   const { title, body, type = 'info', created_by } = req.body;
   if (!title || !body) return res.status(400).json({ error: 'Título y cuerpo requeridos' });
 
@@ -100,8 +109,25 @@ router.post('/', async (req, res) => {
   }
 });
 
+// ── PUT /api/communications/:id (editar reglamento) ─────────
+router.put('/:id', auth, adminOnly, async (req, res) => {
+  const { title, body, type } = req.body;
+  if (!title || !body) return res.status(400).json({ error: 'Título y cuerpo requeridos' });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE communications SET title=$1, body=$2, type=$3 WHERE id=$4 RETURNING *`,
+      [title.trim(), body.trim(), type || 'info', req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Comunicado no encontrado' });
+    res.json({ ok: true, communication: rows[0] });
+  } catch (err) {
+    console.error('[communications PUT]', err.message);
+    res.status(500).json({ error: 'Error al actualizar comunicado' });
+  }
+});
+
 // ── DELETE /api/communications/:id ──────────────────────────
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
     await pool.query('DELETE FROM communications WHERE id = $1', [req.params.id]);
     res.json({ ok: true });
@@ -112,7 +138,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // ── GET /api/notifications (conductor) ──────────────────────
-router.get('/notifications', verifyToken, async (req, res) => {
+router.get('/notifications', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT dn.id, dn.read, dn.read_at, dn.created_at,
@@ -133,7 +159,7 @@ router.get('/notifications', verifyToken, async (req, res) => {
 });
 
 // ── PUT /api/notifications/read-all ─────────────────────────
-router.put('/notifications/read-all', verifyToken, async (req, res) => {
+router.put('/notifications/read-all', auth, async (req, res) => {
   try {
     await pool.query(`
       UPDATE driver_notifications
@@ -148,7 +174,7 @@ router.put('/notifications/read-all', verifyToken, async (req, res) => {
 });
 
 // ── PUT /api/notifications/:id/read ─────────────────────────
-router.put('/notifications/:id/read', verifyToken, async (req, res) => {
+router.put('/notifications/:id/read', auth, async (req, res) => {
   try {
     await pool.query(`
       UPDATE driver_notifications
@@ -159,6 +185,67 @@ router.put('/notifications/:id/read', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('[notifications read]', err.message);
     res.status(500).json({ error: 'Error al marcar notificación' });
+  }
+});
+
+// ── POST /api/communications/notifications (conductor) ───────
+// Recibe SOS e incidentes del conductor y los guarda para el admin
+router.post('/notifications', auth, async (req, res) => {
+  const { type = 'alert', title, body = '' } = req.body;
+  if (!title) return res.status(400).json({ error: 'Título requerido' });
+  try {
+    await pool.query(
+      `INSERT INTO driver_alerts (driver_id, type, title, body) VALUES ($1, $2, $3, $4)`,
+      [req.user.id, type, title.trim(), body.trim()]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[driver_alerts POST]', err.message);
+    res.status(500).json({ error: 'Error al registrar alerta' });
+  }
+});
+
+// ── GET /api/communications/driver-alerts (admin) ────────────
+router.get('/driver-alerts', auth, adminOnly, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT da.id, da.type, da.title, da.body, da.status, da.created_at,
+             u.username, u.name AS driver_name
+        FROM driver_alerts da
+        LEFT JOIN users u ON u.id = da.driver_id
+       ORDER BY da.created_at DESC
+       LIMIT 50
+    `);
+    const pending = rows.filter(r => r.status === 'pending').length;
+    res.json({ ok: true, alerts: rows, pending });
+  } catch (err) {
+    console.error('[driver-alerts GET]', err.message);
+    res.status(500).json({ error: 'Error al obtener alertas' });
+  }
+});
+
+// ── PUT /api/communications/driver-alerts/resolve-all (admin)
+router.put('/driver-alerts/resolve-all', auth, adminOnly, async (req, res) => {
+  try {
+    await pool.query(`UPDATE driver_alerts SET status = 'resolved' WHERE status = 'pending'`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[driver-alerts resolve-all]', err.message);
+    res.status(500).json({ error: 'Error al resolver alertas' });
+  }
+});
+
+// ── PUT /api/communications/driver-alerts/:id/resolve (admin)
+router.put('/driver-alerts/:id/resolve', auth, adminOnly, async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE driver_alerts SET status = 'resolved' WHERE id = $1`,
+      [req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[driver-alerts resolve]', err.message);
+    res.status(500).json({ error: 'Error al resolver alerta' });
   }
 });
 

@@ -7,10 +7,14 @@
 // PUT  /api/drivers/:id/password → cambiar contraseña
 // DELETE /api/drivers/:id     → desactivar
 // ============================================================
-const express = require('express');
-const router  = express.Router();
-const bcrypt  = require('bcryptjs');
-const pool    = require('../config/db');
+const express             = require('express');
+const router              = express.Router();
+const bcrypt              = require('bcryptjs');
+const pool                = require('../config/db');
+const { auth, adminOnly } = require('../middleware/auth');
+
+// Todas las rutas de conductores requieren sesión de administrador
+router.use(auth, adminOnly);
 
 // ── GET /api/drivers ─────────────────────────────────────────
 router.get('/', async (req, res) => {
@@ -222,6 +226,14 @@ router.delete('/:id', async (req, res) => {
     await pool.query(`
       UPDATE users SET active = false
       WHERE id = (SELECT user_id FROM drivers WHERE id = $1)
+    `, [req.params.id]);
+    // Cancelar entradas de cola activas del conductor eliminado
+    await pool.query(`
+      UPDATE queue_entries
+         SET active = FALSE, position = 'cancelled'
+       WHERE driver_id = $1
+         AND active    = TRUE
+         AND queue_date >= CURRENT_DATE
     `, [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
