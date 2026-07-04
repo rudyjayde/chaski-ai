@@ -8,14 +8,25 @@ if (!process.env.JWT_SECRET) {
 }
 
 async function auth(req, res, next) {
+  // El guard global ya autenticó esta petición; evitar doble query a BD
+  if (req.user) return next();
+
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Token requerido' });
 
   const token = header.startsWith('Bearer ') ? header.slice(7) : header;
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
 
-    // Verificar que el usuario existe y sigue activo en BD
+  let payload;
+  try {
+    payload = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado', code: 'TOKEN_EXPIRED' });
+    }
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+
+  try {
     const result = await pool.query(
       'SELECT id FROM users WHERE id = $1 AND active = true',
       [payload.id]
@@ -23,14 +34,12 @@ async function auth(req, res, next) {
     if (!result.rows.length) {
       return res.status(401).json({ error: 'Usuario desactivado' });
     }
-
     req.user = payload;
     next();
   } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expirado', code: 'TOKEN_EXPIRED' });
-    }
-    res.status(401).json({ error: 'Token inválido' });
+    // Error de BD: no enmascarar como "token inválido"
+    console.error('[auth] Error consultando BD:', err.message);
+    res.status(503).json({ error: 'Servicio no disponible temporalmente' });
   }
 }
 

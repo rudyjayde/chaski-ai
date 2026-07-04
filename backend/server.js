@@ -60,6 +60,9 @@ app.use('/api', apiLimiter);
 const PUBLIC_API_PATHS = [
   '/api/auth/login',
   '/api/auth/refresh',
+  '/api/auth/logout',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
   '/api/health',
 ];
 app.use('/api', (req, res, next) => {
@@ -89,9 +92,9 @@ app.get('/admin/dashboard',     (req, res) => res.sendFile(path.join(ROOT, 'admi
 app.get('/admin/ai-dashboard',  (req, res) => res.sendFile(path.join(ROOT, 'admin/ai-dashboard.html')));
 
 // ── API: rutas específicas ────────────────────────────────────
-app.use('/api/gps',            require('./routes/gps'));
-app.use('/api/gps-devices',    require('./routes/gps-devices'));
-app.use('/api/communications', require('./routes/communications'));
+app.use('/api/gps',         require('./routes/gps'));
+app.use('/api/gps-devices', require('./routes/gps-devices'));
+// /api/communications se registra junto al resto en routes/index.js
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
