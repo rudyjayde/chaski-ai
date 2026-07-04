@@ -176,10 +176,36 @@
         </div>
 
         <!-- Panel de alertas -->
-        <div class="dash-card alerts-card">
-          <div class="dc-header">
-            <h3><i data-lucide="alert-triangle"></i> Alertas Operativas</h3>
-            <span class="dc-badge-red" id="alertCount">5</span>
+        <div class="dash-card alerts-card" style="display:flex;flex-direction:column;gap:0">
+
+          <!-- Alertas SOS e Incidentes de conductores -->
+          <div class="dc-header" style="border-bottom:1px solid rgba(255,107,107,.15);padding-bottom:12px;margin-bottom:12px">
+            <h3 style="color:#FF6B6B"><i data-lucide="siren"></i> Alertas de Conductores</h3>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="driverAlertsCount" style="display:none;background:rgba(255,107,107,.2);color:#FF6B6B;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;line-height:1.6">0</span>
+              <button onclick="resolveAllDriverAlerts()" style="background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer">Resolver todas</button>
+            </div>
+          </div>
+          <div id="driverAlertsList" style="max-height:200px;overflow-y:auto;margin-bottom:16px">
+            <p style="text-align:center;color:rgba(255,255,255,.3);padding:16px;font-size:12px">Cargando…</p>
+          </div>
+
+          <!-- Llegadas de conductores -->
+          <div class="dc-header" style="border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:12px;margin-bottom:12px">
+            <h3><i data-lucide="map-pin"></i> Llegadas de Conductores</h3>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="dc-badge-blue" id="arrivalsCount" style="background:rgba(16,185,129,.2);color:#10B981;display:none">0</span>
+              <button onclick="markArrivalsRead()" style="background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer">Marcar leídas</button>
+            </div>
+          </div>
+          <div id="arrivalsList" style="max-height:180px;overflow-y:auto;margin-bottom:16px">
+            <p style="text-align:center;color:rgba(255,255,255,.3);padding:16px;font-size:12px">Cargando…</p>
+          </div>
+
+          <!-- Alertas de velocidad -->
+          <div class="dc-header" style="border-top:1px solid rgba(255,255,255,.06);padding-top:12px;margin-bottom:8px">
+            <h3><i data-lucide="alert-triangle"></i> Alertas de Velocidad</h3>
+            <span class="dc-badge-red" id="alertCount">0</span>
           </div>
           <div class="alerts-list" id="alertsList">
             <!-- Generadas por JS -->
@@ -255,39 +281,45 @@
     MODAL — Nuevo Comunicado
   ============================================================ -->
   <div class="modal-overlay" id="commsModal" onclick="if(event.target===this)closeCommsModal()">
-    <div class="modal-box" style="max-width:520px">
+    <div class="modal-box" style="max-width:540px">
       <div class="modal-header">
-        <h2><i data-lucide="megaphone"></i> Nuevo Comunicado</h2>
+        <h2 id="commsModalTitle"><i data-lucide="megaphone"></i> Nuevo Comunicado</h2>
         <button class="modal-close" onclick="closeCommsModal()"><i data-lucide="x"></i></button>
       </div>
+      <input type="hidden" id="commEditId">
       <form onsubmit="submitCommunication(event)" style="padding:0 24px 24px">
         <div class="form-group" style="margin-bottom:14px">
           <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:6px">Título <span style="color:#FF6B6B">*</span></label>
-          <input type="text" id="commTitle" maxlength="200" placeholder="Ej: Nueva normativa de abordaje"
+          <input type="text" id="commTitle" maxlength="200" placeholder="Ej: Horario de inscripción a la cola"
             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem">
         </div>
         <div class="form-group" style="margin-bottom:14px">
           <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:6px">Tipo</label>
-          <select id="commType"
+          <select id="commType" onchange="onCommTypeChange()"
             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem">
-            <option value="info">ℹ️ Información general</option>
-            <option value="alert">⚠️ Alerta importante</option>
-            <option value="urgent">🚨 Urgente</option>
+            <option value="info">ℹ️ Comunicado — Información general</option>
+            <option value="alert">⚠️ Comunicado — Alerta importante</option>
+            <option value="urgent">🚨 Comunicado — Urgente</option>
+            <option value="reglamento">📋 Reglamento — Norma actualizable</option>
           </select>
+        </div>
+        <div id="commReglamentoHint" style="display:none;background:rgba(170,136,255,.08);border:1px solid rgba(170,136,255,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#AA88FF">
+          <i data-lucide="info" style="width:13px;height:13px;vertical-align:middle"></i>
+          <strong>Reglamento:</strong> aparece fijado en el panel del conductor con un ícono especial. Puedes editarlo en cualquier momento y se actualizará para todos.
         </div>
         <div class="form-group" style="margin-bottom:14px">
           <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:6px">Contenido <span style="color:#FF6B6B">*</span></label>
-          <textarea id="commBody" rows="4" placeholder="Detalla la regla, aviso o instrucción para los conductores..."
+          <textarea id="commBody" rows="4" placeholder="Ej: La inscripción a la cola de salida se habilita a las 18:30 hrs del día anterior. Todo conductor que no se inscriba antes de las 23:59 pierde su turno."
             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;resize:vertical;font-family:inherit"></textarea>
         </div>
         <div id="commFormError" class="form-error" style="display:none;margin-bottom:12px"></div>
-        <p style="font-size:11px;color:var(--text-muted);margin-bottom:16px">
+        <p id="commModalInfo" style="font-size:11px;color:var(--text-muted);margin-bottom:16px">
           <i data-lucide="info" style="width:12px;height:12px;vertical-align:middle"></i> El comunicado llegará a la campana de notificaciones de <strong>todos los conductores activos</strong>.
         </p>
         <div class="modal-actions" style="padding:0">
           <button type="button" class="btn-secondary" onclick="closeCommsModal()">Cancelar</button>
           <button type="submit" class="btn-primary" id="commSubmitBtn">
-            <i data-lucide="send"></i> Enviar a todos
+            <i data-lucide="send"></i> <span id="commSubmitLabel">Enviar a todos</span>
           </button>
         </div>
       </form>

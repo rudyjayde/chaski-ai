@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaski AI — Motor de Decisiones IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="ai-dashboard.css">
+</head>
+<body class="admin-body">
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sb-logo">
+      <img src="../img/logo-oscuro.png" alt="Chaski AI">
+      <div><span class="sb-logo-name">CHASKI AI</span><span class="sb-logo-sub">Admin · ATIPCAR</span></div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="index.html"       class="sb-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="fleet.html"       class="sb-link"><i class="fas fa-truck"></i><span>Flota</span></a>
+    <a href="queue.html"       class="sb-link"><i class="fas fa-list-ol"></i><span>Cola de Salida</span></a>
+    <a href="manifests.html"   class="sb-link"><i class="fas fa-file-invoice"></i><span>Manifiestos</span></a>
+    <a href="ai-dashboard.html" class="sb-link active"><i class="fas fa-brain"></i><span>Motor IA</span><span class="sb-badge">NUEVO</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="logout()" class="sb-link sb-link-logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ═════════════════════════════════════════════════ -->
+<main class="admin-main">
+  <header class="admin-header">
+    <div class="ah-left">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <div>
+        <h1 class="ah-title"><i class="fas fa-brain" style="color:var(--primary)"></i> Motor de Decisiones IA</h1>
+        <span class="ah-sub">Análisis en tiempo real · Actualiza cada 60 s</span>
+      </div>
+    </div>
+    <div class="ah-right">
+      <div class="ai-live-dot" id="liveDot">
+        <span class="dot-pulse"></span> EN VIVO
+      </div>
+      <button class="ai-run-btn" id="runBtn" onclick="triggerAnalysis()">
+        <i class="fas fa-play"></i> Analizar ahora
+      </button>
+      <span class="ah-time" id="clockDisplay">--:--</span>
+    </div>
+  </header>
+
+  <div class="admin-content">
+
+    <!-- ══ FILA 1: RIESGO GLOBAL + RUTAS ══ -->
+    <div class="ai-top-row">
+
+      <!-- Riesgo global -->
+      <div class="d-card ai-risk-card" id="riskCard">
+        <div class="ai-risk-header">
+          <i class="fas fa-shield-alt"></i>
+          <span>Nivel de Riesgo Global</span>
+        </div>
+        <div class="ai-risk-gauge">
+          <div class="ai-risk-value" id="riskValue">—</div>
+          <div class="ai-risk-label" id="riskLabel">Cargando análisis…</div>
+        </div>
+        <div class="ai-risk-meta">
+          <span>Último análisis:</span>
+          <strong id="lastAnalysisTime">—</strong>
+        </div>
+      </div>
+
+      <!-- Ruta Juli → Puno -->
+      <div class="d-card ai-route-card" id="cardJuliPuno">
+        <div class="d-card-header">
+          <h3><i class="fas fa-arrow-right"></i> Juli → Puno</h3>
+          <span class="ai-risk-badge" id="riskJuliPuno">—</span>
+        </div>
+        <div class="ai-route-stats">
+          <div class="ai-stat">
+            <i class="fas fa-parking" style="color:#6366F1"></i>
+            <div><span class="ai-stat-val" id="availableJP">—</span><span class="ai-stat-lbl">Disponibles</span></div>
+          </div>
+          <div class="ai-stat">
+            <i class="fas fa-truck-moving" style="color:#F59E0B"></i>
+            <div><span class="ai-stat-val" id="inRouteJP">—</span><span class="ai-stat-lbl">En ruta</span></div>
+          </div>
+          <div class="ai-stat">
+            <i class="fas fa-clock" style="color:#10B981"></i>
+            <div><span class="ai-stat-val" id="etaJP">—</span><span class="ai-stat-lbl">ETA retorno</span></div>
+          </div>
+          <div class="ai-stat">
+            <i class="fas fa-users" style="color:#00C8FF"></i>
+            <div><span class="ai-stat-val" id="paxJP">—</span><span class="ai-stat-lbl">Pasajeros hoy</span></div>
+          </div>
+        </div>
+        <div class="ai-calling-bar" id="callingJP" style="display:none">
+          <i class="fas fa-bullhorn"></i> Llamando: <strong id="callingUnitJP">—</strong>
+        </div>
+      </div>
+
+      <!-- Ruta Puno → Juli -->
+      <div class="d-card ai-route-card" id="cardPunoJuli">
+        <div class="d-card-header">
+          <h3><i class="fas fa-arrow-left"></i> Puno → Juli</h3>
+          <span class="ai-risk-badge" id="riskPunoJuli">—</span>
+        </div>
+        <div class="ai-route-stats">
+          <div class="ai-stat">
+            <i class="fas fa-parking" style="color:#6366F1"></i>
+            <div><span class="ai-stat-val" id="availablePJ">—</span><span class="ai-stat-lbl">Disponibles</span></div>
+          </div>
+          <div class="ai-stat">
+            <i class="fas fa-truck-moving" style="color:#F59E0B"></i>
+            <div><span class="ai-stat-val" id="inRoutePJ">—</span><span class="ai-stat-lbl">En ruta</span></div>
+          </div>
+          <div class="ai-stat">
+            <i class="fas fa-clock" style="color:#10B981"></i>
+            <div><span class="ai-stat-val" id="etaPJ">—</span><span class="ai-stat-lbl">ETA retorno</span></div>
+          </div>
+          <div class="ai-stat">
+            <i class="fas fa-users" style="color:#00C8FF"></i>
+            <div><span class="ai-stat-val" id="paxPJ">—</span><span class="ai-stat-lbl">Pasajeros hoy</span></div>
+          </div>
+        </div>
+        <div class="ai-calling-bar" id="callingPJ" style="display:none">
+          <i class="fas fa-bullhorn"></i> Llamando: <strong id="callingUnitPJ">—</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ FILA 2: ALERTAS + RECOMENDACIONES ══ -->
+    <div class="ai-mid-row">
+
+      <!-- Alertas activas -->
+      <div class="d-card ai-alerts-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-exclamation-triangle"></i> Alertas Activas</h3>
+          <span class="card-badge danger" id="alertCount">0</span>
+        </div>
+        <div id="alertsList" class="ai-list">
+          <div class="ai-empty"><i class="fas fa-check-circle"></i> Sin alertas activas</div>
+        </div>
+      </div>
+
+      <!-- Recomendaciones -->
+      <div class="d-card ai-recs-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-lightbulb"></i> Recomendaciones</h3>
+          <span class="card-badge" id="recCount">0</span>
+        </div>
+        <div id="recsList" class="ai-list">
+          <div class="ai-empty"><i class="fas fa-robot"></i> Sin recomendaciones pendientes</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ FILA 3: DECISIONES IA + HISTORIAL ══ -->
+    <div class="ai-bot-row">
+
+      <!-- Decisiones tomadas por la IA -->
+      <div class="d-card ai-decisions-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-robot"></i> Decisiones de la IA</h3>
+          <span class="card-badge live">AUTO</span>
+        </div>
+        <div id="decisionsList" class="ai-decisions-list">
+          <div class="ai-empty"><i class="fas fa-clock"></i> Esperando primer análisis…</div>
+        </div>
+      </div>
+
+      <!-- Historial de patrones -->
+      <div class="d-card ai-history-card">
+        <div class="d-card-header">
+          <h3><i class="fas fa-chart-line"></i> Patrones — Últimos 7 días</h3>
+          <span class="card-badge">APRENDIZAJE</span>
+        </div>
+
+        <!-- Horas pico -->
+        <div class="ai-peaks-title">Horas pico de demanda</div>
+        <div id="peakHoursList" class="ai-peaks"></div>
+
+        <!-- Gráfico de barras simple (demanda por hora hoy) -->
+        <div class="ai-peaks-title" style="margin-top:16px">Pasajeros por hora (últimos 7 días · promedio)</div>
+        <div id="demandChart" class="ai-bar-chart"></div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script src="../js/auth.js"></script>
+<script src="ai-dashboard.js"></script>
+</body>
+</html>

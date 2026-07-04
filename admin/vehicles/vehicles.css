@@ -319,3 +319,68 @@
   .vh-view-toggle { margin-left: 0; justify-content: flex-end; }
 }
 
+
+/* ============================================================
+   7. SELECCIÓN MÚLTIPLE
+   ============================================================ */
+.vh-card { position: relative; }
+.vh-card.sel-mode { cursor: default; }
+.vh-card.sel-mode:hover { transform: none; box-shadow: none; }
+.vh-card.selected {
+  border-color: rgba(255, 107, 107, 0.65);
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+  background: rgba(255, 107, 107, 0.04);
+}
+.vh-card.sel-mode.selected:hover { border-color: rgba(255, 107, 107, 0.65); }
+
+.vh-card-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  transition: background 0.15s, border-color 0.15s;
+}
+.vh-card.selected .vh-card-check {
+  background: #FF6B6B;
+  border-color: #FF6B6B;
+  color: #fff;
+}
+.vh-card-check svg { width: 13px; height: 13px; display: none; }
+.vh-card.selected .vh-card-check svg { display: block; }
+
+/* Barra flotante reutiliza .dr-select-bar de drivers.css — o re-declarada aquí */
+.dr-select-bar {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 22, 40, 0.97);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: 16px;
+  padding: 11px 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+  backdrop-filter: blur(14px);
+  z-index: 999;
+  white-space: nowrap;
+}
+.dr-select-bar-count { font-size: 13px; color: rgba(255,255,255,0.55); margin-right: 4px; }
+.dr-select-bar-count strong { color: #FF6B6B; }
+.dr-sel-btn {
+  border: none; border-radius: 9px; padding: 7px 14px; font-size: 12px; cursor: pointer;
+  font-family: inherit; display: flex; align-items: center; gap: 5px; transition: opacity 0.15s;
+}
+.dr-sel-btn:hover { opacity: 0.85; }
+.dr-sel-btn.all    { background: rgba(0,200,255,0.12); color: #00C8FF; border: 1px solid rgba(0,200,255,0.3); }
+.dr-sel-btn.del    { background: rgba(255,68,68,0.15);  color: #FF6B6B; border: 1px solid rgba(255,68,68,0.4); }
+.dr-sel-btn.cancel { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+

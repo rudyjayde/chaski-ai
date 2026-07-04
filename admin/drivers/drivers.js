@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const API = '';
 
@@ -6,6 +6,9 @@ const API = '';
 let DRIVERS   = [];
 let COMPANIES = [];
 let filtered  = [];
+
+let selectionMode = false;
+let selectedIds   = new Set();
 
 const AVATAR_COLORS = ['#0066CC','#00875A','#CF4B2B','#6554C0','#FF991F'];
 const STATUS_LABEL  = { active:'Activo', driving:'En ruta', inactive:'Inactivo' };
@@ -27,21 +30,26 @@ async function loadAll() {
 
 async function loadDrivers() {
   try {
-    const res  = await fetch(`${API}/api/drivers`);
+    const res  = await authFetch(`${API}/api/drivers`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
-    DRIVERS  = data.drivers;
+    DRIVERS  = data.drivers.sort((a, b) => {
+      // Conductores con vehículo primero, ordenados por código numérico
+      const ca = parseInt(a.vehicle_code) || 9999;
+      const cb = parseInt(b.vehicle_code) || 9999;
+      return ca - cb;
+    });
     filtered = [...DRIVERS];
     applyFilters();
   } catch (err) {
     document.getElementById('driversGrid').innerHTML =
-      `<div style="color:#FF6B6B;padding:30px"><i class="fas fa-exclamation-triangle"></i> Error: ${err.message}</div>`;
+      `<div style="color:#FF6B6B;padding:30px"><i data-lucide="alert-triangle"></i> Error: ${err.message}</div>`;
   }
 }
 
 async function loadCompanies() {
   try {
-    const res  = await fetch(`${API}/api/vehicles/companies`);
+    const res  = await authFetch(`${API}/api/vehicles/companies`);
     const data = await res.json();
     if (!data.ok) return;
     COMPANIES = data.companies;
@@ -93,6 +101,33 @@ document.getElementById('drSearch')?.addEventListener('input', applyFilters);
 document.getElementById('drFilterCompany')?.addEventListener('change', applyFilters);
 document.getElementById('drFilterStatus')?.addEventListener('change', applyFilters);
 
+// ── Autocompletar empresa al escribir código de vehículo ──────
+let _vehicleLookupTimer = null;
+document.getElementById('drVehicleCode')?.addEventListener('input', function () {
+  clearTimeout(_vehicleLookupTimer);
+  const code = this.value.trim();
+  const hint = document.getElementById('vehicleCodeHint');
+  if (!code) { if (hint) hint.textContent = ''; return; }
+  _vehicleLookupTimer = setTimeout(async () => {
+    try {
+      const res  = await authFetch(`/api/vehicles?search=${encodeURIComponent(code)}`);
+      const data = await res.json();
+      const vehicles = Array.isArray(data) ? data : (data.vehicles || data.data || []);
+      const match = vehicles.find(v => v.code?.toLowerCase() === code.toLowerCase());
+      if (match && match.company_id) {
+        document.getElementById('drCompany').value = match.company_id;
+        if (hint) {
+          hint.textContent = `✓ ${match.company_name || 'Empresa asignada'} — Placa: ${match.plate || '—'}`;
+          hint.style.color = 'var(--ds-success)';
+        }
+      } else if (hint) {
+        hint.textContent = code.length >= 2 ? 'Vehículo no encontrado' : '';
+        hint.style.color = 'var(--ds-danger)';
+      }
+    } catch { /* silencioso */ }
+  }, 450);
+});
+
 // ── Grid ──────────────────────────────────────────────────────
 const AVATAR_BORDER = ['rgba(0,200,255,0.5)','rgba(0,255,148,0.5)','rgba(255,184,0,0.5)','rgba(255,68,68,0.5)','rgba(138,80,255,0.5)'];
 
@@ -106,21 +141,27 @@ function renderGrid() {
   }
 
   grid.innerHTML = filtered.map((d, i) => {
-    const name   = `${d.first_name} ${d.last_name}`;
-    const init   = initials(d.first_name, d.last_name);
-    const status = d.active ? 'active' : 'inactive';
-    const cIdx   = i % AVATAR_BORDER.length;
-    const border = AVATAR_BORDER[cIdx];
+    const name     = `${d.first_name} ${d.last_name}`;
+    const init     = initials(d.first_name, d.last_name);
+    const status   = d.active ? 'active' : 'inactive';
+    const border   = AVATAR_BORDER[i % AVATAR_BORDER.length];
+    const isSel    = selectedIds.has(d.id);
+    const selClass = selectionMode ? 'sel-mode' : '';
+    const selStyle = isSel ? 'selected' : '';
+    const clickFn  = selectionMode
+      ? `toggleDriverSelect(event,'${d.id}')`
+      : `openDrModal('${d.id}')`;
 
     return `
-    <div class="dr-card ${status}" onclick="openDrModal('${d.id}')">
+    <div class="dr-card ${status} ${selClass} ${selStyle}" data-driver-id="${d.id}" onclick="${clickFn}">
+      ${selectionMode ? `<div class="dr-card-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
       <div class="dr-avatar" style="border-color:${border}">${init}</div>
       <div class="dr-card-name">${name}</div>
       <div class="dr-card-company">
-        <i class="fas fa-building"></i> ${d.company || '—'}
+        <i data-lucide="building-2"></i> ${d.company || '—'}
       </div>
       ${d.vehicle_code
-        ? `<div style="margin:4px 0"><span style="font-size:0.73rem;background:rgba(0,200,255,0.08);color:#00C8FF;border:1px solid rgba(0,200,255,0.2);border-radius:4px;padding:2px 8px"><i class="fas fa-bus" style="font-size:0.65rem"></i> ${d.vehicle_code}</span></div>`
+        ? `<div style="margin:4px 0"><span style="font-size:0.73rem;background:rgba(0,200,255,0.08);color:#00C8FF;border:1px solid rgba(0,200,255,0.2);border-radius:4px;padding:2px 8px"><i data-lucide="bus"></i> ${d.vehicle_code}</span></div>`
         : `<div style="margin:4px 0;font-size:0.72rem;color:var(--text-muted)">Sin vehículo</div>`
       }
       <span class="status-badge ${status}">
@@ -138,6 +179,8 @@ function renderGrid() {
       </div>
     </div>`;
   }).join('');
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ── Modal Perfil ──────────────────────────────────────────────
@@ -180,18 +223,18 @@ window.openDrModal = function (dId) {
   const actBox = document.getElementById('drModalActions');
   if (actBox) {
     actBox.innerHTML = `
-      <button class="mf-btn-act ghost" onclick="closeDrModal()"><i class="fas fa-times"></i> Cerrar</button>
+      <button class="mf-btn-act ghost" onclick="closeDrModal()"><i data-lucide="x"></i> Cerrar</button>
       <button class="mf-btn-act" style="background:rgba(255,68,68,0.1);color:#FF6B6B;border:1px solid rgba(255,68,68,0.3)"
         onclick="deleteDriver(window._activeDrId, window._activeDrName)">
-        <i class="fas fa-trash"></i> Eliminar
+        <i data-lucide="trash-2"></i> Eliminar
       </button>
       <button class="mf-btn-act" style="background:rgba(255,184,0,0.12);color:#FFB800;border:1px solid rgba(255,184,0,0.3)"
         onclick="closeDrModal();openEditDriverModal(window._activeDrId)">
-        <i class="fas fa-pen"></i> Editar
+        <i data-lucide="pen"></i> Editar
       </button>
       <button class="mf-btn-act" style="background:rgba(0,200,255,0.1);color:#00C8FF;border:1px solid rgba(0,200,255,0.25)"
         onclick="closeDrModal();openPassModal(window._activeDrId)">
-        <i class="fas fa-key"></i> Contraseña
+        <i data-lucide="key"></i> Contraseña
       </button>`;
   }
 
@@ -209,12 +252,14 @@ document.getElementById('driverModal')?.addEventListener('click', function(e) {
 
 // ── Modal Registrar ───────────────────────────────────────────
 window.openRegDriverModal = function () {
-  document.getElementById('drRegTitle').innerHTML = '<i class="fas fa-user-plus"></i> Registrar Conductor';
+  document.getElementById('drRegTitle').innerHTML = '<i data-lucide="user-plus"></i> Registrar Conductor';
   document.getElementById('drRegId').value = '';
   document.getElementById('driverRegForm').reset();
   document.getElementById('drPasswordGroup').style.display = '';
   document.getElementById('drPassword').required = true;
   document.getElementById('drRegError').style.display = 'none';
+  const hint = document.getElementById('vehicleCodeHint');
+  if (hint) { hint.textContent = 'Número de unidad a asignar (opcional)'; hint.style.color = ''; }
   populateCompanySelect('drCompany');
   document.getElementById('driverRegModal').classList.add('open');
 };
@@ -222,7 +267,7 @@ window.openRegDriverModal = function () {
 window.openEditDriverModal = function (dId) {
   const d = DRIVERS.find(x => x.id === dId);
   if (!d) return;
-  document.getElementById('drRegTitle').innerHTML = '<i class="fas fa-pen"></i> Editar Conductor';
+  document.getElementById('drRegTitle').innerHTML = '<i data-lucide="pen"></i> Editar Conductor';
   document.getElementById('drRegId').value      = d.id;
   document.getElementById('drFirstName').value  = d.first_name;
   document.getElementById('drLastName').value   = d.last_name;
@@ -283,7 +328,7 @@ window.submitDriver = async function (e) {
 
   const btn = document.getElementById('drRegSubmit');
   btn.disabled  = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+  btn.innerHTML = '<i data-lucide="loader-2"></i> Guardando…';
 
   try {
     const url    = id ? `${API}/api/drivers/${id}` : `${API}/api/drivers`;
@@ -291,7 +336,7 @@ window.submitDriver = async function (e) {
 
     // Si edición y hay nuevo código de vehículo, llamar endpoint separado
     if (id && body.vehicle_code) {
-      await fetch(`${API}/api/drivers/${id}/vehicle`, {
+      await authFetch(`${API}/api/drivers/${id}/vehicle`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vehicle_code: body.vehicle_code }),
@@ -299,7 +344,7 @@ window.submitDriver = async function (e) {
       delete body.vehicle_code;
     }
 
-    const res  = await fetch(url, {
+    const res  = await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -319,7 +364,7 @@ window.submitDriver = async function (e) {
     errBox.style.display = 'block';
   } finally {
     btn.disabled  = false;
-    btn.innerHTML = '<i class="fas fa-save"></i> Guardar';
+    btn.innerHTML = '<i data-lucide="save"></i> Guardar';
   }
 };
 
@@ -345,7 +390,7 @@ window.submitPassword = async function () {
     return;
   }
   try {
-    const res  = await fetch(`${API}/api/drivers/${id}/password`, {
+    const res  = await authFetch(`${API}/api/drivers/${id}/password`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pass }),
@@ -364,7 +409,7 @@ window.submitPassword = async function () {
 window.deleteDriver = async function (dId, name) {
   if (!confirm(`¿Eliminar al conductor ${name}?\nSu cuenta quedará desactivada.`)) return;
   try {
-    const res = await fetch(`${API}/api/drivers/${dId}`, { method: 'DELETE' });
+    const res = await authFetch(`${API}/api/drivers/${dId}`, { method: 'DELETE' });
     if (!res.ok) { alert('Error al eliminar'); return; }
     window.closeDrModal();
     await loadDrivers();
@@ -375,6 +420,81 @@ window.deleteDriver = async function (dId, name) {
 
 // ── Mensaje (placeholder) ─────────────────────────────────────
 window.sendDriverMessage = function () { alert('Función de mensajería próximamente'); };
+
+// ── Selección múltiple ────────────────────────────────────────
+window.toggleSelectionMode = function () {
+  selectionMode = !selectionMode;
+  selectedIds.clear();
+  renderGrid();
+  _updateSelBar();
+
+  const btn = document.getElementById('btnSelectionMode');
+  if (!btn) return;
+  if (selectionMode) {
+    btn.innerHTML = '<i data-lucide="x"></i> Cancelar selección';
+    btn.style.cssText = 'background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.4);color:#FF6B6B;border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit';
+  } else {
+    btn.innerHTML = '<i data-lucide="check-square"></i> Seleccionar';
+    btn.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit';
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.toggleDriverSelect = function (e, dId) {
+  e.stopPropagation();
+  if (selectedIds.has(dId)) selectedIds.delete(dId);
+  else selectedIds.add(dId);
+
+  const card = document.querySelector(`[data-driver-id="${dId}"]`);
+  if (card) card.classList.toggle('selected', selectedIds.has(dId));
+
+  _updateSelBar();
+};
+
+window.selectAllDrivers = function () {
+  filtered.forEach(d => selectedIds.add(d.id));
+  renderGrid();
+  _updateSelBar();
+};
+
+function _updateSelBar() {
+  const bar = document.getElementById('selectionBar');
+  if (!bar) return;
+  const n = selectedIds.size;
+  if (!selectionMode) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const el = document.getElementById('selectionCount');
+  if (el) el.innerHTML = `<strong>${n}</strong> conductor${n !== 1 ? 'es' : ''} seleccionado${n !== 1 ? 's' : ''}`;
+}
+
+window.deleteSelectedDrivers = async function () {
+  const n = selectedIds.size;
+  if (n === 0) { alert('Selecciona al menos un conductor.'); return; }
+  if (!confirm(`¿Eliminar ${n} conductor${n !== 1 ? 'es' : ''}?\nSus cuentas quedarán desactivadas.`)) return;
+
+  const ids = [...selectedIds];
+  let ok = 0, fail = 0;
+
+  for (const id of ids) {
+    try {
+      const res = await authFetch(`${API}/api/drivers/${id}`, { method: 'DELETE' });
+      res.ok ? ok++ : fail++;
+    } catch { fail++; }
+  }
+
+  selectionMode = false;
+  selectedIds.clear();
+  const bar = document.getElementById('selectionBar');
+  if (bar) bar.style.display = 'none';
+  const btn = document.getElementById('btnSelectionMode');
+  if (btn) {
+    btn.innerHTML = '<i data-lucide="check-square"></i> Seleccionar';
+    btn.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit';
+  }
+
+  await loadDrivers();
+  if (fail > 0) alert(`${ok} eliminados. ${fail} fallaron.`);
+};
 
 // ── Init ──────────────────────────────────────────────────────
 loadAll();

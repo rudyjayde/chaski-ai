@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const API = '';
 
@@ -7,6 +7,9 @@ let FLEET      = [];
 let COMPANIES  = [];
 let filteredFleet = [];
 let currentView   = 'grid';
+
+let vhSelMode = false;
+let vhSelIds  = new Set();
 
 const STATUS_LABEL = { active: 'En operación', waiting: 'En espera', maintenance: 'Mantenimiento', inactive: 'Inactivo' };
 const STATUS_ICON  = { active: 'fa-circle', waiting: 'fa-clock', maintenance: 'fa-wrench', inactive: 'fa-ban' };
@@ -18,7 +21,7 @@ async function loadAll() {
 
 async function loadVehicles() {
   try {
-    const res  = await fetch(`${API}/api/vehicles`);
+    const res  = await authFetch(`${API}/api/vehicles`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     FLEET         = data.vehicles;
@@ -26,13 +29,13 @@ async function loadVehicles() {
     renderVehicles();
   } catch (err) {
     document.getElementById('vehiclesGrid').innerHTML =
-      `<div class="vh-empty"><i class="fas fa-exclamation-triangle"></i> Error al cargar: ${err.message}</div>`;
+      `<div class="vh-empty"><i data-lucide="alert-triangle"></i> Error al cargar: ${err.message}</div>`;
   }
 }
 
 async function loadCompanies() {
   try {
-    const res  = await fetch(`${API}/api/vehicles/companies`);
+    const res  = await authFetch(`${API}/api/vehicles/companies`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     COMPANIES = data.companies;
@@ -97,7 +100,7 @@ function renderGrid() {
   if (!grid) return;
 
   if (!filteredFleet.length) {
-    grid.innerHTML = `<div class="vh-empty"><i class="fas fa-bus"></i> No se encontraron vehículos</div>`;
+    grid.innerHTML = `<div class="vh-empty"><i data-lucide="bus"></i> No se encontraron vehículos</div>`;
     return;
   }
 
@@ -105,9 +108,16 @@ function renderGrid() {
     const speedAlert = v.speed && parseFloat(v.speed) > 90;
     const gpsOk      = !!v.gps_device_id;
     const speed      = v.speed ? Math.round(parseFloat(v.speed)) : 0;
+    const isSel      = vhSelIds.has(v.id);
+    const selClass   = vhSelMode ? 'sel-mode' : '';
+    const selStyle   = isSel ? 'selected' : '';
+    const clickFn    = vhSelMode
+      ? `toggleVhSelect(event,'${v.id}')`
+      : `openVhModal('${v.id}')`;
 
     return `
-    <div class="vh-card ${v.status}" onclick="openVhModal('${v.id}')">
+    <div class="vh-card ${v.status} ${selClass} ${selStyle}" data-vehicle-id="${v.id}" onclick="${clickFn}">
+      ${vhSelMode ? `<div class="vh-card-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
       <div class="vh-card-head">
         <div>
           <div class="vh-card-code">${v.code}</div>
@@ -121,10 +131,10 @@ function renderGrid() {
         </div>
       </div>
       <div class="vh-card-company">
-        <i class="fas fa-building" style="color:var(--primary);margin-right:5px"></i>${v.company || '—'}
+        <i data-lucide="building-2"></i>${v.company || '—'}
       </div>
       <div class="vh-card-driver">
-        <i class="fas fa-user"></i>${v.driver_name}
+        <i data-lucide="user"></i>${v.driver_name}
       </div>
       <span class="vh-status-badge ${v.status}">
         <i class="fas ${STATUS_ICON[v.status] || 'fa-circle'}"></i>
@@ -142,6 +152,8 @@ function renderGrid() {
       </div>
     </div>`;
   }).join('');
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderList() {
@@ -162,7 +174,7 @@ function renderList() {
       <td style="color:var(--text-muted)">${v.brand || '—'} ${v.model || ''}</td>
       <td>
         <span style="color:${v.gps_device_id ? 'var(--success)' : 'var(--text-muted)'}">
-          <i class="fas fa-satellite-dish"></i> ${v.gps_device_id ? 'Asignado' : 'Sin GPS'}
+          <i data-lucide="radio"></i> ${v.gps_device_id ? 'Asignado' : 'Sin GPS'}
         </span>
       </td>
       <td style="text-align:center">${v.year || '—'}</td>
@@ -170,8 +182,8 @@ function renderList() {
       <td><span class="status-badge ${v.status}">${STATUS_LABEL[v.status] || v.status}</span></td>
       <td>
         <div style="display:flex;gap:4px">
-          <button class="tbl-btn" onclick="openVhModal('${v.id}')" title="Ver ficha"><i class="fas fa-eye"></i></button>
-          <button class="tbl-btn edit" onclick="openEditModal(${JSON.stringify(v).replace(/"/g,'&quot;')})" title="Editar"><i class="fas fa-pen"></i></button>
+          <button class="tbl-btn" onclick="openVhModal('${v.id}')" title="Ver ficha"><i data-lucide="eye"></i></button>
+          <button class="tbl-btn edit" onclick="openEditModal(${JSON.stringify(v).replace(/"/g,'&quot;')})" title="Editar"><i data-lucide="pen"></i></button>
         </div>
       </td>
     </tr>
@@ -211,14 +223,14 @@ window.openVhModal = function (vhId) {
     `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Historial de viajes disponible próximamente</td></tr>`;
 
   document.getElementById('vhModalActions').innerHTML = `
-    <button class="mf-btn-act ghost" onclick="closeVhModal()"><i class="fas fa-times"></i> Cerrar</button>
+    <button class="mf-btn-act ghost" onclick="closeVhModal()"><i data-lucide="x"></i> Cerrar</button>
     <button class="mf-btn-act" style="background:rgba(255,68,68,0.1);color:#FF6B6B;border:1px solid rgba(255,68,68,0.3)"
       onclick="deleteVehicle('${v.id}','${v.code}')">
-      <i class="fas fa-trash"></i> Eliminar
+      <i data-lucide="trash-2"></i> Eliminar
     </button>
     <button class="mf-btn-act" style="background:rgba(255,184,0,0.12);color:#FFB800;border:1px solid rgba(255,184,0,0.3)"
       onclick="closeVhModal();openEditModal(${JSON.stringify(v).replace(/"/g,'&quot;')})">
-      <i class="fas fa-pen"></i> Editar
+      <i data-lucide="pen"></i> Editar
     </button>`;
 
   document.getElementById('vehicleModal').classList.add('open');
@@ -233,7 +245,7 @@ window.closeVhModal = function () {
 window.deleteVehicle = async function (id, code) {
   if (!confirm(`¿Eliminar el vehículo ${code}?\nSe desactivará del sistema.`)) return;
   try {
-    const res = await fetch(`${API}/api/vehicles/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API}/api/vehicles/${id}`, { method: 'DELETE' });
     if (!res.ok) { alert('Error al eliminar'); return; }
     window.closeVhModal();
     await loadVehicles();
@@ -248,7 +260,7 @@ document.getElementById('vehicleModal')?.addEventListener('click', function(e) {
 
 // ── Modal Registrar / Editar ──────────────────────────────────
 window.openRegisterModal = function () {
-  document.getElementById('regModalTitle').innerHTML = '<i class="fas fa-bus"></i> Registrar Vehículo';
+  document.getElementById('regModalTitle').innerHTML = '<i data-lucide="bus"></i> Registrar Vehículo';
   document.getElementById('regVehicleId').value = '';
   document.getElementById('vehicleRegForm').reset();
   document.getElementById('regCode').disabled    = false;
@@ -258,7 +270,7 @@ window.openRegisterModal = function () {
 };
 
 window.openEditModal = function (v) {
-  document.getElementById('regModalTitle').innerHTML = '<i class="fas fa-pen"></i> Editar Vehículo';
+  document.getElementById('regModalTitle').innerHTML = '<i data-lucide="pen"></i> Editar Vehículo';
   document.getElementById('regVehicleId').value  = v.id;
   document.getElementById('regCode').value       = v.code;
   document.getElementById('regCode').disabled    = true;
@@ -301,12 +313,12 @@ window.submitVehicle = async function (e) {
 
   const btn = document.getElementById('regSubmitBtn');
   btn.disabled  = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+  btn.innerHTML = '<i data-lucide="loader-2"></i> Guardando…';
 
   try {
     const url    = id ? `${API}/api/vehicles/${id}` : `${API}/api/vehicles`;
     const method = id ? 'PUT' : 'POST';
-    const res    = await fetch(url, {
+    const res    = await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -326,8 +338,83 @@ window.submitVehicle = async function (e) {
     errBox.style.display = 'block';
   } finally {
     btn.disabled  = false;
-    btn.innerHTML = '<i class="fas fa-save"></i> Guardar';
+    btn.innerHTML = '<i data-lucide="save"></i> Guardar';
   }
+};
+
+// ── Selección múltiple ────────────────────────────────────────
+window.toggleVhSelectionMode = function () {
+  vhSelMode = !vhSelMode;
+  vhSelIds.clear();
+  renderVehicles();
+  _updateVhSelBar();
+
+  const btn = document.getElementById('btnVhSelectionMode');
+  if (!btn) return;
+  if (vhSelMode) {
+    btn.innerHTML = '<i data-lucide="x"></i> Cancelar selección';
+    btn.style.cssText = 'background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.4);color:#FF6B6B;border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit';
+  } else {
+    btn.innerHTML = '<i data-lucide="check-square"></i> Seleccionar';
+    btn.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit';
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.toggleVhSelect = function (e, vId) {
+  e.stopPropagation();
+  if (vhSelIds.has(vId)) vhSelIds.delete(vId);
+  else vhSelIds.add(vId);
+
+  const card = document.querySelector(`[data-vehicle-id="${vId}"]`);
+  if (card) card.classList.toggle('selected', vhSelIds.has(vId));
+
+  _updateVhSelBar();
+};
+
+window.selectAllVehicles = function () {
+  filteredFleet.forEach(v => vhSelIds.add(v.id));
+  renderVehicles();
+  _updateVhSelBar();
+};
+
+function _updateVhSelBar() {
+  const bar = document.getElementById('vhSelectionBar');
+  if (!bar) return;
+  const n = vhSelIds.size;
+  if (!vhSelMode) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const el = document.getElementById('vhSelectionCount');
+  if (el) el.innerHTML = `<strong>${n}</strong> vehículo${n !== 1 ? 's' : ''} seleccionado${n !== 1 ? 's' : ''}`;
+}
+
+window.deleteSelectedVehicles = async function () {
+  const n = vhSelIds.size;
+  if (n === 0) { alert('Selecciona al menos un vehículo.'); return; }
+  if (!confirm(`¿Eliminar ${n} vehículo${n !== 1 ? 's' : ''}?\nEsta acción los desactivará del sistema.`)) return;
+
+  const ids = [...vhSelIds];
+  let ok = 0, fail = 0;
+
+  for (const id of ids) {
+    try {
+      const res = await authFetch(`${API}/api/vehicles/${id}`, { method: 'DELETE' });
+      res.ok ? ok++ : fail++;
+    } catch { fail++; }
+  }
+
+  vhSelMode = false;
+  vhSelIds.clear();
+  const bar = document.getElementById('vhSelectionBar');
+  if (bar) bar.style.display = 'none';
+  const btn = document.getElementById('btnVhSelectionMode');
+  if (btn) {
+    btn.innerHTML = '<i data-lucide="check-square"></i> Seleccionar';
+    btn.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit';
+  }
+
+  await loadVehicles();
+  if (fail > 0) alert(`${ok} eliminados. ${fail} fallaron.`);
 };
 
 // ── Init ──────────────────────────────────────────────────────

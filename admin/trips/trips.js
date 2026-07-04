@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    trips.js — Lógica de la página de Viajes
    Chaski AI v2.0 — Datos reales desde API REST
    ============================================================ */
@@ -6,17 +6,10 @@
 'use strict';
 
 /* ============================================================
-   1. HELPER DE AUTENTICACIÓN
+   1. HELPER DE AUTENTICACIÓN — delega a window.authFetch (core.js)
    ============================================================ */
 function authFetch(path, opts = {}) {
-  const s = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  return fetch(path, {
-    ...opts,
-    headers: {
-      ...(opts.headers || {}),
-      ...(s.token ? { 'Authorization': 'Bearer ' + s.token } : {}),
-    },
-  });
+  return window.authFetch(path, opts);
 }
 
 
@@ -325,7 +318,7 @@ function renderSpeedAlerts() {
 
   list.innerHTML = SPEED_ALERTS_DATA.map(a => `
     <div class="tr-alert-item">
-      <div class="tr-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="tr-alert-icon"><i data-lucide="alert-triangle"></i></div>
       <div class="tr-alert-body">
         <div class="tr-alert-title">Unidad ${a.unit} — ${a.driver}</div>
         <div class="tr-alert-sub">${a.date} ${a.time} hrs</div>
@@ -391,7 +384,7 @@ function renderTripsTable() {
           <td>${arr}</td>
           <td style="color:var(--text-sub)">${dur}</td>
           <td style="text-align:center;font-weight:600">${t.passengers}</td>
-          <td ${speedClass}>${t.maxSpeed} km/h ${t.hasAlert ? '<i class="fas fa-exclamation-triangle" style="color:var(--danger);font-size:11px"></i>' : ''}</td>
+          <td ${speedClass}>${t.maxSpeed} km/h ${t.hasAlert ? '<i data-lucide="alert-triangle"></i>' : ''}</td>
           <td style="color:var(--gold);font-weight:600">S/ ${t.revenue.toFixed(2)}</td>
           <td>
             <span class="status-badge ${t.status}">

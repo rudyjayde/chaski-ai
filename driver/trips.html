@@ -61,6 +61,30 @@
     </div>
   </header>
 
+  <!-- Banner viaje activo -->
+  <div id="activeTripBanner" class="active-trip-banner" style="display:none"></div>
+
+  <!-- Diálogo: inscribirse para el viaje de regreso -->
+  <div id="returnDialog" class="rd-overlay">
+    <div class="rd-modal">
+      <div class="rd-check-icon"><i class="fas fa-check-circle"></i></div>
+      <h3 class="rd-title">¡Llegaste a <span id="rdArrivedCity">destino</span>!</h3>
+      <p class="rd-text">¿Quieres inscribirte ahora para el viaje de regreso?</p>
+      <div class="rd-route-pill">
+        <i class="fas fa-route"></i>
+        <span id="rdReturnLabel">—</span>
+      </div>
+      <div class="rd-actions">
+        <button id="rdConfirmBtn" class="rd-btn rd-btn-primary" onclick="registerForReturn()">
+          <i class="fas fa-check"></i> Sí, inscribirme
+        </button>
+        <button class="rd-btn rd-btn-secondary" onclick="closeReturnDialog()">
+          Ahora no
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="driver-content">
 
     <!-- KPI del conductor -->
@@ -199,6 +223,8 @@
   </div>
 </main>
 
+<script src="core.js"></script>
+<script src="trip-banner.js"></script>
 <script src="trips.js"></script>
 
 </body>

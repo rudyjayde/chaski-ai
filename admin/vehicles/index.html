@@ -42,7 +42,11 @@
       <!-- ============================================================
         BARRA DE ACCIONES
       ============================================================ -->
-      <div style="display:flex;justify-content:flex-end;padding:16px 24px 0">
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 24px 0">
+        <button id="btnVhSelectionMode" onclick="toggleVhSelectionMode()"
+          style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+          <i data-lucide="check-square"></i> Seleccionar
+        </button>
         <button class="btn-primary" onclick="openRegisterModal()">
           <i data-lucide="plus"></i> Registrar Vehículo
         </button>
@@ -165,6 +169,20 @@
 
     </div>
   </main>
+
+  <!-- Barra de selección múltiple — vehículos -->
+  <div class="dr-select-bar" id="vhSelectionBar">
+    <span class="dr-select-bar-count" id="vhSelectionCount"><strong>0</strong> seleccionados</span>
+    <button class="dr-sel-btn all" onclick="selectAllVehicles()">
+      <i data-lucide="check-check"></i> Todos
+    </button>
+    <button class="dr-sel-btn del" onclick="deleteSelectedVehicles()">
+      <i data-lucide="trash-2"></i> Eliminar seleccionados
+    </button>
+    <button class="dr-sel-btn cancel" onclick="toggleVhSelectionMode()">
+      <i data-lucide="x"></i> Cancelar
+    </button>
+  </div>
 
   <!-- ============================================================
     MODAL — Registrar / Editar Vehículo

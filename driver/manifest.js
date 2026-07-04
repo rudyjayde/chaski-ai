@@ -6,22 +6,79 @@
 
 /* ─── 1. AUTENTICACIÓN ─────────────────────────────────── */
 const user = JSON.parse(localStorage.getItem('chaski_user') || 'null');
-if (!user || !user.username) window.location.href = '../login.html';
 
-/* Datos extendidos del conductor */
-const DRIVER_DATA = {
-  'eloy.mamani':     { name:'Eloy Mamani',    vehicle:'001', plate:'PUN-001', company:'Virgen de Fátima',       license:'AII-b',  licenseNum:'Q40123456', queuePos:5, model:'Toyota Hiace 2022', capacity:15 },
-  'jose.quispe':     { name:'José Quispe',     vehicle:'002', plate:'PUN-002', company:'Surandino',              license:'AIII-b', licenseNum:'Q40234567', queuePos:2, model:'Toyota Hiace 2021', capacity:15 },
-  'abraham.morales': { name:'Abraham Morales', vehicle:'003', plate:'PUN-003', company:'San Francisco de Borja', license:'AII-b',  licenseNum:'Q40345678', queuePos:3, model:'Toyota Hiace 2020', capacity:15 },
-  'juan.perez':      { name:'Juan Pérez',      vehicle:'004', plate:'PUN-004', company:'Virgen de Fátima II',   license:'AIII-b', licenseNum:'Q40456789', queuePos:4, model:'Toyota Hiace 2022', capacity:15 },
-  'carlos.ticona':   { name:'Carlos Ticona',   vehicle:'005', plate:'PUN-005', company:'San Miguel',             license:'AII-b',  licenseNum:'Q40567890', queuePos:6, model:'Toyota Hiace 2019', capacity:15 },
+let driver = {
+  name:       user.name || user.username || 'Conductor',
+  vehicle:    '—',
+  plate:      '—',
+  company:    '—',
+  license:    'AII-b',
+  licenseNum: '—',
+  model:      'Toyota Hiace',
+  capacity:   15,
 };
-
-let driver = DRIVER_DATA[user.username] || { name: user.name||'Conductor', vehicle:'001', plate:'PUN-001', company:'—', license:'AII-b', licenseNum:'—', queuePos:1, model:'Toyota Hiace', capacity:15 };
 
 /* Cargar perfil personalizado si existe */
 const savedProfile = JSON.parse(localStorage.getItem('chaski_profile_' + user.username) || 'null');
 if (savedProfile) driver = { ...driver, ...savedProfile };
+
+/* ─── 0. ESTADO DE COLA ──────────────────────────────── */
+const QUEUE_API = '/api/queue';
+let myQueueEntry = null; // { id, position, turn, date, route }
+
+function localDateStrManifest(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function loadMyQueueEntry() {
+  const today    = localDateStrManifest(new Date());
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tmrStr   = localDateStrManifest(tomorrow);
+
+  for (const date of [today, tmrStr]) {
+    for (const route of ['juli-puno', 'puno-juli']) {
+      try {
+        const res  = await authFetch(`${QUEUE_API}?route=${route}&date=${date}`);
+        const data = await res.json();
+        if (!data.ok) continue;
+        // Saltar entradas ya completadas — buscar la posición activa actual
+        const e = data.entries.find(
+          en => en.username === user.username && !['departed', 'cancelled'].includes(en.position)
+        );
+        if (!e) continue;
+
+        myQueueEntry = { id: e.id, position: e.position, turn: e.turn_number, date, route, driver_id: e.driver_id, vehicle_id: e.vehicle_id };
+
+        // Poblar cabecera con datos reales
+        if (e.vehicle_code) { driver.vehicle = e.vehicle_code; setText('mhcCode', e.vehicle_code); }
+        if (e.plate)        { driver.plate   = e.plate;        setText('mhcPlate', e.plate); }
+        if (e.company)      { driver.company = e.company;      setText('mhcCompany', e.company); }
+        if (e.first_name)   {
+          driver.name = `${e.first_name} ${e.last_name}`;
+          setText('sidebarDriverName', driver.name);
+          setText('mhcDriver', driver.name);
+          setText('sidebarVehicle', `Cód. ${driver.vehicle} · ${driver.plate}`);
+          setText('sidebarCompany', driver.company);
+        }
+
+        // Auto-seleccionar ruta según la cola actual del conductor
+        const routeEl = document.getElementById('routeField');
+        if (routeEl && route) routeEl.value = route;
+
+        // Indicador de estado en la cabecera
+        const badge = document.getElementById('queueStatusBadge');
+        const label = { calling:'🔴 LLAMANDO', ramp1:'🟡 RAMPA 1', ramp2:'🟡 RAMPA 2',
+                        outside1:'🔵 EXTERIOR 1', outside2:'🔵 EXTERIOR 2', waiting:'⚪ EN ESPERA',
+                        departed:'🟢 EN VIAJE', cancelled:'⛔ CANCELADO' };
+        if (badge) {
+          badge.textContent = label[e.position] || e.position;
+          badge.style.display = '';
+        }
+        return;
+      } catch {}
+    }
+  }
+}
 
 /* ─── 2. POBLAR CABECERA ──────────────────────────────── */
 function setText(id, val) {
@@ -76,6 +133,45 @@ let passengers  = [];
 let selectedPay = 'cash';
 let nextSeat    = 1;
 
+const DRAFT_KEY = 'chaski_manifest_draft_' + (user?.username || 'anon');
+
+function _saveDraft() {
+  const routeEl = document.getElementById('routeField');
+  const depEl   = document.getElementById('departureDT');
+  localStorage.setItem(DRAFT_KEY, JSON.stringify({
+    route:      routeEl?.value || '',
+    departure:  depEl?.value   || '',
+    passengers,
+    nextSeat,
+  }));
+}
+
+function _restoreDraft() {
+  let draft;
+  try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { return; }
+  if (!draft || !Array.isArray(draft.passengers) || !draft.passengers.length) return;
+
+  passengers = draft.passengers;
+  nextSeat   = draft.nextSeat || passengers.length + 1;
+
+  const routeEl = document.getElementById('routeField');
+  const depEl   = document.getElementById('departureDT');
+  if (routeEl && draft.route)     routeEl.value = draft.route;
+  if (depEl   && draft.departure) depEl.value   = draft.departure;
+
+  const listEl  = document.getElementById('passengerList');
+  const emptyEl = document.getElementById('plcEmpty');
+  if (listEl) {
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'none';
+    passengers.forEach(pax => renderPassengerRow(pax));
+  }
+  updateSummary();
+  document.getElementById('pfSeat').value = nextSeat;
+  setText('nextSeatNum', nextSeat);
+  showToast(`📋 Borrador restaurado — ${passengers.length} pasajero${passengers.length > 1 ? 's' : ''}`);
+}
+
 function selectPay(btn) {
   document.querySelectorAll('.pmb').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -98,6 +194,7 @@ function registerPassenger() {
   passengers.push(pax);
   renderPassengerRow(pax);
   updateSummary();
+  _saveDraft();
 
   document.getElementById('pfDni').value  = '';
   document.getElementById('pfName').value = '';
@@ -145,7 +242,12 @@ function deletePassenger(id) {
     if (numEl) numEl.textContent = i + 1;
   });
   updateSummary();
-  if (passengers.length === 0) document.getElementById('plcEmpty').style.display = '';
+  if (passengers.length === 0) {
+    document.getElementById('plcEmpty').style.display = '';
+    localStorage.removeItem(DRAFT_KEY);
+  } else {
+    _saveDraft();
+  }
 }
 window.deletePassenger = deletePassenger;
 
@@ -153,6 +255,7 @@ function clearAllPassengers() {
   if (!passengers.length) return;
   if (!confirm(`¿Eliminar los ${passengers.length} pasajeros?`)) return;
   passengers = [];
+  localStorage.removeItem(DRAFT_KEY);
   document.getElementById('passengerList').innerHTML = '';
   document.getElementById('plcEmpty').style.display = '';
   nextSeat = 1;
@@ -245,8 +348,12 @@ function updateYapeStatus(ok) {
 })();
 
 /* ─── 8. GUARDAR MANIFIESTO ─────────────────────────────── */
-function saveManifest() {
+async function saveManifest() {
   if (!passengers.length) { showToast('⚠️ Registra al menos un pasajero', 'error'); return; }
+
+  const saveBtn = document.querySelector('[onclick="saveManifest()"]');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Guardando...'; }
+
   const routeEl  = document.getElementById('routeField');
   const routeTxt = routeEl.selectedOptions[0].text;
   const dep      = document.getElementById('departureDT').value;
@@ -259,24 +366,83 @@ function saveManifest() {
     passengers, passengerCount:passengers.length,
     cashCount:passengers.filter(p=>p.pay==='cash').length,
     digitalCount:passengers.filter(p=>p.pay!=='cash').length,
-    revenue, status:'saved', createdAt:new Date().toISOString(),
+    revenue, status:'en_ruta', createdAt:new Date().toISOString(),
   };
 
-  const manifests = JSON.parse(localStorage.getItem('chaski_manifests') || '[]');
-  manifests.unshift(manifest);
-  localStorage.setItem('chaski_manifests', JSON.stringify(manifests));
+  // Guardar en localStorage (respaldo)
+  const localManifests = JSON.parse(localStorage.getItem('chaski_manifests') || '[]');
+  localManifests.unshift(manifest);
+  localStorage.setItem('chaski_manifests', JSON.stringify(localManifests));
 
-  /* Notificar admin */
-  const notifs = JSON.parse(localStorage.getItem('chaski_admin_notifs') || '[]');
-  notifs.unshift({
-    id:Date.now(), type:'manifest', icon:'fa-file-invoice',
-    msg:`Nuevo manifiesto de ${driver.name} · ${routeTxt} · ${passengers.length} pasajeros`,
-    sub:`${driver.company} · Unidad ${driver.vehicle} · ${new Date().toLocaleString('es-PE')}`,
-    read:false, at:new Date().toISOString(),
-  });
-  localStorage.setItem('chaski_admin_notifs', JSON.stringify(notifs));
+  // Guardar en base de datos
+  let apiOk = false;
+  if (myQueueEntry?.driver_id) {
+    try {
+      const apiRes = await authFetch('/api/manifests/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          driver_id:      myQueueEntry.driver_id,
+          vehicle_id:     myQueueEntry.vehicle_id || null,
+          route_name:     routeEl.value,
+          departure_time: dep || new Date().toISOString(),
+          passengers:     passengers.map(p => ({
+            dni:    p.dni,
+            name:   p.name,
+            origin: p.origin,
+            dest:   p.dest,
+            seat:   p.seat,
+            pay:    p.pay,
+            fare:   p.fare,
+          })),
+        }),
+      });
+      const apiData = await apiRes.json();
+      apiOk = apiRes.ok && apiData.ok;
+      if (apiOk && apiData.trip_id) {
+        localStorage.setItem('chaski_active_trip_' + user.username, JSON.stringify({
+          trip_id:    apiData.trip_id,
+          revenue:    revenue,
+          route:      routeEl.value,
+          routeText:  routeTxt,
+          startedAt:  new Date().toISOString(),
+        }));
+      }
+      if (!apiRes.ok) {
+        console.warn('[saveManifest]', apiData.error);
+        showToast('⚠️ Manifiesto guardado localmente (error de servidor: ' + (apiData.error || 'desconocido') + ')', 'error');
+      }
+    } catch (e) {
+      console.error('[saveManifest API]', e);
+      showToast('⚠️ Sin conexión — manifiesto guardado solo en este dispositivo', 'error');
+    }
+  } else {
+    showToast('⚠️ Sin turno activo — manifiesto guardado solo localmente', 'warn');
+  }
 
-  showToast(`✅ Manifiesto ${manifestNum} guardado y notificado al admin`);
+  // Marcar salida en la cola → auto-avanza al siguiente conductor
+  let queueOk = false;
+  if (myQueueEntry?.id) {
+    try {
+      const r = await authFetch(`${QUEUE_API}/${myQueueEntry.id}/depart`, { method: 'PUT' });
+      queueOk = r.ok;
+    } catch {}
+  }
+
+  // Actualizar badge de estado
+  const badge = document.getElementById('queueStatusBadge');
+  if (badge) { badge.textContent = '🟢 EN RUTA'; badge.style.background = 'rgba(16,185,129,.15)'; badge.style.color = '#10B981'; }
+
+  const dbMsg    = apiOk   ? ' · Registrado en BD' : '';
+  const queueMsg = queueOk ? ' · Cola avanzó'      : '';
+  showToast(`✅ Manifiesto ${manifestNum} guardado${dbMsg}${queueMsg}`);
+
+  localStorage.removeItem(DRAFT_KEY);
+
+  if (saveBtn) {
+    saveBtn.textContent = '✅ Manifiesto guardado — EN RUTA';
+    saveBtn.style.background = '#10B981';
+  }
 }
 window.saveManifest = saveManifest;
 
@@ -392,13 +558,30 @@ function exportPDF() {
 </body>
 </html>`;
 
+  const driverSlug = (driver.name || 'conductor').replace(/\s+/g, '-').toLowerCase();
+  const fechaSlug  = fecha.replace(/\//g, '-');
+  const filename   = `manifiesto-${driverSlug}-${fechaSlug}.pdf`;
+
+  const htmlConScript = html.replace('</body>', `
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+<script>
+  window.addEventListener('load', function () {
+    html2pdf().set({
+      margin: [10, 12, 10, 12],
+      filename: '${filename}',
+      image:      { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, logging: false, useCORS: true },
+      jsPDF:      { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(document.body).save().then(function () { window.close(); });
+  });
+<\/script>
+</body>`);
+
   const win = window.open('', '_blank');
-  if (!win) { showToast('⚠️ Permite ventanas emergentes para generar el PDF', 'error'); return; }
-  win.document.write(html);
+  if (!win) { showToast('⚠️ Permite ventanas emergentes para descargar el PDF', 'error'); return; }
+  win.document.write(htmlConScript);
   win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); }, 400);
-  showToast('✅ Manifiesto listo para imprimir');
+  showToast('⏳ Generando PDF, descarga en segundos…');
 }
 window.exportPDF = exportPDF;
 
@@ -493,10 +676,7 @@ function shakeField(id) {
   setTimeout(() => { el.style.animation = ''; el.style.borderColor = ''; }, 400);
 }
 
-function logout() {
-  if (confirm('¿Cerrar sesión?')) {
-    localStorage.removeItem('chaski_user');
-    window.location.href = '../login.html';
-  }
-}
-window.logout = logout;
+// Cargar estado de cola y restaurar borrador al iniciar
+loadMyQueueEntry();
+_restoreDraft();
+

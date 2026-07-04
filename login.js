@@ -259,7 +259,7 @@ window.submitRecovery     = submitRecovery;
         loginTime:    new Date().toISOString(),
       }));
 
-      const redirect = data.user.role === 'admin' ? '/admin/dashboard' : 'driver/index.html';
+      const redirect = data.user.role === 'admin' ? '/admin/dashboard' : '/driver/index.html';
       setTimeout(() => { window.location.href = redirect; }, 500);
 
     } catch (err) {

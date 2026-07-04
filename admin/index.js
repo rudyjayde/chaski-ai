@@ -1,23 +1,9 @@
-/* ============================================================
+﻿/* ============================================================
    admin/index.js — Dashboard del Panel Administrador
    Chaski AI v2.0 — Datos reales desde API REST
    ============================================================ */
 
 'use strict';
-
-/* ============================================================
-   HELPER DE AUTENTICACIÓN
-   ============================================================ */
-function authFetch(path, opts = {}) {
-  const s = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  return fetch(path, {
-    ...opts,
-    headers: {
-      ...(opts.headers || {}),
-      ...(s.token ? { 'Authorization': 'Bearer ' + s.token } : {}),
-    },
-  });
-}
 
 
 /* ============================================================
@@ -43,8 +29,8 @@ function authFetch(path, opts = {}) {
       const [summaryRes, tripsSumRes, vehiclesRes, driversRes] = await Promise.all([
         authFetch('/api/reports/summary'),
         authFetch('/api/trips/today/summary'),
-        fetch('/api/vehicles'),
-        fetch('/api/drivers'),
+        authFetch('/api/vehicles'),
+        authFetch('/api/drivers'),
       ]);
 
       const summary    = await summaryRes.json();
@@ -160,7 +146,7 @@ function authFetch(path, opts = {}) {
 
     let vehicles = [];
     try {
-      const res = await fetch('/api/vehicles');
+      const res = await authFetch('/api/vehicles');
       const d   = await res.json();
       vehicles  = Array.isArray(d.vehicles) ? d.vehicles : [];
     } catch (e) { console.error('[Fleet chart]', e); }
@@ -264,7 +250,7 @@ function authFetch(path, opts = {}) {
 
   async function loadVehicles() {
     try {
-      const res  = await fetch(`${API_BASE}/api/gps/live`);
+      const res  = await authFetch(`${API_BASE}/api/gps/live`);
       const data = await res.json();
       if (!data.ok) return;
 
@@ -315,8 +301,170 @@ function authFetch(path, opts = {}) {
 })();
 
 
+/* ── Campana compartida (arrivals + driver alerts) ────────── */
+window._bellArrivals = 0;
+window._bellDriver   = 0;
+function _updateBell() {
+  const el = document.getElementById('bellCount');
+  if (!el) return;
+  const total = window._bellArrivals + window._bellDriver;
+  el.textContent    = total || 0;
+  el.style.display  = total > 0 ? '' : 'none';
+}
+
 /* ============================================================
-   7. ALERTAS OPERATIVAS — datos reales desde /api/reports/alerts
+   7a. LLEGADAS DE CONDUCTORES — /api/arrivals
+   ============================================================ */
+(function initArrivals() {
+
+  async function loadArrivals() {
+    try {
+      const res  = await authFetch('/api/arrivals');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const list    = document.getElementById('arrivalsList');
+      const countEl = document.getElementById('arrivalsCount');
+      const bellEl  = document.getElementById('bellCount');
+
+      if (countEl) {
+        countEl.textContent   = data.unseen || 0;
+        countEl.style.display = data.unseen > 0 ? 'inline-flex' : 'none';
+      }
+      window._bellArrivals = data.unseen || 0;
+      _updateBell();
+
+      if (!list) return;
+
+      if (!data.arrivals || data.arrivals.length === 0) {
+        list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,.3);padding:16px;font-size:12px">Sin llegadas en las últimas 24 h</p>';
+        return;
+      }
+
+      const routeLabel = r => r === 'juli-puno' ? 'Juli → Puno' : 'Puno → Juli';
+
+      list.innerHTML = data.arrivals.map(a => {
+        const time    = new Date(a.arrived_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        const isNew   = !a.seen_by_admin;
+        return `
+          <div class="alert-item" style="${isNew ? 'border-left:3px solid #10B981;background:rgba(16,185,129,.05);' : 'opacity:.7'}">
+            <div class="alert-icon" style="background:rgba(16,185,129,.15);color:#10B981;flex-shrink:0">
+              <i data-lucide="map-pin" style="width:14px;height:14px"></i>
+            </div>
+            <div class="alert-body">
+              <strong>${a.driver_name || a.username} llegó a ${a.arrived_city}</strong>
+              <span>${routeLabel(a.route)} · ${time}${isNew ? ' · <span style="color:#10B981;font-weight:700">NUEVO</span>' : ''}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (e) { console.error('[Arrivals]', e); }
+  }
+
+  window.markArrivalsRead = async function () {
+    try {
+      await authFetch('/api/arrivals/seen-all', { method: 'PUT' });
+      const countEl = document.getElementById('arrivalsCount');
+      if (countEl) { countEl.textContent = '0'; countEl.style.display = 'none'; }
+      await loadArrivals();
+    } catch (e) { console.error('[Arrivals markRead]', e); }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadArrivals();
+    setInterval(loadArrivals, 30000);
+  });
+
+})();
+
+
+/* ============================================================
+   7b. ALERTAS SOS / INCIDENTES DE CONDUCTORES
+   ============================================================ */
+(function initDriverAlerts() {
+
+  function _esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function loadDriverAlerts() {
+    try {
+      const res = await authFetch('/api/communications/driver-alerts');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      window._bellDriver = data.pending || 0;
+      _updateBell();
+
+      const cntEl = document.getElementById('driverAlertsCount');
+      if (cntEl) {
+        cntEl.textContent  = window._bellDriver;
+        cntEl.style.display = window._bellDriver > 0 ? 'inline-flex' : 'none';
+      }
+
+      const list = document.getElementById('driverAlertsList');
+      if (!list) return;
+
+      if (!data.alerts || data.alerts.length === 0) {
+        list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,.3);padding:16px;font-size:12px">Sin alertas registradas</p>';
+        return;
+      }
+
+      list.innerHTML = data.alerts.map(a => {
+        const isPending = a.status === 'pending';
+        const isUrgent  = a.type === 'urgent';
+        const color     = isUrgent ? '#FF6B6B' : '#FFB800';
+        const icon      = isUrgent ? 'siren' : 'triangle-alert';
+        const time      = new Date(a.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        const name      = _esc(a.driver_name || a.username || '—');
+        const bodyText  = a.body ? `<span style="font-size:11px;color:rgba(255,255,255,.4);display:block;margin-top:2px">${_esc(a.body)}</span>` : '';
+        const badge     = isPending ? `<span style="color:${color};font-weight:700"> · PENDIENTE</span>` : '';
+        const btn       = isPending
+          ? `<button onclick="resolveDriverAlert('${a.id}')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.5);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">Resolver</button>`
+          : '';
+        return `
+          <div class="alert-item" style="${isPending ? `border-left:3px solid ${color};background:${color}11` : 'opacity:.55'}">
+            <div class="alert-icon" style="background:${color}22;color:${color};flex-shrink:0">
+              <i data-lucide="${icon}" style="width:14px;height:14px"></i>
+            </div>
+            <div class="alert-body" style="flex:1;min-width:0">
+              <strong>${_esc(a.title)}</strong>
+              <span>${name} · ${time}${badge}</span>
+              ${bodyText}
+            </div>
+            ${btn}
+          </div>`;
+      }).join('');
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (e) { console.error('[DriverAlerts]', e); }
+  }
+
+  window.resolveDriverAlert = async function (id) {
+    try {
+      await authFetch(`/api/communications/driver-alerts/${id}/resolve`, { method: 'PUT' });
+      await loadDriverAlerts();
+    } catch (e) { console.error('[resolveDriverAlert]', e); }
+  };
+
+  window.resolveAllDriverAlerts = async function () {
+    try {
+      await authFetch('/api/communications/driver-alerts/resolve-all', { method: 'PUT' });
+      await loadDriverAlerts();
+    } catch (e) { console.error('[resolveAllDriverAlerts]', e); }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDriverAlerts();
+    setInterval(loadDriverAlerts, 20000);
+  });
+
+})();
+
+
+/* ============================================================
+   7b. ALERTAS OPERATIVAS — datos reales desde /api/reports/alerts
    ============================================================ */
 (function initAlerts() {
 
@@ -339,7 +487,7 @@ function authFetch(path, opts = {}) {
         item.className = 'alert-item speed';
         const time = new Date(a.occurred_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
         item.innerHTML = `
-          <div class="alert-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="alert-icon"><i data-lucide="gauge" style="width:14px;height:14px"></i></div>
           <div class="alert-body">
             <strong>Velocidad excesiva — ${a.association_code || a.driver_name || '—'}</strong>
             <span>${a.max_speed} km/h · ${a.driver_name || '—'} · ${a.plate || '—'}</span>
@@ -350,9 +498,7 @@ function authFetch(path, opts = {}) {
       });
     }
 
-    const bellCount  = document.getElementById('bellCount');
     const alertCount = document.getElementById('alertCount');
-    if (bellCount)  bellCount.textContent  = alerts.length;
     if (alertCount) alertCount.textContent = alerts.length;
   });
 
@@ -421,7 +567,7 @@ function authFetch(path, opts = {}) {
 
   let vehicles = [];
 
-  fetch('/api/vehicles')
+  authFetch('/api/vehicles')
     .then(r => r.json())
     .then(d => { vehicles = Array.isArray(d.vehicles) ? d.vehicles : []; })
     .catch(() => {});
@@ -442,7 +588,7 @@ function authFetch(path, opts = {}) {
     if (!found) {
       result.innerHTML = `
         <div style="padding:12px;font-size:0.84rem;color:var(--text-muted);">
-          <i class="fas fa-search"></i> No se encontró ningún vehículo con "${query}"
+          <i data-lucide="search"></i> No se encontró ningún vehículo con "${query}"
         </div>`;
       return;
     }

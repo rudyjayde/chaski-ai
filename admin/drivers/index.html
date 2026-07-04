@@ -39,8 +39,12 @@
 
     <div class="admin-content">
 
-      <!-- Botón registrar -->
-      <div style="display:flex;justify-content:flex-end;padding:16px 24px 0">
+      <!-- Botones de acción -->
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 24px 0">
+        <button id="btnSelectionMode" onclick="toggleSelectionMode()"
+          style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:10px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+          <i data-lucide="check-square"></i> Seleccionar
+        </button>
         <button class="btn-primary" onclick="openRegDriverModal()">
           <i data-lucide="user-plus"></i> Registrar Conductor
         </button>
@@ -131,6 +135,20 @@
     </div>
   </main>
 
+  <!-- Barra de selección múltiple -->
+  <div class="dr-select-bar" id="selectionBar">
+    <span class="dr-select-bar-count" id="selectionCount"><strong>0</strong> seleccionados</span>
+    <button class="dr-sel-btn all" onclick="selectAllDrivers()">
+      <i data-lucide="check-check"></i> Todos
+    </button>
+    <button class="dr-sel-btn del" onclick="deleteSelectedDrivers()">
+      <i data-lucide="trash-2"></i> Eliminar seleccionados
+    </button>
+    <button class="dr-sel-btn cancel" onclick="toggleSelectionMode()">
+      <i data-lucide="x"></i> Cancelar
+    </button>
+  </div>
+
   <!-- ============================================================
     MODAL — Registrar / Editar Conductor
   ============================================================ -->
@@ -166,7 +184,7 @@
           <div class="form-group">
             <label>Código de Vehículo</label>
             <input type="text" id="drVehicleCode" maxlength="3" placeholder="ej: 001">
-            <small>Número de unidad a asignar (opcional)</small>
+            <small id="vehicleCodeHint">Número de unidad a asignar (opcional)</small>
           </div>
           <div class="form-group full">
             <label>Empresa <span class="req">*</span></label>

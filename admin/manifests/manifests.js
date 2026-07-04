@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    manifests.js — Lógica de la página de Manifiestos
    Chaski AI v2.0 — Datos reales desde API REST
    ============================================================ */
@@ -6,17 +6,10 @@
 'use strict';
 
 /* ============================================================
-   1. HELPER DE AUTENTICACIÓN
+   1. HELPER DE AUTENTICACIÓN — delega a window.authFetch (core.js)
    ============================================================ */
 function authFetch(path, opts = {}) {
-  const s = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  return fetch(path, {
-    ...opts,
-    headers: {
-      ...(opts.headers || {}),
-      ...(s.token ? { 'Authorization': 'Bearer ' + s.token } : {}),
-    },
-  });
+  return window.authFetch(path, opts);
 }
 
 
@@ -49,7 +42,13 @@ async function loadManifests() {
   try {
     const res = await authFetch('/api/manifests?limit=500');
     const data = await res.json();
-    ALL_MANIFESTS = Array.isArray(data) ? data.map(normalizeManifest) : [];
+    if (!res.ok) {
+      console.error('[Manifests] API error:', data);
+      ALL_MANIFESTS = [];
+    } else {
+      ALL_MANIFESTS = Array.isArray(data) ? data.map(normalizeManifest) : [];
+      console.log(`[Manifests] Cargados ${ALL_MANIFESTS.length} manifiestos del servidor`);
+    }
   } catch (err) {
     console.error('[Manifests] Error al cargar:', err.message);
     ALL_MANIFESTS = [];
@@ -108,7 +107,7 @@ function clearFilters() {
   document.getElementById('searchInput').value   = '';
   document.getElementById('filterCompany').value = '';
   document.getElementById('filterStatus').value  = '';
-  document.getElementById('filterFrom').value    = new Date().toISOString().slice(0, 10);
+  document.getElementById('filterFrom').value    = '';
   document.getElementById('filterTo').value      = '';
   filteredData = [...ALL_MANIFESTS];
   currentPage  = 1;
@@ -145,11 +144,15 @@ function renderTable() {
   if (!tbody) return;
 
   if (slice.length === 0) {
+    const sinDatos  = ALL_MANIFESTS.length === 0;
+    const msg = sinDatos
+      ? 'No hay manifiestos registrados en la base de datos aún'
+      : 'No se encontraron manifiestos con los filtros aplicados — prueba limpiar los filtros';
     tbody.innerHTML = `
       <tr>
         <td colspan="10" style="text-align:center;padding:40px;color:var(--text-muted)">
           <i class="fas fa-file-alt" style="font-size:28px;display:block;margin-bottom:10px;opacity:0.3"></i>
-          No se encontraron manifiestos con los filtros aplicados
+          ${msg}
         </td>
       </tr>`;
     renderPagination(pages);
@@ -181,10 +184,10 @@ function renderTable() {
       <td>
         <div class="tbl-actions">
           <button class="tbl-btn" title="Ver detalle" onclick="openModal(${m.id})">
-            <i class="fas fa-eye"></i>
+            <i data-lucide="eye"></i>
           </button>
           <button class="tbl-btn success" title="Descargar PDF" onclick="downloadPDF(${m.id})">
-            <i class="fas fa-file-pdf"></i>
+            <i data-lucide="file-text"></i>
           </button>
           <button class="tbl-btn success" title="WhatsApp" onclick="whatsapp(${m.id})">
             <i class="fab fa-whatsapp"></i>
@@ -362,7 +365,7 @@ async function openModal(manifestId) {
   const tbody = document.getElementById('modalPassBody');
   if (tbody) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">
-      <i class="fas fa-spinner fa-spin"></i> Cargando pasajeros...</td></tr>`;
+      <i data-lucide="loader-2"></i> Cargando pasajeros...</td></tr>`;
   }
 
   try {

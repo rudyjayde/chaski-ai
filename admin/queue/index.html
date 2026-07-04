@@ -96,7 +96,7 @@
       <!-- ============================================================
         TABS DE RUTA
       ============================================================ -->
-      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
         <button class="aq-route-tab active" id="tabJuliPuno"
           onclick="switchRoute('juli-puno', this)">
           <i data-lucide="arrow-right"></i> Juli → Puno
@@ -105,21 +105,87 @@
           onclick="switchRoute('puno-juli', this)">
           <i data-lucide="arrow-left"></i> Puno → Juli
         </button>
-        <button class="aq-route-tab" style="margin-left:auto;background:rgba(0,200,255,.1);border-color:var(--primary)"
-          onclick="loadQueue()">
-          <i data-lucide="refresh-cw"></i> Actualizar
+        <button class="aq-route-tab" id="tabFleet"
+          onclick="toggleFleetView()"
+          style="background:rgba(170,136,255,.1);border-color:rgba(170,136,255,.4);color:#AA88FF">
+          <i data-lucide="layout-list"></i> Vista General
         </button>
+        <!-- Selector de fecha -->
+        <div id="dateControls" style="display:flex;align-items:center;gap:8px;margin-left:auto">
+          <button class="aq-route-tab" id="btnToday"
+            onclick="setQueueDate('today')" style="background:rgba(0,200,255,.1);border-color:var(--primary)">
+            Hoy
+          </button>
+          <button class="aq-route-tab" id="btnTomorrow"
+            onclick="setQueueDate('tomorrow')">
+            Mañana
+          </button>
+          <input type="date" id="queueDateInput"
+            style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;cursor:pointer"
+            onchange="setQueueDate('custom', this.value)">
+          <button class="aq-route-tab" style="background:rgba(0,200,255,.08);border-color:rgba(0,200,255,.3)"
+            onclick="loadQueue()">
+            <i data-lucide="refresh-cw"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+        VISTA GENERAL DE FLOTA (Lista Madre)
+      ============================================================ -->
+      <div id="fleetView" style="display:none">
+        <div class="dash-card" style="margin-bottom:16px">
+          <div class="dc-header">
+            <h3><i data-lucide="layout-list"></i> Estado General de Flota — Lista Madre</h3>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="dc-live-badge">EN TIEMPO REAL</span>
+              <button class="aq-route-tab" onclick="loadFleetStatus()" style="font-size:11px;padding:5px 12px">
+                <i data-lucide="refresh-cw"></i> Actualizar
+              </button>
+            </div>
+          </div>
+          <!-- Filtro rápido -->
+          <div style="display:flex;gap:8px;padding:0 0 14px;flex-wrap:wrap">
+            <button class="fleet-filter active" data-filter="all"    onclick="filterFleet('all', this)"   style="padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--text);font-size:12px;cursor:pointer">Todos</button>
+            <button class="fleet-filter"         data-filter="calling" onclick="filterFleet('calling', this)" style="padding:5px 14px;border-radius:6px;border:1px solid rgba(255,107,107,.3);background:rgba(255,107,107,.08);color:#FF6B6B;font-size:12px;cursor:pointer">🔴 Llamando</button>
+            <button class="fleet-filter"         data-filter="ramp"    onclick="filterFleet('ramp', this)"   style="padding:5px 14px;border-radius:6px;border:1px solid rgba(255,184,0,.3);background:rgba(255,184,0,.08);color:#FFB800;font-size:12px;cursor:pointer">🟡 En Rampa</button>
+            <button class="fleet-filter"         data-filter="outside" onclick="filterFleet('outside', this)" style="padding:5px 14px;border-radius:6px;border:1px solid rgba(0,200,255,.3);background:rgba(0,200,255,.08);color:#00C8FF;font-size:12px;cursor:pointer">🔵 Exterior</button>
+            <button class="fleet-filter"         data-filter="waiting" onclick="filterFleet('waiting', this)" style="padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:var(--text-muted);font-size:12px;cursor:pointer">⚪ En Espera</button>
+            <button class="fleet-filter"         data-filter="departed" onclick="filterFleet('departed', this)" style="padding:5px 14px;border-radius:6px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.08);color:#10B981;font-size:12px;cursor:pointer">🟢 En Ruta</button>
+            <button class="fleet-filter"         data-filter="none"    onclick="filterFleet('none', this)"   style="padding:5px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.15);color:rgba(255,255,255,.3);font-size:12px;cursor:pointer">— Sin inscripción</button>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table" id="fleetTable">
+              <thead>
+                <tr>
+                  <th>Unidad</th>
+                  <th>Placa</th>
+                  <th>Conductor</th>
+                  <th>Empresa</th>
+                  <th>Estado Actual</th>
+                  <th>Ruta</th>
+                  <th>Turno</th>
+                  <th>Fecha Cola</th>
+                  <th>Hora Salida</th>
+                </tr>
+              </thead>
+              <tbody id="fleetBody">
+                <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">Cargando flota…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- ============================================================
         FILA: Vista de cola + Posiciones en terminal
       ============================================================ -->
-      <div class="dashboard-row">
+      <div class="dashboard-row" id="queueView">
 
         <!-- Lista de la cola -->
         <div class="dash-card">
           <div class="dc-header">
-            <h3><i data-lucide="list"></i> Cola de Salida del Día</h3>
+            <h3><i data-lucide="list"></i> Cola de Salida — <span id="queueDateLabel" style="font-weight:400;font-size:0.85rem;color:var(--primary)">—</span></h3>
             <div class="dc-controls">
               <input type="text" class="dc-search-input" id="qSearch"
                      placeholder="Buscar unidad, conductor...">
@@ -203,7 +269,7 @@
           </div>
         </div>
 
-      </div>
+      </div><!-- /queueView -->
 
     </div>
   </main>

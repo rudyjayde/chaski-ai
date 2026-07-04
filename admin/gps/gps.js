@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    admin/gps.js — Módulo de Dispositivos GPS
    Chaski AI v2.0
    ============================================================ */
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadDevices() {
   try {
-    const res  = await fetch(`${API}/api/gps-devices`);
+    const res  = await authFetch(`${API}/api/gps-devices`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
 
@@ -28,7 +28,7 @@ async function loadDevices() {
   } catch (err) {
     document.getElementById('devicesBody').innerHTML =
       `<tr><td colspan="8" class="table-loading" style="color:#FF6B6B">
-        <i class="fas fa-exclamation-triangle"></i> Error: ${err.message}
+        <i data-lucide="alert-triangle"></i> Error: ${err.message}
       </td></tr>`;
   }
 }
@@ -71,13 +71,13 @@ function renderTable(devices) {
       <td>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="tbl-btn assign" onclick="openAssign('${d.id}','${d.imei}')">
-            <i class="fas fa-link"></i> Asignar
+            <i data-lucide="link"></i> Asignar
           </button>
           <button class="tbl-btn edit" onclick="openEdit(${JSON.stringify(d).replace(/"/g, '&quot;')})">
-            <i class="fas fa-pen"></i>
+            <i data-lucide="pen"></i>
           </button>
           <button class="tbl-btn del" onclick="deleteDevice('${d.id}','${d.imei}')">
-            <i class="fas fa-trash"></i>
+            <i data-lucide="trash-2"></i>
           </button>
         </div>
       </td>
@@ -88,7 +88,7 @@ function renderTable(devices) {
 function vehicleCell(d) {
   if (!d.vehicle_id) return '<span style="color:var(--muted);font-size:0.8rem">Sin asignar</span>';
   return `<span class="vehicle-code-pill">
-    <i class="fas fa-bus" style="font-size:0.7rem"></i>
+    <i data-lucide="bus"></i>
     ${d.vehicle_code}
     <span class="plate">${d.vehicle_plate}</span>
   </span>`;
@@ -96,14 +96,14 @@ function vehicleCell(d) {
 
 function statusBadge(status) {
   const MAP = {
-    online:      ['signal',          'Online'],
-    reciente:    ['clock',           'Reciente'],
-    offline:     ['times-circle',    'Offline'],
-    sin_señal:   ['question-circle', 'Sin señal'],
-    sin_asignar: ['unlink',          'Sin asignar'],
+    online:      ['signal',       'Online'],
+    reciente:    ['clock',        'Reciente'],
+    offline:     ['x-circle',     'Offline'],
+    sin_señal:   ['help-circle',  'Sin señal'],
+    sin_asignar: ['unlink',       'Sin asignar'],
   };
   const [icon, label] = MAP[status] || ['circle', status];
-  return `<span class="status-badge ${status}"><i class="fas fa-${icon}"></i>${label}</span>`;
+  return `<span class="status-badge ${status}"><i data-lucide="${icon}"></i>${label}</span>`;
 }
 
 function formatPing(ping, speed) {
@@ -128,7 +128,7 @@ window.filterTable = function () {
 
 // ── Modal Registrar / Editar ─────────────────────────────────
 window.openModal = function () {
-  document.getElementById('modalTitle').innerHTML = '<i class="fas fa-satellite-dish"></i> Registrar Dispositivo GPS';
+  document.getElementById('modalTitle').innerHTML = '<i data-lucide="radio"></i> Registrar Dispositivo GPS';
   document.getElementById('deviceId').value = '';
   document.getElementById('deviceForm').reset();
   document.getElementById('fModel').value = 'Teltonika FMC130';
@@ -137,7 +137,7 @@ window.openModal = function () {
 };
 
 window.openEdit = function (d) {
-  document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pen"></i> Editar Dispositivo';
+  document.getElementById('modalTitle').innerHTML = '<i data-lucide="pen"></i> Editar Dispositivo';
   document.getElementById('deviceId').value = d.id;
   document.getElementById('fImei').value    = d.imei;
   document.getElementById('fAlias').value   = d.alias  || '';
@@ -172,12 +172,12 @@ window.submitDevice = async function (e) {
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+  btn.innerHTML = '<i data-lucide="loader-2"></i> Guardando…';
 
   try {
     const url    = id ? `${API}/api/gps-devices/${id}` : `${API}/api/gps-devices`;
     const method = id ? 'PUT' : 'POST';
-    const res    = await fetch(url, {
+    const res    = await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -197,7 +197,7 @@ window.submitDevice = async function (e) {
     errBox.style.display = 'block';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-save"></i> Guardar';
+    btn.innerHTML = '<i data-lucide="save"></i> Guardar';
   }
 };
 
@@ -226,13 +226,13 @@ window.previewVehicle = async function (code) {
 
   const padded = code.padStart(3, '0');
   try {
-    const res  = await fetch(`${API}/api/vehicles`);
+    const res  = await authFetch(`${API}/api/vehicles`);
     const data = await res.json();
     const v    = (data.vehicles || []).find(v => v.code === padded);
     if (v) {
-      preview.innerHTML = `<i class="fas fa-check-circle" style="color:#00FF94"></i> ${v.code} — ${v.plate} (${v.driver_name})`;
+      preview.innerHTML = `<i data-lucide="check-circle"></i> ${v.code} — ${v.plate} (${v.driver_name})`;
     } else {
-      preview.innerHTML = `<span style="color:#FF6B6B"><i class="fas fa-times-circle"></i> Vehículo no encontrado</span>`;
+      preview.innerHTML = `<span style="color:#FF6B6B"><i data-lucide="x-circle"></i> Vehículo no encontrado</span>`;
     }
   } catch { preview.textContent = ''; }
 };
@@ -250,7 +250,7 @@ window.confirmAssign = async function () {
   }
 
   try {
-    const res  = await fetch(`${API}/api/gps-devices/${id}/assign`, {
+    const res  = await authFetch(`${API}/api/gps-devices/${id}/assign`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vehicle_code: code }),
@@ -276,7 +276,7 @@ window.unassignDevice = async function () {
   if (!confirm('¿Desasignar este dispositivo del vehículo actual?')) return;
 
   try {
-    await fetch(`${API}/api/gps-devices/${id}/assign`, {
+    await authFetch(`${API}/api/gps-devices/${id}/assign`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vehicle_code: null }),
@@ -292,7 +292,7 @@ window.unassignDevice = async function () {
 window.deleteDevice = async function (id, imei) {
   if (!confirm(`¿Eliminar el dispositivo IMEI ${imei}? Esta acción no se puede deshacer.`)) return;
   try {
-    await fetch(`${API}/api/gps-devices/${id}`, { method: 'DELETE' });
+    await authFetch(`${API}/api/gps-devices/${id}`, { method: 'DELETE' });
     loadDevices();
   } catch (err) {
     alert('Error al eliminar');

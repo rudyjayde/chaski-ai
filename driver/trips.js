@@ -16,9 +16,6 @@
    1. AUTENTICACIÓN
    ============================================================ */
 const session = JSON.parse(localStorage.getItem('chaski_user') || 'null');
-if (!session || session.role !== 'driver') {
-  window.location.href = '../login.html';
-}
 
 const DRIVER_DATA = {
   'eloy.mamani':     { name: 'Eloy Mamani',     vehicle: '001', plate: 'PUN-001', company: 'Virgen de Fátima' },
@@ -36,11 +33,6 @@ if (nameEl)    nameEl.textContent    = driver.name;
 if (vehicleEl) vehicleEl.textContent = `Unidad ${driver.vehicle} · ${driver.plate}`;
 if (companyEl) companyEl.textContent = driver.company;
 
-function logout() {
-  localStorage.removeItem('chaski_user');
-  window.location.href = '../login.html';
-}
-window.logout = logout;
 
 
 /* ============================================================
@@ -355,9 +347,82 @@ function tripRowHtml(t, label) {
 
 
 /* ============================================================
+   7. VIAJE ACTIVO — delegado a trip-banner.js
+   ============================================================ */
+
+// Después de confirmar llegada, recargar el historial de viajes
+window._afterTripArrival = loadRealTrips;
+
+async function loadRealTrips() {
+  try {
+    // Buscar driver_id en ambas rutas del día actual
+    const today = new Date().toISOString().split('T')[0];
+    let driverId = null;
+
+    for (const route of ['juli-puno', 'puno-juli']) {
+      const qRes  = await authFetch(`/api/queue?date=${today}&route=${route}`);
+      if (!qRes.ok) continue;
+      const qData = await qRes.json();
+      const entry = (qData.entries || []).find(e => e.username === session.username);
+      if (entry?.driver_id) { driverId = entry.driver_id; break; }
+    }
+
+    if (!driverId) return;
+
+    const from = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
+    const res  = await authFetch(`/api/trips?driver_id=${driverId}&from=${from}&to=${today}&limit=200`);
+    if (!res.ok) return;
+
+    const trips = await res.json();
+    if (!Array.isArray(trips) || trips.length === 0) return;
+
+    // Si hay un viaje activo en la BD, mostrar el banner aunque no esté en localStorage
+    const activeTrip = trips.find(t => t.status === 'active');
+    if (activeTrip) window._showBannerFromDB(activeTrip);
+
+    // Renderizar lista
+    const list = document.getElementById('tripsList');
+    if (!list) return;
+
+    list.innerHTML = trips.map((t, i) => {
+      const dep     = new Date(t.start_time);
+      const depStr  = dep.toLocaleDateString('es-PE',{weekday:'short',day:'2-digit',month:'short'}) + ' · ' +
+                      dep.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+      const status  = t.status === 'active' ? 'transit' : 'completed';
+      const revenue = parseFloat(t.revenue) || 0;
+      const pax     = parseInt(t.total_passengers) || 0;
+      return `
+        <div class="dt-trip-card">
+          <div class="dt-trip-num">${i + 1}</div>
+          <div class="dt-trip-body">
+            <div class="dt-trip-route">${t.route_name || '—'}</div>
+            <div class="dt-trip-meta">
+              <span><i class="fas fa-calendar-alt"></i>${depStr}</span>
+              <span><i class="fas fa-file-invoice"></i>${t.manifest_number || '—'}</span>
+            </div>
+          </div>
+          <div class="dt-trip-stats">
+            <div class="dt-stat"><span class="dt-stat-val">${pax}</span><span class="dt-stat-lbl">Pasajeros</span></div>
+            <div class="dt-stat"><span class="dt-stat-val gold">S/${revenue.toFixed(0)}</span><span class="dt-stat-lbl">Recaudado</span></div>
+          </div>
+          <span class="status-badge ${status}">
+            <i class="fas ${status === 'transit' ? 'fa-truck-moving' : 'fa-check-circle'}"></i>
+            ${status === 'transit' ? 'En ruta' : 'Completado'}
+          </span>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('[loadRealTrips]', e);
+  }
+}
+
+
+/* ============================================================
    INICIALIZACIÓN
    ============================================================ */
 (function init() {
   updateKPIs();
   renderMyTrips();
+  loadActiveTripBanner();
+  loadRealTrips();
 })();

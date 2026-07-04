@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // CHASKI AI 2.0 — Asistente IA Frontend
 // admin/assistant.js
 // ============================================================
@@ -147,8 +147,8 @@ function renderData(intent, data) {
         <td>${i + 1}</td>
         <td>${d.driver_name}</td>
         <td>${d.company}</td>
-        <td>${d.total_trips}</td>
-        <td>${d.total_passengers}</td>
+        <td>${d.total_viajes}</td>
+        <td>${d.total_pasajeros}</td>
         <td>S/. ${parseFloat(d.total_revenue).toFixed(2)}</td>
       </tr>`).join('');
 
@@ -188,12 +188,12 @@ function renderData(intent, data) {
   if (intent === 'queue' && data.queue && data.queue.length > 0) {
     const rows = data.queue.map(q => `
       <tr>
-        <td>${q.position}</td>
-        <td>${q.association_code}</td>
-        <td>${q.plate}</td>
+        <td>${q.posicion}</td>
+        <td>${q.association_code || '—'}</td>
+        <td>${q.plate || '—'}</td>
         <td>${q.driver_name}</td>
         <td>${q.company}</td>
-        <td>${q.status}</td>
+        <td>${q.estado}</td>
       </tr>`).join('');
 
     return `
@@ -251,6 +251,116 @@ function renderData(intent, data) {
     return kpis;
   }
 
+  // Resumen del día
+  if (intent === 'summary' && data) {
+    const v = data.viajes  || {};
+    const c = data.cola    || {};
+    const kpis = `
+      <div class="data-cards">
+        <div class="data-kpi">
+          <span class="data-kpi-label">Viajes hoy</span>
+          <span class="data-kpi-value">${parseInt(v.total_viajes) || 0}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Pasajeros</span>
+          <span class="data-kpi-value green">${parseInt(v.total_pasajeros) || 0}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Recaudación</span>
+          <span class="data-kpi-value gold">S/. ${parseFloat(v.total_revenue || 0).toFixed(2)}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">En cola</span>
+          <span class="data-kpi-value">${parseInt(c.en_cola) || 0}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Salidos</span>
+          <span class="data-kpi-value green">${parseInt(c.salidos) || 0}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Manif. abiertos</span>
+          <span class="data-kpi-value" ${parseInt(data.manifAbiertos) > 0 ? 'style="color:#F59E0B"' : ''}>${parseInt(data.manifAbiertos) || 0}</span>
+        </div>
+      </div>`;
+    return kpis;
+  }
+
+  // Ingresos por empresa
+  if (intent === 'companies' && data.empresas && data.empresas.length > 0) {
+    const rows = data.empresas.map((e, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${e.company}</strong></td>
+        <td>${e.total_drivers}</td>
+        <td>${e.total_viajes}</td>
+        <td>${e.total_pasajeros}</td>
+        <td><strong>S/. ${parseFloat(e.total_revenue).toFixed(2)}</strong></td>
+      </tr>`).join('');
+
+    return `
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>#</th><th>Empresa</th><th>Conductores</th><th>Viajes</th><th>Pasajeros</th><th>Recaudación</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // Manifiestos sin cerrar
+  if (intent === 'open_manifests') {
+    if (!data.manifiestos || data.manifiestos.length === 0) {
+      return `<div class="data-cards"><div class="data-kpi"><span class="data-kpi-label">Manifiestos abiertos</span><span class="data-kpi-value green">0</span></div></div>`;
+    }
+    const rows = data.manifiestos.map(m => `
+      <tr>
+        <td>${m.manifest_number || '—'}</td>
+        <td>${m.driver_name}</td>
+        <td>${m.association_code || '—'} / ${m.plate || '—'}</td>
+        <td>${m.departure_time ? new Date(m.departure_time).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+        <td>${m.total_passengers || 0}</td>
+        <td>S/. ${parseFloat(m.total_revenue || 0).toFixed(2)}</td>
+      </tr>`).join('');
+
+    return `
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>Manifiesto</th><th>Conductor</th><th>Unidad</th><th>Salida</th><th>Pasajeros</th><th>Recaudación</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // Conductores con retrasos
+  if (intent === 'delays' && data.conductores && data.conductores.length > 0) {
+    const rows = data.conductores.map((c, i) => {
+      const mins = parseInt(c.minutos_espera) || 0;
+      const alerta = mins > 60 ? 'style="color:#EF4444"' : mins > 30 ? 'style="color:#F59E0B"' : '';
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${c.driver_name}</td>
+          <td>${c.association_code || '—'} / ${c.plate || '—'}</td>
+          <td>${c.registered_at ? new Date(c.registered_at).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+          <td>${c.departure_at ? new Date(c.departure_at).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+          <td><span ${alerta}>${mins} min</span></td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>#</th><th>Conductor</th><th>Unidad</th><th>Inscripción</th><th>Salida</th><th>Tiempo espera</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
   return '';
 }
 
@@ -301,8 +411,8 @@ function generatePDF(intent, data) {
         <td>${i + 1}</td>
         <td>${d.driver_name}</td>
         <td>${d.company}</td>
-        <td>${d.total_trips}</td>
-        <td>${d.total_passengers}</td>
+        <td>${d.total_viajes}</td>
+        <td>${d.total_pasajeros}</td>
         <td>S/. ${parseFloat(d.total_revenue).toFixed(2)}</td>
       </tr>`).join('');
 
@@ -355,13 +465,13 @@ function renderExportCard(intent, data) {
   const card = document.createElement('div');
   card.className = 'export-card';
   card.innerHTML = `
-    <div class="export-card-icon"><i class="fas fa-file-pdf"></i></div>
+    <div class="export-card-icon"><i data-lucide="file-text"></i></div>
     <div class="export-card-info">
       <strong>Reporte listo para descargar</strong>
       <span>PDF con los datos consultados · Optimizado para impresión</span>
     </div>
     <button class="export-btn" onclick="generatePDF('${intent}', ${JSON.stringify(data || null).replace(/'/g, "\\'")})">
-      <i class="fas fa-download"></i> Descargar PDF
+      <i data-lucide="download"></i> Descargar PDF
     </button>`;
   return card;
 }
@@ -387,7 +497,7 @@ async function sendMessage(overrideText) {
   showTyping();
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/assistant/chat`, {
+    const res = await authFetch(`${BACKEND_URL}/api/assistant/chat`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ message: text, history: history.slice(0, -1) }),
@@ -397,7 +507,7 @@ async function sendMessage(overrideText) {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      appendMessageRow('ai', `<span style="color:#EF4444"><i class="fas fa-exclamation-triangle"></i> ${errData.error || 'Error al conectar con el servidor.'}</span>`);
+      appendMessageRow('ai', `<span style="color:#EF4444"><i data-lucide="alert-triangle"></i> ${errData.error || 'Error al conectar con el servidor.'}</span>`);
       return;
     }
 
@@ -423,7 +533,7 @@ async function sendMessage(overrideText) {
     hideTyping();
     appendMessageRow('ai', `
       <span style="color:#EF4444">
-        <i class="fas fa-wifi" style="margin-right:6px"></i>
+        <i data-lucide="wifi"></i>
         No se pudo conectar al backend. Verifica que el servidor esté corriendo en <strong>chaski-ai.onrender.com</strong>.
       </span>
       <br><small style="color:#6A8DB0;font-size:0.75rem;margin-top:6px;display:block">

@@ -55,8 +55,9 @@
       ${navLink('/admin/queue',    'list-ordered',    'Lista Diaria')}
 
       <span class="asb-nav-label">Análisis</span>
-      ${navLink('/admin/gps',     'radio',            'Dispositivos GPS')}
-      ${navLink('/admin/reports', 'bar-chart-2',      'Reportes')}
+      ${navLink('/admin/gps',          'radio',            'Dispositivos GPS')}
+      ${navLink('/admin/reports',      'bar-chart-2',      'Reportes')}
+      ${navLink('/admin/ai-dashboard', 'brain-circuit',    'Motor IA')}
       <a href="/admin/assistant"
          class="asb-link${isActive('/admin/assistant') ? ' active' : ''}"
          id="nav-assistant"

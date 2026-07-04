@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/driver.css">
   <link rel="stylesheet" href="queue.css">
+  <link rel="stylesheet" href="trips.css">
 </head>
 <body class="driver-body">
 
@@ -63,6 +64,24 @@
 
   <div class="driver-content">
 
+    <!-- Banner viaje activo -->
+    <div id="activeTripBanner" class="active-trip-banner" style="display:none"></div>
+
+    <!-- Banner de llamado — solo visible cuando position = calling -->
+    <div id="queueCallingAlert" style="display:none;align-items:center;gap:14px;
+         padding:14px 20px;border-radius:12px;border:1px solid #FF6B6B;
+         background:rgba(255,107,107,.12);margin-bottom:16px;animation:pulse-border 1.5s ease infinite">
+      <span style="font-size:22px">🔴</span>
+      <div style="flex:1">
+        <strong style="color:#FF6B6B;font-size:15px">¡ESTÁS DE TURNO!</strong>
+        <span style="color:var(--text-sub);font-size:13px;margin-left:8px">Dirígete al terminal y carga a tus pasajeros</span>
+      </div>
+      <a href="manifest.html" style="background:#FF6B6B;color:#fff;padding:10px 18px;
+         border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap">
+        📋 Abrir Manifiesto
+      </a>
+    </div>
+
     <!-- ══ MI TURNO — Tarjeta destacada ══ -->
     <div class="dq-my-turn-hero" id="myTurnCard">
       <div class="dq-turn-left">
@@ -89,12 +108,17 @@
         </div>
       </div>
       <div class="dq-turn-right">
+        <button class="dq-btn-arrive" id="dqArriveBtn" onclick="handleArriveFromQueue()" style="display:none">
+          <i class="fas fa-map-marker-alt"></i>
+          <span id="dqArriveBtnLabel">Llegué a destino</span>
+          <small>Confirmar llegada</small>
+        </button>
         <button class="dq-btn-register" id="btnRegister" onclick="registerInQueue()">
           <i class="fas fa-user-plus"></i>
           <span>Inscribirme</span>
           <small>para mañana</small>
         </button>
-        <button class="dq-btn-absent" onclick="reportAbsence()">
+        <button class="dq-btn-absent" id="btnAbsent" onclick="reportAbsence()">
           <i class="fas fa-user-times"></i>
           <span>No saldré hoy</span>
         </button>
@@ -251,6 +275,8 @@
   </div>
 </main>
 
+<script src="core.js"></script>
+<script src="trip-banner.js"></script>
 <script src="queue.js"></script>
 
 </body>

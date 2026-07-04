@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    reports.js — Lógica de la página de Reportes
    Chaski AI v2.0 — Datos reales desde API REST
    ============================================================ */
@@ -6,17 +6,10 @@
 'use strict';
 
 /* ============================================================
-   1. HELPER DE AUTENTICACIÓN
+   1. HELPER DE AUTENTICACIÓN — delega a window.authFetch (core.js)
    ============================================================ */
 function authFetch(path, opts = {}) {
-  const s = JSON.parse(localStorage.getItem('chaski_user') || '{}');
-  return fetch(path, {
-    ...opts,
-    headers: {
-      ...(opts.headers || {}),
-      ...(s.token ? { 'Authorization': 'Bearer ' + s.token } : {}),
-    },
-  });
+  return window.authFetch(path, opts);
 }
 
 
@@ -398,7 +391,7 @@ function renderCompanyTable() {
       </td>
       <td style="color:${c.speedAlerts > 5 ? 'var(--danger)' : 'var(--text-sub)'};font-weight:${c.speedAlerts > 5 ? '700' : '400'}">
         ${c.speedAlerts}
-        ${c.speedAlerts > 5 ? '<i class="fas fa-exclamation-triangle" style="font-size:11px"></i>' : ''}
+        ${c.speedAlerts > 5 ? '<i data-lucide="alert-triangle"></i>' : ''}
       </td>
     </tr>
   `).join('');

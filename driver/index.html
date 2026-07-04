@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/driver.css">
   <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="trips.css">
 </head>
 <body class="driver-body">
 
@@ -108,6 +109,9 @@
   <!-- MAIN CONTENT -->
   <div class="driver-content">
 
+    <!-- Banner viaje activo -->
+    <div id="activeTripBanner" class="active-trip-banner" style="display:none"></div>
+
     <!-- Banner de alerta -->
     <div class="driver-alert" id="driverAlert">
       <i class="fas fa-bell"></i>
@@ -117,13 +121,101 @@
       </button>
     </div>
 
-    <!-- Quick stats -->
+    <!-- ESTADO ACTUAL — Tarjeta Principal -->
+    <div class="d-card status-hero-card" id="statusHeroCard">
+      <div class="shc-accent-bar" id="shcAccentBar"></div>
+      <div class="shc-top">
+        <div class="shc-status-group">
+          <div class="shc-status-dot waiting" id="shcDot"></div>
+          <span class="shc-status-label waiting" id="shcLabel">CARGANDO...</span>
+        </div>
+        <div class="shc-position-badge" id="shcPosition">#—</div>
+      </div>
+      <div class="shc-meta-row">
+        <div class="shc-meta-item">
+          <div class="shc-meta-label">Ruta asignada</div>
+          <div class="shc-meta-value" id="shcRoute">—</div>
+        </div>
+        <div class="shc-meta-item">
+          <div class="shc-meta-label">Tiempo estimado</div>
+          <div class="shc-meta-value" id="shcETA">—</div>
+        </div>
+        <div class="shc-meta-item">
+          <div class="shc-meta-label">Unidades antes</div>
+          <div class="shc-meta-value" id="shcAhead">—</div>
+        </div>
+      </div>
+      <div class="shc-action-box">
+        <div style="flex:1;min-width:0">
+          <div class="shc-next-label">Próxima acción</div>
+          <div class="shc-action-text" id="shcAction">Cargando estado de operación...</div>
+        </div>
+        <a href="queue.html" class="shc-view-btn" title="Ver cola completa">
+          <i class="fas fa-list-ol"></i>
+        </a>
+      </div>
+      <div class="shc-footer">
+        <span id="shcLastUpdate"><i class="fas fa-circle-notch fa-spin"></i> Actualizando...</span>
+        <span id="shcDatetime"></span>
+      </div>
+    </div>
+
+    <!-- CHASKI AI — Análisis Inteligente -->
+    <div class="d-card chaski-ai-card" id="chaskiAiCard">
+      <div class="cai-header">
+        <div class="cai-header-left">
+          <div class="cai-icon"><i class="fas fa-robot"></i></div>
+          <div class="cai-title-group">
+            <span>CHASKI AI</span>
+            <span>Análisis Inteligente de Operación</span>
+          </div>
+        </div>
+        <div class="cai-status-badge">
+          <span class="ai-status-dot"></span>
+          <span>En línea</span>
+        </div>
+      </div>
+      <div class="cai-greeting" id="caiGreeting">
+        <div class="ai-greeting-skeleton"></div>
+        <div class="ai-greeting-skeleton short"></div>
+      </div>
+      <div class="cai-bullets" id="caiBullets"></div>
+      <div class="cai-prob-section">
+        <div class="cai-prob-label">
+          <span>Probabilidad de salir pronto</span>
+          <span class="cai-prob-value" id="caiProbVal">—%</span>
+        </div>
+        <div class="cai-prob-bar">
+          <div class="cai-prob-fill" id="caiProbFill" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="cai-recommendation" id="caiRec">
+        <i class="fas fa-lightbulb cai-rec-icon"></i>
+        <span id="caiRecText">Analizando la operación...</span>
+      </div>
+    </div>
+
+    <!-- KPIs — 6 celdas -->
     <div class="driver-stats-row">
       <div class="dstat-card">
         <div class="dstat-icon"><i class="fas fa-list-ol"></i></div>
         <div class="dstat-info">
           <span class="dstat-val" id="queuePos">—</span>
-          <span class="dstat-label">Tu posición en la cola</span>
+          <span class="dstat-label">Posición cola</span>
+        </div>
+      </div>
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-circle" id="statusKpiIcon" style="color:#8BA3C1;font-size:10px"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="statusKpi" style="font-size:0.7rem;letter-spacing:0.04em">—</span>
+          <span class="dstat-label">Estado</span>
+        </div>
+      </div>
+      <div class="dstat-card">
+        <div class="dstat-icon"><i class="fas fa-clock"></i></div>
+        <div class="dstat-info">
+          <span class="dstat-val" id="etaKpi">—</span>
+          <span class="dstat-label">ETA salida</span>
         </div>
       </div>
       <div class="dstat-card">
@@ -137,14 +229,14 @@
         <div class="dstat-icon"><i class="fas fa-users"></i></div>
         <div class="dstat-info">
           <span class="dstat-val" id="passengersToday">0</span>
-          <span class="dstat-label">Pasajeros hoy</span>
+          <span class="dstat-label">Pasajeros</span>
         </div>
       </div>
       <div class="dstat-card highlight">
         <div class="dstat-icon gold"><i class="fas fa-money-bill-wave"></i></div>
         <div class="dstat-info">
           <span class="dstat-val gold" id="revenueToday">S/ 0.00</span>
-          <span class="dstat-label">Recaudado hoy</span>
+          <span class="dstat-label">Recaudado</span>
         </div>
       </div>
     </div>
@@ -181,6 +273,73 @@
               <span>No saldré hoy</span>
               <small>Reportar ausencia</small>
             </button>
+            <button class="qa-btn" style="border-color:rgba(99,102,241,0.4)" onclick="toggleAiChat()">
+              <i class="fas fa-robot" style="color:#8B5CF6"></i>
+              <span>Preguntar IA</span>
+              <small>Consultar Chaski AI</small>
+            </button>
+            <button class="qa-btn" style="border-color:rgba(245,158,11,0.4)" onclick="openIncidentModal()">
+              <i class="fas fa-flag" style="color:#F59E0B"></i>
+              <span>Reportar</span>
+              <small>Incidente en ruta</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mi Desempeño -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-chart-bar"></i> Mi Desempeño</h3>
+            <span class="card-badge">HOY</span>
+          </div>
+          <div class="perf-grid">
+            <div class="perf-item">
+              <span class="perf-val" id="perfTrips">—</span>
+              <span class="perf-lbl">Viajes</span>
+            </div>
+            <div class="perf-item">
+              <span class="perf-val" id="perfPax">—</span>
+              <span class="perf-lbl">Pasajeros</span>
+            </div>
+            <div class="perf-item">
+              <span class="perf-val" id="perfRevenue" style="color:var(--gold,#FBBF24)">S/ —</span>
+              <span class="perf-lbl">Ingresos</span>
+            </div>
+            <div class="perf-item">
+              <span class="perf-val" id="perfAvgPax">—</span>
+              <span class="perf-lbl">Pax / viaje</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Semáforo IA -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-traffic-light"></i> Estado Operativo</h3>
+            <span class="card-badge live">EN VIVO</span>
+          </div>
+          <div class="ai-semaphore-wrap" style="padding:14px 16px">
+            <div class="ai-semaphore">
+              <div class="ai-semaphore-light" id="sLight-red"></div>
+              <div class="ai-semaphore-light" id="sLight-yellow"></div>
+              <div class="ai-semaphore-light" id="sLight-green"></div>
+            </div>
+            <div class="ai-semaphore-info">
+              <div class="ai-semaphore-status" id="semaphoreStatus">Cargando...</div>
+              <div class="ai-semaphore-desc" id="semaphoreDesc">Analizando el sistema...</div>
+              <div class="ai-semaphore-counts">
+                <div class="ai-sc-item">
+                  <i class="fas fa-bus"></i>
+                  <span class="ai-sc-val" id="semVehiclesAvail">—</span>
+                  <span>disponibles</span>
+                </div>
+                <div class="ai-sc-item">
+                  <i class="fas fa-road"></i>
+                  <span class="ai-sc-val" id="semVehiclesRoute">—</span>
+                  <span>en ruta</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -259,6 +418,19 @@
           </div>
         </div>
 
+        <!-- Asistente IA — Recomendaciones y Alertas -->
+        <div class="d-card">
+          <div class="d-card-header">
+            <h3><i class="fas fa-brain"></i> Asistente IA</h3>
+            <span class="card-badge live">EN VIVO</span>
+          </div>
+          <div id="driverAiRecs" class="ai-driver-list">
+            <div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);font-size:13px">
+              <i class="fas fa-spinner fa-spin"></i> Cargando...
+            </div>
+          </div>
+        </div>
+
         <!-- Estado GPS -->
         <div class="d-card">
           <div class="d-card-header">
@@ -292,8 +464,80 @@
 
       </div><!-- /driver-col derecha -->
     </div><!-- /driver-grid -->
+
+    <!-- Mis Notificaciones -->
+    <div class="d-card" style="margin-top:20px">
+      <div class="d-card-header">
+        <h3><i class="fas fa-bell"></i> Mis Notificaciones</h3>
+        <button onclick="markAllRead()" class="card-link" style="background:none;border:none;cursor:pointer;color:inherit">Marcar leídas</button>
+      </div>
+      <div id="notifCardList" style="padding:4px 0">
+        <div style="padding:20px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">
+          <i class="fas fa-spinner fa-spin" style="display:block;font-size:20px;opacity:.4;margin-bottom:8px"></i>Cargando…
+        </div>
+      </div>
+    </div>
+
   </div><!-- /driver-content -->
+
+  <style>
+    .notif-reglamento { border-left:3px solid #AA88FF; }
+    .notif-type-tag { font-size:9px;font-weight:700;letter-spacing:.08em;color:#AA88FF;text-transform:uppercase;margin-bottom:2px; }
+    .notif-icon.indigo { background:rgba(170,136,255,.15);color:#AA88FF; }
+    .nc-section-title { font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.35);text-transform:uppercase;padding:10px 16px 6px;border-top:1px solid rgba(255,255,255,.05); }
+    .nc-section-title:first-child { border-top:none; }
+    .nc-item { display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;transition:background .15s; }
+    .nc-item:hover { background:rgba(255,255,255,.04); }
+    .nc-item.nc-unread { background:rgba(0,200,255,.03); }
+    .nc-item.nc-reg { border-left:3px solid #AA88FF;background:rgba(170,136,255,.04); }
+    .nc-icon { width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0; }
+    .nc-icon--reg { background:rgba(170,136,255,.15);color:#AA88FF; }
+    .nc-body { flex:1;min-width:0; }
+    .nc-title { font-size:0.88rem;font-weight:600;color:#E8F0FE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .nc-meta { font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .nc-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+    .nc-badge { font-size:9px;font-weight:700;background:rgba(0,200,255,.15);color:#00C8FF;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0; }
+    .nc-arrow { color:rgba(255,255,255,.2);font-size:11px;flex-shrink:0; }
+  </style>
 </main>
+
+<!-- ============================================================
+  CHAT FLOTANTE — Copiloto IA
+============================================================ -->
+<!-- SOS FAB -->
+<button class="sos-fab" id="sosFab" onclick="toggleSOS()" title="SOS — Emergencia">
+  <i class="fas fa-exclamation-triangle"></i>
+  <span>SOS</span>
+</button>
+
+<button class="ai-chat-fab" id="aiChatFab" onclick="toggleAiChat()" title="Hablar con Chaski AI">
+  <i class="fas fa-robot"></i>
+</button>
+
+<div class="ai-chat-modal" id="aiChatModal">
+  <div class="ai-chat-modal-header">
+    <div class="ai-hero-icon" style="width:30px;height:30px;font-size:14px;flex-shrink:0">
+      <i class="fas fa-robot"></i>
+    </div>
+    <span class="ai-chat-modal-title">Chaski AI — Copiloto</span>
+    <button class="ai-chat-modal-close" onclick="toggleAiChat()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="ai-chat-messages" id="aiChatMessages">
+    <div class="ai-chat-msg ai">
+      Hola, soy tu copiloto Chaski AI. ¿En qué puedo ayudarte hoy?
+    </div>
+  </div>
+  <div class="ai-chat-input-row">
+    <input type="text" class="ai-chat-input" id="aiChatInput"
+           placeholder="Escribe una pregunta..."
+           onkeydown="if(event.key==='Enter')sendChatMsg()">
+    <button class="ai-chat-send" id="aiChatSendBtn" onclick="sendChatMsg()">
+      <i class="fas fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
 
 <!-- ============================================================
   MODAL — Detalle de Notificación
@@ -335,6 +579,62 @@
   </div>
 </div>
 
+<!-- SOS Modal -->
+<div class="sos-overlay" id="sosOverlay" style="display:none" onclick="if(event.target===this)closeSOS()">
+  <div class="sos-card">
+    <i class="fas fa-exclamation-triangle sos-warning-icon"></i>
+    <h2>EMERGENCIA</h2>
+    <p class="sos-card-desc">Selecciona el tipo de emergencia. El administrador será notificado inmediatamente.</p>
+    <div class="sos-types">
+      <button class="sos-type-btn" onclick="sendSOS('accidente')">
+        <i class="fas fa-car-crash"></i><span>Accidente</span>
+      </button>
+      <button class="sos-type-btn" onclick="sendSOS('averia')">
+        <i class="fas fa-wrench"></i><span>Avería</span>
+      </button>
+      <button class="sos-type-btn" onclick="sendSOS('medica')">
+        <i class="fas fa-heartbeat"></i><span>Emergencia médica</span>
+      </button>
+      <button class="sos-type-btn" onclick="sendSOS('otro')">
+        <i class="fas fa-circle-exclamation"></i><span>Otro</span>
+      </button>
+    </div>
+    <button class="sos-cancel" onclick="closeSOS()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Incident Modal -->
+<div class="incident-overlay" id="incidentOverlay" style="display:none" onclick="if(event.target===this)closeIncidentModal()">
+  <div class="incident-card">
+    <div class="incident-card-header">
+      <h3><i class="fas fa-flag"></i> Reportar Incidente</h3>
+      <button onclick="closeIncidentModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="incident-card-body">
+      <select class="incident-select" id="incidentType">
+        <option value="">Selecciona el tipo de incidente...</option>
+        <option value="trafico">Tráfico / Congestión</option>
+        <option value="via">Vía en mal estado</option>
+        <option value="mecanico">Problema mecánico</option>
+        <option value="pasajero">Incidente con pasajero</option>
+        <option value="otro">Otro</option>
+      </select>
+      <textarea class="incident-textarea" id="incidentDesc" placeholder="Describe brevemente el incidente (opcional)..." rows="3"></textarea>
+      <div class="incident-footer">
+        <button class="incident-cancel-btn" onclick="closeIncidentModal()">Cancelar</button>
+        <button class="incident-submit-btn" onclick="submitIncident()">
+          <i class="fas fa-paper-plane"></i> Enviar reporte
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="core.js"></script>
+<script src="trip-banner.js"></script>
 <script src="index.js"></script>
 
 </body>

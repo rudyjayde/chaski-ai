@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // CHASKI AI 2.0 — Widget Flotante del Asistente IA
 // admin/assistant-widget.js
 // Se inyecta automáticamente en todas las páginas admin
@@ -23,7 +23,7 @@
       <!-- Botón flotante -->
       <button id="aiFloatBtn" aria-label="Abrir asistente IA">
         <i class="fas fa-robot ai-icon-robot"></i>
-        <i class="fas fa-times ai-icon-close"></i>
+        <i data-lucide="x"></i>
         <span id="aiFloatBadge"></span>
       </button>
 
@@ -41,7 +41,7 @@
             <span>En línea</span>
           </div>
           <button class="aw-close-btn" id="awCloseBtn" aria-label="Cerrar">
-            <i class="fas fa-times"></i>
+            <i data-lucide="x"></i>
           </button>
         </div>
 
@@ -74,7 +74,7 @@
             ></textarea>
           </div>
           <button class="aw-send-btn" id="awSendBtn" aria-label="Enviar">
-            <i class="fas fa-paper-plane"></i>
+            <i data-lucide="send"></i>
           </button>
         </div>
 
@@ -370,7 +370,7 @@ ${content}
     showTyping();
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/assistant/chat`, {
+      const res = await authFetch(`${BACKEND_URL}/api/assistant/chat`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ message: text, history: history.slice(0, -1) }),
@@ -380,7 +380,7 @@ ${content}
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        appendMsg('ai', `<span style="color:#ef4444"><i class="fas fa-exclamation-triangle"></i> ${err.error || 'Error del servidor.'}</span>`);
+        appendMsg('ai', `<span style="color:#ef4444"><i data-lucide="alert-triangle"></i> ${err.error || 'Error del servidor.'}</span>`);
         return;
       }
 
@@ -392,13 +392,13 @@ ${content}
         const card = document.createElement('div');
         card.className = 'aw-export-card';
         card.innerHTML = `
-          <div class="aw-export-icon"><i class="fas fa-file-pdf"></i></div>
+          <div class="aw-export-icon"><i data-lucide="file-text"></i></div>
           <div class="aw-export-info">
             <strong>Reporte listo</strong>
             <span>PDF para impresión</span>
           </div>
           <button class="aw-export-btn" onclick="window._awGeneratePDF('${intent}', ${JSON.stringify(data||null).replace(/'/g,"\\'").replace(/"/g,'&quot;')})">
-            <i class="fas fa-download"></i> PDF
+            <i data-lucide="download"></i> PDF
           </button>`;
         msgRow.querySelector('.aw-msg-content').appendChild(card);
         scrollBottom();
@@ -409,7 +409,7 @@ ${content}
     } catch {
       hideTyping();
       appendMsg('ai', `
-        <span style="color:#ef4444"><i class="fas fa-wifi"></i> Sin conexión al backend.</span>
+        <span style="color:#ef4444"><i data-lucide="wifi"></i> Sin conexión al backend.</span>
         <br><small style="color:#8b949e;font-size:.7rem;display:block;margin-top:4px">
           Inicia: <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px">node backend/server.js</code>
         </small>`);
