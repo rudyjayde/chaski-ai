@@ -40,7 +40,7 @@
 | `assistant-widget.css / .js` | Widget flotante del asistente IA presente en todas las vistas del admin |
 | `communications.js` | Utilidad compartida para llamadas a la API REST del backend |
 
----
+---1
 
 ## Portal Conductor — `driver/`
 

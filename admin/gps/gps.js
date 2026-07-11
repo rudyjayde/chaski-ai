@@ -85,6 +85,8 @@ function renderTable(devices) {
   `).join('');
 }
 
+
+
 function vehicleCell(d) {
   if (!d.vehicle_id) return '<span style="color:var(--muted);font-size:0.8rem">Sin asignar</span>';
   return `<span class="vehicle-code-pill">
@@ -287,6 +289,8 @@ window.unassignDevice = async function () {
     alert('Error al desasignar');
   }
 };
+
+
 
 // ── Eliminar ─────────────────────────────────────────────────
 window.deleteDevice = async function (id, imei) {

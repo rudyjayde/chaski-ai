@@ -136,6 +136,9 @@ router.get('/live', async (req, res) => {
       const speedKmh = Math.round((pos.speed || 0) * 1.852);
       const dbVehicle = imeiMap[device.uniqueId];
 
+      // Solo mostrar dispositivos registrados en nuestra BD
+      if (!dbVehicle) continue;
+
       vehicles.push({
         vehicle_id: dbVehicle?.vehicle_id || null,
         code:       dbVehicle?.code       || device.name,
