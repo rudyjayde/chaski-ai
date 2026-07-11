@@ -10,6 +10,17 @@ const express = require('express');
 const router  = express.Router();
 const pool    = require('../config/db');
 
+async function traccarFetch(path) {
+  const base = process.env.TRACCAR_URL || 'http://147.182.187.28:8082';
+  const auth = Buffer.from(`${process.env.TRACCAR_USER}:${process.env.TRACCAR_PASS}`).toString('base64');
+  const res  = await fetch(`${base}/api${path}`, {
+    headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`Traccar ${res.status}`);
+  return res.json();
+}
+
 // ── GET /api/gps-devices ─────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
@@ -37,18 +48,45 @@ router.get('/', async (req, res) => {
       ORDER BY d.registered_at DESC
     `);
 
+    // Consultar estado real de Traccar (con fallback si no responde)
+    let traccarMap = {};
+    try {
+      const [tDevices, tPositions] = await Promise.all([
+        traccarFetch('/devices'),
+        traccarFetch('/positions'),
+      ]);
+      const posMap = {};
+      for (const p of tPositions) posMap[p.deviceId] = p;
+      for (const d of tDevices) {
+        const pos = posMap[d.id];
+        traccarMap[d.uniqueId] = {
+          online:    d.status === 'online',
+          lastUpdate: pos?.deviceTime || pos?.serverTime || d.lastUpdate,
+          speed:     pos ? Math.round((pos.speed || 0) * 1.852) : 0,
+        };
+      }
+    } catch (_) { /* Traccar no disponible, usamos BD */ }
+
     const now = new Date();
     const devices = result.rows.map(r => {
-      let status = 'sin_asignar';
+      let status   = 'sin_asignar';
+      let lastPing = r.last_ping;
+      let lastSpeed = r.last_speed;
+
       if (r.vehicle_id) {
-        if (r.last_ping) {
+        const t = traccarMap[r.imei];
+        if (t) {
+          status    = t.online ? 'online' : 'offline';
+          lastPing  = t.lastUpdate || r.last_ping;
+          lastSpeed = t.speed ?? r.last_speed;
+        } else if (r.last_ping) {
           const diffMin = (now - new Date(r.last_ping)) / 60000;
           status = diffMin < 5 ? 'online' : diffMin < 60 ? 'reciente' : 'offline';
         } else {
           status = 'sin_señal';
         }
       }
-      return { ...r, status };
+      return { ...r, status, last_ping: lastPing, last_speed: lastSpeed };
     });
 
     res.json({ ok: true, devices });
