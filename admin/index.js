@@ -255,6 +255,8 @@
       if (!data.ok) return;
 
       const withGPS = data.vehicles.filter(v => v.lat && v.lon);
+      const activeIds = new Set(withGPS.map(v => v.vehicle_id));
+
       withGPS.forEach(v => {
         const latlng = [v.lat, v.lon];
         const icon   = makeVehicleIcon(v.code, v.speed || 0);
@@ -269,6 +271,14 @@
           markers[v.vehicle_id].setLatLng(latlng).setIcon(icon).setPopupContent(popup);
         } else {
           markers[v.vehicle_id] = L.marker(latlng, { icon }).bindPopup(popup).addTo(map);
+        }
+      });
+
+      // Eliminar del mapa los marcadores de dispositivos que ya no están en el API
+      Object.keys(markers).forEach(id => {
+        if (!activeIds.has(id)) {
+          map.removeLayer(markers[id]);
+          delete markers[id];
         }
       });
 
