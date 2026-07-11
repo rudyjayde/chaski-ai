@@ -187,7 +187,7 @@ router.get('/live', async (req, res) => {
           v.id          AS vehicle_id,
           v.association_code AS code,
           v.plate,
-          v.gps_device_id,
+          gd.imei       AS gps_device_id,
           COALESCE(d.first_name || ' ' || d.last_name, 'Sin conductor') AS driver,
           p.latitude    AS lat,
           p.longitude   AS lon,
@@ -196,6 +196,7 @@ router.get('/live', async (req, res) => {
           p.satellites,
           p.recorded_at AS timestamp
         FROM vehicles v
+        JOIN gps_devices gd ON gd.vehicle_id = v.id AND gd.active = true
         LEFT JOIN drivers d ON d.vehicle_id = v.id
         LEFT JOIN gps_positions p ON p.vehicle_id = v.id
         WHERE v.active = true
